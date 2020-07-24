@@ -1,4 +1,6 @@
 
+
+
 #' @importFrom magrittr %>%
 
 
@@ -31,18 +33,37 @@ filter_enrolled_on <- function(x, date = '10-01') {
 #' @export
 filter_enrolled_days <- function(x, n_days = 1) {
 
-  x %>%
-    dplyr::filter(AggrDaysEnrlCnt >= n_days)
+  x %>% dplyr::filter(AggrDaysEnrlCnt >= n_days)
 
 }
 
 
 
 #' @export
-filter_enrolled_cum <- function(x) {
+filter_enrolled_cum <- function(x, level = 'site') {
 
-  x %>%
-    dplyr::filter(SiteCumEnrlFlg == 'Y')
+  if (level == 'state') {
+
+    x %>% dplyr::filter(StateCumEnrlFlg == 'Y')
+
+  } else if (level == 'lea') {
+
+    x %>% dplyr::filter(LeaCumEnrlFlg == 'Y')
+
+  } else {
+
+    x %>% dplyr::filter(SiteCumEnrlFlg == 'Y')
+
+  }
+
+}
+
+
+
+#' @export
+filter_grades_exclude <- function(x, grades = c('15', '20')) {
+
+  x %>% dplyr::filter(!(GradePlacementCd %in% grades))
 
 }
 
@@ -66,10 +87,11 @@ count_enrollment <- function(x, ...) {
 
 
 #' @export
-prop_absent <- function(x, ..., days = 15) {
+prop_absent <- function(x, ..., days = 15, level) {
 
   x %>%
-    filter_enrolled_cum() %>%
+    filter_enrolled_cum(level) %>%
+    filter_grades_exclude() %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
       denom_absent = dplyr::n(),
