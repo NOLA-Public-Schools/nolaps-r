@@ -40,7 +40,7 @@ filter_enrolled_days <- function(x, n_days = 1) {
 
 
 #' @export
-filter_enrolled_cum <- function(x, level = 'site') {
+filter_enrolled_cum <- function(x, level) {
 
   if (level == 'state') {
 
@@ -74,15 +74,32 @@ filter_grades_exclude <- function(x, grades = c('15', '20')) {
 
 
 #' @export
-count_enrollment <- function(x, ...) {
+count_enrollment <- function(x, ..., date) {
 
   x %>%
-    filter_enrolled_on() %>%
+    filter_enrolled_on(date) %>%
     filter_enrolled_days() %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(num_enrolled = dplyr::n())
 
 }
+
+
+
+#' @export
+count_enrollment_cum <- function(x, ..., level) {
+
+  x %>%
+    filter_enrolled_cum(level) %>%
+    dplyr::group_by(...) %>%
+    dplyr::distinct(StudentIdNum) %>%
+    dplyr::summarize(num_enrolled_cum = dplyr::n())
+
+}
+
+
+
+# Absenteeism and Attendance ----------------------------------------------
 
 
 
@@ -112,10 +129,32 @@ count_discipline <- function(x, ...) {
 
   x %>%
     dplyr::group_by(...) %>%
+    dplyr::distinct(StudentIdNum, ActionInterventionCd) %>%
     dplyr::summarize(
       num_suspensions_out = sum(ActionInterventionCd == '002'),
       num_expulsions_out = sum(ActionInterventionCd == '003'),
       num_suspensions_in = sum(ActionInterventionCd == '004')
+    )
+
+}
+
+
+
+#' @export
+prop_discipline <- function(table_num, table_denom, ..., level) {
+
+  denoms <-
+    table_denom %>%
+    count_enrollment_cum(..., level = level)
+
+  nums <-
+    table_num %>%
+    count_discipline(...)
+
+  denoms %>%
+    left_join(nums) %>%
+    mutate(
+      rate_susp_out = num_suspensions_out / num_enrolled_cum
     )
 
 }

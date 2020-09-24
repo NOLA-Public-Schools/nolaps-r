@@ -45,6 +45,20 @@ matchcalcs_participants_n_choices <- function(x) {
 
 
 #' @export
+matchcalcs_participants_n_eligibleprocessed <- function(x) {
+
+  x %>%
+    dplyr::filter(
+      `ASSIGNMENT STATUS` != 'Ineligible',
+      `ASSIGNMENT STATUS` != 'Not Processed'
+    ) %>%
+    dplyr::count(`STUDENT ID`, name = 'n_eligibleprocessed')
+
+}
+
+
+
+#' @export
 matchcalcs_participants_n_ineligible <- function(x) {
 
   x %>%
@@ -64,6 +78,7 @@ matchcalcs_participants_info <- function(x) {
     dplyr::left_join(matchcalcs_participants_accepted(x), by = 'STUDENT ID') %>%
     dplyr::left_join(matchcalcs_participants_guaranteed(x), by = 'STUDENT ID') %>%
     dplyr::left_join(matchcalcs_participants_n_choices(x), by = 'STUDENT ID') %>%
+    dplyr::left_join(matchcalcs_participants_n_eligibleprocessed(x), by = 'STUDENT ID') %>%
     dplyr::left_join(matchcalcs_participants_n_ineligible(x), by = 'STUDENT ID')
 
 }
@@ -79,11 +94,10 @@ matchcalcs_results_seekingneweligible <- function(x, ...) {
     dplyr::filter(`ASSIGNMENT STATUS` != 'Not Processed') %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
-      n_seekingneweligible = dplyr::n(),
-      n_seekingneweligible_rank1 = sum(`CHOICE RANK` == 1),
-      n_seekingneweligible_accepted = sum(`ASSIGNMENT STATUS` == 'Accepted'),
-      prop_accepted = n_seekingneweligible_accepted / n_seekingneweligible
-    )
+      n_seekingneweligible = length(unique(`STUDENT ID`)),
+      n_seekingneweligible_accepted = sum(`ASSIGNMENT STATUS` == 'Accepted')
+    ) %>%
+    dplyr::mutate(rate_accepted = n_seekingneweligible_accepted / n_seekingneweligible)
 
 }
 

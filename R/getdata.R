@@ -7,11 +7,13 @@
 
 # Database ----------------------------------------------------------------
 
+
+
 #' @export
 getdata_governance <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'governance')
   )
 
@@ -23,20 +25,8 @@ getdata_governance <- function() {
 getdata_derivation_discipline <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'derivation_discipline')
-  )
-
-}
-
-
-
-#' @export
-getdata_derivation_enrollment <- function() {
-
-  dplyr::tbl(
-    src = nolaps::connection_ldoe(),
-    dbplyr::in_schema('db_owner', 'derivation_enrollment')
   )
 
 }
@@ -47,8 +37,20 @@ getdata_derivation_enrollment <- function() {
 getdata_disadvantage <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'disadvantage')
+  )
+
+}
+
+
+
+#' @export
+getdata_match <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema('db_owner', 'matches')
   )
 
 }
@@ -59,7 +61,7 @@ getdata_disadvantage <- function() {
 getdata_roster_assessment <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'roster_assessment')
   )
 
@@ -71,13 +73,29 @@ getdata_roster_assessment <- function() {
 getdata_roster_graduation <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'roster_graduation')
   )
 
 }
 
+
+
+#' @export
+getdata_sped_public <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema('db_owner', 'sped_public')
+  )
+
+}
+
+
+
 # Local -------------------------------------------------------------------
+
+
 
 #' @export
 getdata_performancescores_schools <- function() {
@@ -139,26 +157,6 @@ getdata_multistats_mfp_schools <- function() {
 
 
 
-#' @export
-getdata_sped_districts <- function() {
 
-  readr::read_csv(
-    file = '~/Data/Special Education/clean/sped_allyears_02_districts.csv',
-    col_types = 'dccdd'
-  )
-
-}
-
-
-
-#' @export
-getdata_sped_schools <- function() {
-
-  readr::read_csv(
-    file = '~/Data/Special Education/clean/sped_allyears_02_schools.csv',
-    col_types = 'dccccdd'
-  )
-
-}
 
 
