@@ -98,35 +98,11 @@ getdata_sped_public <- function() {
 
 
 #' @export
-getdata_performancescores_schools <- function() {
-
-  readr::read_csv(
-    file = '~/Projects/Performance Scores/Data/performancescores_schools_clean.csv',
-    col_types = 'dclccccdcccccddddddddddd'
-  )
-
-}
-
-
-
-#' @export
 getdata_assessment_roster <- function() {
 
   readr::read_csv(
     file = '~/Projects/Assessment/Data/assessment_roster_postcert_clean.csv',
     col_types = 'cccccccccccccccccccccccddcccccccccc'
-  )
-
-}
-
-
-
-#' @export
-getdata_enrollmentderivation <- function() {
-
-  readr::read_csv(
-    file = '~/Data/Enrollment Derivation/data/clean/enrollmentderivation_allyears.csv',
-    col_types = 'dccccTccccTccccccTccccccTcccccccccccddccTTcccccccccccccccccccTccTcccccccccccccccccc'
   )
 
 }
@@ -154,9 +130,5 @@ getdata_multistats_mfp_schools <- function() {
   )
 
 }
-
-
-
-
 
 
