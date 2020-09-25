@@ -10,7 +10,19 @@ getdata_enrollmentderivation <- function() {
 
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'enrollmentderivation')
+    dbplyr::in_schema("db_owner", "enrollmentderivation")
+  )
+
+}
+
+
+
+#' @export
+getdata_multistat <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "multistat")
   )
 
 }
@@ -22,7 +34,7 @@ getdata_sps <- function() {
 
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'sps')
+    dbplyr::in_schema("db_owner", "sps")
   )
 
 }
