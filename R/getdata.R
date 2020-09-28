@@ -81,18 +81,6 @@ getdata_roster_graduation <- function() {
 
 
 
-#' @export
-getdata_sped_public <- function() {
-
-  dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'sped_public')
-  )
-
-}
-
-
-
 # Local -------------------------------------------------------------------
 
 
@@ -103,30 +91,6 @@ getdata_assessment_roster <- function() {
   readr::read_csv(
     file = '~/Projects/Assessment/Data/assessment_roster_postcert_clean.csv',
     col_types = 'cccccccccccccccccccccccddcccccccccc'
-  )
-
-}
-
-
-
-#' @export
-getdata_multistats_mfp_districts <- function() {
-
-  readr::read_csv(
-    file = '~/Data/Multi Stats/clean/multistats_mfp_allyears_10_districts.csv',
-    col_types = 'dccdddddddddddddddddddddddddddddddd'
-  )
-
-}
-
-
-
-#' @export
-getdata_multistats_mfp_schools <- function() {
-
-  readr::read_csv(
-    file = '~/Data/Multi Stats/clean/multistats_mfp_allyears_10_schools.csv',
-    col_types = 'dcccccdddddddddddddddddddddddddddddddcccc'
   )
 
 }

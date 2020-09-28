@@ -6,6 +6,18 @@
 
 
 #' @export
+getdata_demographic <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "demographic")
+  )
+
+}
+
+
+
+#' @export
 getdata_enrollmentderivation <- function() {
 
   dplyr::tbl(
@@ -23,6 +35,18 @@ getdata_multistat <- function() {
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema("db_owner", "multistat")
+  )
+
+}
+
+
+
+#' @export
+getdata_sped <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "sped")
   )
 
 }
