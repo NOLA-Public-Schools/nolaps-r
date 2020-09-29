@@ -80,19 +80,3 @@ getdata_roster_graduation <- function() {
 }
 
 
-
-# Local -------------------------------------------------------------------
-
-
-
-#' @export
-getdata_assessment_roster <- function() {
-
-  readr::read_csv(
-    file = '~/Projects/Assessment/Data/assessment_roster_postcert_clean.csv',
-    col_types = 'cccccccccccccccccccccccddcccccccccc'
-  )
-
-}
-
-
