@@ -3,7 +3,7 @@
 
 
 #' @export
-matchcalcs_participants_all <- function(x) {
+matchcalcs_participants <- function(x) {
 
   x %>%
     dplyr::distinct(`STUDENT ID`, GRADE)
@@ -70,9 +70,9 @@ matchcalcs_participants_n_ineligible <- function(x) {
 
 
 #' @export
-matchcalcs_participants_info <- function(x) {
+matchcalcs_participants_all <- function(x) {
 
-  participants <- matchcalcs_participants_all(x)
+  participants <- matchcalcs_participants(x)
 
   participants %>%
     dplyr::left_join(matchcalcs_participants_accepted(x), by = 'STUDENT ID') %>%
