@@ -79,7 +79,8 @@ matchcalcs_participants_all <- function(x) {
     dplyr::left_join(matchcalcs_participants_guaranteed(x), by = 'STUDENT ID') %>%
     dplyr::left_join(matchcalcs_participants_n_choices(x), by = 'STUDENT ID') %>%
     dplyr::left_join(matchcalcs_participants_n_eligibleprocessed(x), by = 'STUDENT ID') %>%
-    dplyr::left_join(matchcalcs_participants_n_ineligible(x), by = 'STUDENT ID')
+    dplyr::left_join(matchcalcs_participants_n_ineligible(x), by = 'STUDENT ID') %>%
+    tidyr::replace_na(list(n_eligibleprocessed = 0, n_ineligible = 0))
 
 }
 

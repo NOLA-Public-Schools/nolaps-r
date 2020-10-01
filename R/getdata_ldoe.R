@@ -6,6 +6,30 @@
 
 
 #' @export
+getdata_act <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "act")
+  )
+
+}
+
+
+
+#' @export
+getdata_act_subgroup <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "act_subgroup")
+  )
+
+}
+
+
+
+#' @export
 getdata_ap <- function() {
 
   dplyr::tbl(
