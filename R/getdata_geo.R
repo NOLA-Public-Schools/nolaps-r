@@ -1,10 +1,6 @@
 
 
 
-#' @importFrom magrittr %>%
-
-
-
 #' @export
 getdata_zips_orleans <- function() {
 

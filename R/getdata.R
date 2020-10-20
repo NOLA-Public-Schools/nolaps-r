@@ -1,14 +1,6 @@
 
 
 
-#' @importFrom magrittr %>%
-
-
-
-# Database ----------------------------------------------------------------
-
-
-
 #' @export
 getdata_governance <- function() {
 
@@ -27,18 +19,6 @@ getdata_derivation_discipline <- function() {
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema('db_owner', 'derivation_discipline')
-  )
-
-}
-
-
-
-#' @export
-getdata_disadvantage <- function() {
-
-  dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'disadvantage')
   )
 
 }

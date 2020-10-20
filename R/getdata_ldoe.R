@@ -1,7 +1,15 @@
 
 
 
-#' @importFrom magrittr %>%
+#' @export
+getdata_achievementsummary <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "achievementsummary")
+  )
+
+}
 
 
 
@@ -66,11 +74,35 @@ getdata_demographic <- function() {
 
 
 #' @export
+getdata_disadvantage <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema('db_owner', 'disadvantage')
+  )
+
+}
+
+
+
+#' @export
 getdata_enrollmentderivation <- function() {
 
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema("db_owner", "enrollmentderivation")
+  )
+
+}
+
+
+
+#' @export
+getdata_masterysummary <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "masterysummary")
   )
 
 }
