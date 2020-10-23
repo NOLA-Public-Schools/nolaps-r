@@ -10,14 +10,14 @@
 plot_bar_v <- function(
   d,
   x,
-  color = nolaps_blue(),
   title = "title",
   subtitle = NULL,
-  title_legend = NULL,
+  caption = captions("ldoe"),
   xlab = NULL,
   ylab = NULL,
-  caption = "Louisiana Department of Education"
-) {
+  title_legend = NULL,
+  color = "gray"
+  ) {
 
   d %>%
     ggplot2::ggplot(ggplot2::aes({{ x }})) +
@@ -27,8 +27,8 @@ plot_bar_v <- function(
       ggplot2::aes(label = stat(count)),
       vjust = -1
     ) +
-    labels_nolaps_bar(title, subtitle, title_legend, xlab, ylab, caption) +
-    theme_bar_v(percent = FALSE)
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
+    theme_bar(percent = FALSE)
 
 }
 
@@ -39,14 +39,14 @@ plot_bar_v_dodge <- function(
   d,
   x,
   fill,
-  colors = c("gray", nolaps_blue()),
   title = "title",
   subtitle = NULL,
-  title_legend = NULL,
+  caption = captions("ldoe"),
   xlab = NULL,
   ylab = NULL,
-  caption = "Louisiana Department of Education"
-) {
+  title_legend = NULL,
+  colors = c("gray", nolaps_blue())
+  ) {
 
   d %>%
     ggplot2::ggplot(ggplot2::aes({{ x }}, fill = {{ fill }})) +
@@ -58,8 +58,8 @@ plot_bar_v_dodge <- function(
       vjust = -1
     ) +
     ggplot2::scale_fill_manual(values = colors) +
-    labels_nolaps_bar(title, subtitle, title_legend, xlab, ylab, caption) +
-    theme_bar_v(percent = FALSE)
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
+    theme_bar(percent = FALSE)
 
 }
 
@@ -74,53 +74,74 @@ plot_col_h <- function(
   d,
   x,
   y,
-  percent = FALSE,
+  title = "title",
+  subtitle = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  caption = captions("ldoe"),
+  title_legend = NULL,
   digits = 0,
+  percent = FALSE,
   color = "gray",
   bars_focus_1 = NULL,
-  color_focus_1 = nolaps_blue(),
   bars_focus_2 = NULL,
-  color_focus_2 = "black",
+  color_focus_1 = NULL,
+  color_focus_2 = NULL,
+  .fun = median
+) {
+
+  colors <- rep(color, nrow(d))
+
+  if (!is.null(bars_focus_1)) {colors[bars_focus_1] <- color_focus_1}
+
+  if (!is.null(bars_focus_2)) {colors[bars_focus_2] <- color_focus_2}
+
+  d %>%
+    addlabels({{ y }}, digits, percent) %>%
+    ggplot2::ggplot(ggplot2::aes(
+      x = forcats::fct_reorder({{ x }}, {{ y }}, .fun),
+      y = {{ y }}
+      )
+    ) +
+    ggplot2::geom_col(fill = colors) +
+    ggplot2::geom_text(
+      ggplot2::aes(label = label),
+      hjust = -0.5
+    ) +
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
+    theme_bar(percent) +
+    ggplot2::coord_flip()
+
+}
+
+
+
+#' @export
+plot_col_v <- function(
+  d,
+  x,
+  y,
+  title = "title",
+  subtitle = NULL,
+  caption = captions("ldoe"),
   xlab = NULL,
   ylab = NULL,
   title_legend = NULL,
-  title = "title",
-  subtitle = NULL,
-  caption = "Louisiana Department of Education",
-  ...
+  digits = 0,
+  percent = FALSE,
+  color = "gray"
 ) {
 
-  if (percent == TRUE) {
-    lab <- d %>% dplyr::pull({{ y }}) %>% percentify(digits)
-  } else {
-    lab <- d %>% dplyr::pull({{ y }}) %>% round(digits) %>% as.character()
-  }
-
-  cols <- rep(color, nrow(d))
-
-  if (!is.null(bars_focus_1)) {cols[bars_focus_1] <- color_focus_1}
-
-  if (!is.null(bars_focus_2)) {cols[bars_focus_2] <- color_focus_2}
-
   d %>%
-    dplyr::mutate(label = lab) %>%
-    ggplot2::ggplot(ggplot2::aes(
-      forcats::fct_reorder({{ x }}, {{ y }}, ...),
-      {{ y }}
-      )
-    ) +
-    ggplot2::geom_col(fill = cols) +
+    addlabels({{ y }}, digits, percent) %>%
+    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }})) +
+    ggplot2::geom_col(fill = color) +
     ggplot2::geom_text(
-      ggplot2::aes(label = lab),
-      hjust = -0.5
+      ggplot2::aes(label = label),
+      vjust = -1
     ) +
-    ggplot2::geom_hline(yintercept = 0) +
-    style_axis_y_bar(percent) +
-    theme_bar_h() +
-    ggplot2::xlab(xlab) +
-    ggplot2::ylab(ylab) +
-    labels_nolaps(xlab, ylab, title_legend, title, subtitle, caption) +
-    ggplot2::coord_flip()
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
+    theme_bar(percent)
 
 }
 
@@ -182,6 +203,7 @@ plot_col_v_dodge <- function(
   fill,
   percent = FALSE,
   digits = 0,
+  levels = NULL,
   colors = c("gray", nolaps_blue()),
   title = "title",
   subtitle = NULL,
@@ -198,17 +220,23 @@ plot_col_v_dodge <- function(
     label <- d %>% pull({{ y }})
   }
 
+  if (!is.null(levels)) {
+    l <- d %>% dplyr::pull({{ fill }}) %>% factor() %>% forcats::fct_relevel(levels) %>% levels()
+  } else {
+    l <- d %>% dplyr::pull({{ fill }}) %>% factor() %>% levels()
+  }
+
   d %>%
-    mutate(label = label) %>%
-    ggplot(aes(
-      fct_rev(fct_reorder({{ x }}, {{ y }}, ...)),
+    dplyr::mutate(label = label) %>%
+    ggplot2::ggplot(ggplot2::aes(
+      forcats::fct_rev(forcats::fct_reorder({{ x }}, {{ y }}, ...)),
       {{ y }},
-      fill = factor({{ fill }})
+      fill = factor({{ fill }}, levels = l)
       )
     ) +
-    geom_col(position = position_dodge()) +
-    geom_text(
-      aes(label = label),
+    ggplot2::geom_col(position = position_dodge()) +
+    ggplot2::geom_text(
+      ggplot2::aes(label = label),
       position = position_dodge(1),
       vjust = -1
     ) +
@@ -335,11 +363,123 @@ nolaps_yellow <- function() {"#F0CB5D"}
 
 
 
+#' @export
+palette_greys_light <- function(n) {
+
+  RColorBrewer::brewer.pal(n + 1, "Greys")[(2):(n + 1)]
+
+}
+
+
+
+#' @export
+palette_greys_dark <- function(n) {
+
+  RColorBrewer::brewer.pal(n + 2, "Greys")[(3):(n + 2)]
+
+}
+
+
+
+# Captions ----------------------------------------------------------------
+
+
+
+#' @export
+captions <- function(x) {
+
+  switch(
+    x,
+    enrollment = "NOLA Public Schools enrollment data",
+    ldoe = "Louisiana Department of Education",
+    match = "NOLA Public Schools match data",
+    nolaps = "NOLA Public Schools",
+    nolaps_ldoe = "NOLA Public Schools analysis of LDOE data"
+  )
+
+}
+
+
+
 # Helpers -----------------------------------------------------------------
 
 
 
-percentify <- function(x, digits = 0) {str_c(round(x, digits), "%")}
+percentify <- function(x) {stringr::str_c(x, "%")}
+
+
+
+addlabels <- function(d, labelcol, digits, percent) {
+
+  d <- d %>% dplyr::mutate(label = as.character(round({{ labelcol }}, digits)))
+
+  if (percent == TRUE) {
+
+    d <- d %>% dplyr::mutate(dplyr::across(label, percentify))
+
+  }
+
+  d
+
+}
+
+
+
+# Labels ------------------------------------------------------------------
+
+
+
+labels_nolaps <- function(title, subtitle, caption, xlab, ylab) {
+
+  list(
+    ggplot2::labs(
+      title = title,
+      subtitle = subtitle,
+      caption = caption
+    ),
+    ggplot2::xlab(label = xlab),
+    ggplot2::ylab(label = ylab)
+  )
+
+}
+
+
+
+labels_nolaps_bar <- function(title, subtitle, caption, xlab, ylab, title_legend) {
+
+  list(
+    labels_nolaps(title, subtitle, caption, xlab, ylab),
+    ggplot2::guides(fill = ggplot2::guide_legend(title = title_legend))
+  )
+
+}
+
+
+
+labels_nolaps_line <- function(title, subtitle, caption, xlab, ylab, title_legend) {
+
+  list(
+    labels_nolaps(title, subtitle, caption, xlab, ylab),
+    ggplot2::guides(color = ggplot2::guide_legend(title = title_legend))
+  )
+
+}
+
+
+
+# Theme -------------------------------------------------------------------
+
+
+
+axis_nolaps <- function(percent) {
+
+  ggplot2::scale_y_continuous(
+    breaks = 0,
+    labels = if (percent == TRUE) {"0%"} else {"0"},
+    expand = ggplot2::expansion(mult = c(.0, .15))
+  )
+
+}
 
 
 
@@ -347,56 +487,7 @@ setlims_y <- function(min, max) {ggplot2::coord_cartesian(ylim = c(min, max))}
 
 
 
-axis_bar_h <- function(percent) {
-
-  ggplot2::scale_x_continuous(
-    breaks = 0,
-    labels = if (percent == TRUE) {"0%"} else {"0"},
-    expand = expansion(mult = c(.0, .15))
-  )
-
-}
-
-
-
-axis_bar_v <- function(percent) {
-
-  ggplot2::scale_y_continuous(
-    breaks = 0,
-    labels = if (percent == TRUE) {"0%"} else {"0"},
-    expand = ggplot2::expansion(mult = c(.0, .15))
-  )
-
-}
-
-
-
-axis_line <- function(percent) {
-
-  ggplot2::scale_y_continuous(
-    breaks = 0,
-    labels = if (percent == TRUE) {"0%"} else {"0"},
-    expand = ggplot2::expansion(mult = c(.0, .15))
-  )
-
-}
-
-
-
-theme_bar_h <- function() {
-
-  ggplot2::theme_classic() +
-    ggplot2::theme(axis.ticks = ggplot2::element_blank()) +
-    ggplot2::theme(axis.line = ggplot2::element_blank()) +
-    ggplot2::theme(legend.position = "top") +
-    ggplot2::theme(legend.justification = "right") +
-    ggplot2::theme(plot.title.position = "plot")
-
-}
-
-
-
-theme_bar_v <- function(percent) {
+theme_nolaps <- function(percent) {
 
   list(
     ggplot2::theme_classic(),
@@ -405,8 +496,19 @@ theme_bar_v <- function(percent) {
     ggplot2::theme(legend.position = "right"),
     ggplot2::theme(legend.justification = "top"),
     ggplot2::theme(axis.ticks = ggplot2::element_blank()),
-    ggplot2::theme(axis.line.y = ggplot2::element_blank()),
-    axis_bar_v(percent)
+    ggplot2::theme(axis.line = ggplot2::element_blank()),
+    axis_nolaps(percent)
+  )
+
+}
+
+
+
+theme_bar <- function(percent) {
+
+  list(
+    theme_nolaps(percent),
+    ggplot2::geom_hline(yintercept = 0)
   )
 
 }
@@ -416,14 +518,8 @@ theme_bar_v <- function(percent) {
 theme_line <- function(percent, miny, maxy) {
 
   list(
-    ggplot2::theme_classic(),
-    ggplot2::theme(plot.title.position = "plot"),
-    ggplot2::theme(plot.caption.position = "plot"),
-    ggplot2::theme(legend.position = "right"),
-    ggplot2::theme(legend.justification = "top"),
-    ggplot2::theme(axis.ticks = ggplot2::element_blank()),
-    ggplot2::theme(axis.line.y = ggplot2::element_blank()),
-    axis_line(percent),
+    theme_nolaps(percent),
+    ggplot2::geom_hline(yintercept = 0),
     setlims_y(miny, maxy)
   )
 
@@ -431,40 +527,10 @@ theme_line <- function(percent, miny, maxy) {
 
 
 
-theme_stack_v <- function() {
-
-  ggplot2::theme_classic() +
-    ggplot2::theme(axis.ticks = ggplot2::element_blank()) +
-    ggplot2::theme(axis.line.y = ggplot2::element_blank()) +
-    ggplot2::theme(legend.position = "right") +
-    ggplot2::theme(legend.justification = "top")
-
-}
-
-
-
-labels_nolaps_bar <- function(title, subtitle, title_legend, xlab, ylab, caption) {
+theme_stack100 <- function() {
 
   list(
-    ggplot2::ggtitle(title, subtitle),
-    ggplot2::xlab(xlab),
-    ggplot2::ylab(ylab),
-    ggplot2::labs(caption = caption),
-    ggplot2::guides(fill = ggplot2::guide_legend(title = title_legend))
-  )
-
-}
-
-
-
-labels_nolaps_line <- function(title, subtitle, title_legend, xlab, ylab, caption) {
-
-  list(
-    ggplot2::ggtitle(title, subtitle),
-    ggplot2::xlab(xlab),
-    ggplot2::ylab(ylab),
-    ggplot2::labs(caption = caption),
-    ggplot2::guides(color = ggplot2::guide_legend(title = title_legend))
+    theme_nolaps(percent)
   )
 
 }

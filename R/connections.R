@@ -1,10 +1,6 @@
 
 
 
-#' @importFrom magrittr %>%
-
-
-
 #' @export
 connection_ldoe_test <- function() {
 
@@ -17,6 +13,17 @@ connection_ldoe_test <- function() {
     PWD = keyring::key_get('ldoe_test', 'password'),
     Port = 1433
   )
+
+}
+
+
+
+#' @export
+write_ldoe <- function(x, tablename) {
+
+  conn <- connection_ldoe_test()
+
+  DBI::dbWriteTable(conn, name = tablename, value = x, overwrite = TRUE)
 
 }
 

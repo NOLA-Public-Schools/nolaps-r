@@ -5,8 +5,7 @@
 #' @export
 matchcalcs_participants <- function(x) {
 
-  x %>%
-    dplyr::distinct(`STUDENT ID`, GRADE)
+  x %>% dplyr::distinct(`STUDENT ID`, GRADE)
 
 }
 
@@ -37,8 +36,7 @@ matchcalcs_participants_guaranteed <- function(x) {
 #' @export
 matchcalcs_participants_n_choices <- function(x) {
 
-  x %>%
-    dplyr::count(`STUDENT ID`, name = 'n_choices')
+  x %>% dplyr::count(`STUDENT ID`, name = 'n_choices')
 
 }
 
@@ -87,18 +85,46 @@ matchcalcs_participants_all <- function(x) {
 
 
 #' @export
-matchcalcs_results_seekingneweligible <- function(x, ...) {
+seekingnew <- function(x) {
 
   x %>%
-    dplyr::filter(is.na(`GUARANTEED?`)) %>%
-    dplyr::filter(`ASSIGNMENT STATUS` != 'Ineligible') %>%
-    dplyr::filter(`ASSIGNMENT STATUS` != 'Not Processed') %>%
+    matchcalcs_participants_all() %>%
+    filter(is.na(rank_guaranteed) | rank_guaranteed != 1)
+
+}
+
+
+
+#' @export
+matchcalcs_results_seekingnew <- function(
+  x,
+  ...,
+  excludechoices_ineligible = TRUE,
+  excludechoices_notprocessed = TRUE
+  ) {
+
+  if (excludechoices_ineligible == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Ineligible')
+  }
+
+  if (excludechoices_notprocessed == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Not Processed')
+  }
+
+  x %>%
+    dplyr::filter(`STUDENT ID` %in% seekingnew(x)$`STUDENT ID`) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
-      n_seekingneweligible = length(unique(`STUDENT ID`)),
-      n_seekingneweligible_accepted = sum(`ASSIGNMENT STATUS` == 'Accepted')
+      n_seekingnew = length(unique(`STUDENT ID`)),
+      n_seekingnew_acceptednew =
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`)),
+      n_seekingnew_acceptednew_top3 =
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`) & `CHOICE RANK` %in% 1:3)
     ) %>%
-    dplyr::mutate(rate_accepted = n_seekingneweligible_accepted / n_seekingneweligible)
+    dplyr::mutate(
+      rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,
+      rate_acceptednew_top3 = n_seekingnew_acceptednew_top3 / n_seekingnew
+    )
 
 }
 

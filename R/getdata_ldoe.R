@@ -62,6 +62,18 @@ getdata_ap_subgroup <- function() {
 
 
 #' @export
+getdata_college <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "college")
+  )
+
+}
+
+
+
+#' @export
 getdata_demographic <- function() {
 
   dplyr::tbl(
@@ -91,6 +103,18 @@ getdata_enrollmentderivation <- function() {
   dplyr::tbl(
     src = nolaps::connection_ldoe_test(),
     dbplyr::in_schema("db_owner", "enrollmentderivation")
+  )
+
+}
+
+
+
+#' @export
+getdata_graduation <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema('db_owner', 'graduation')
   )
 
 }
