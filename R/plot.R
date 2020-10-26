@@ -163,7 +163,7 @@ plot_col_h_dodge <- function(
 ) {
 
   if (percent == TRUE) {
-    label <- d %>% pull({{ y }}) %>% percentify(digits = digits)
+    label <- d %>% pull({{ y }}) %>% percentify()
   } else {
     label <- d %>% pull({{ y }})
   }
@@ -282,7 +282,7 @@ plot_stack100_comp <- function(
     ggplot2::scale_fill_manual(values = rep(cols, 2)) +
     style_axis_y_bar(percent = TRUE) +
     theme_stack_v() +
-    labels_nolaps(xlab, ylab, title_legend, title, subtitle, caption)
+    labels_nolaps_bar(title, subtitle, title_legend, xlab, ylab, caption)
 
 }
 
@@ -309,7 +309,7 @@ plot_line_comp <- function(
 ) {
 
   if (percent == TRUE) {
-    d <- d %>% dplyr::mutate(label = percentify({{ y }}, digits))
+    d <- d %>% dplyr::mutate(label = percentify({{ y }}))
   } else {
     d <- d %>% dplyr::mutate(label = as.character({{ y }}))
   }

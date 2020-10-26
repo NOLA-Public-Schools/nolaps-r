@@ -1,6 +1,3 @@
-
-
-
 #' @importFrom magrittr %>%
 
 
@@ -10,19 +7,19 @@
 
 
 #' @export
-filter_enrolled_on <- function(x, date = '10-01') {
+filter_enrolled_on <- function(x, date = "10-01") {
 
-  if (date == '02-01') {
+  if (date == "02-01") {
 
     x %>%
-      dplyr::filter(EntryDt <= stringr::str_c(as.integer(BegSchSessYr) + 1, '-', date)) %>%
-      dplyr::filter(is.na(ExitDt) | ExitDt > stringr::str_c(as.integer(BegSchSessYr) + 1, '-', date))
+      dplyr::filter(EntryDt <= stringr::str_c(BegSchSessYr + 1, "-", date)) %>%
+      dplyr::filter(is.na(ExitDt) | ExitDt > stringr::str_c(BegSchSessYr + 1, "-", date))
 
   } else {
 
     x %>%
-      dplyr::filter(EntryDt <= stringr::str_c(BegSchSessYr, '-', date)) %>%
-      dplyr::filter(is.na(ExitDt) | ExitDt > stringr::str_c(BegSchSessYr, '-', date))
+      dplyr::filter(EntryDt <= stringr::str_c(BegSchSessYr, "-", date)) %>%
+      dplyr::filter(is.na(ExitDt) | ExitDt > stringr::str_c(BegSchSessYr, "-", date))
 
   }
 
@@ -42,17 +39,17 @@ filter_enrolled_days <- function(x, n_days = 1) {
 #' @export
 filter_enrolled_cum <- function(x, level) {
 
-  if (level == 'state') {
+  if (level == "state") {
 
-    x %>% dplyr::filter(StateCumEnrlFlg == 'Y')
+    x %>% dplyr::filter(StateCumEnrlFlg == "Y")
 
-  } else if (level == 'lea') {
+  } else if (level == "lea") {
 
-    x %>% dplyr::filter(LeaCumEnrlFlg == 'Y')
+    x %>% dplyr::filter(LeaCumEnrlFlg == "Y")
 
   } else {
 
-    x %>% dplyr::filter(SiteCumEnrlFlg == 'Y')
+    x %>% dplyr::filter(SiteCumEnrlFlg == "Y")
 
   }
 
@@ -61,7 +58,7 @@ filter_enrolled_cum <- function(x, level) {
 
 
 #' @export
-filter_grades_exclude <- function(x, grades = c('15', '20')) {
+filter_grades_exclude <- function(x, grades = c("15", "20")) {
 
   x %>% dplyr::filter(!(GradePlacementCd %in% grades))
 
@@ -131,9 +128,9 @@ count_discipline <- function(x, ...) {
     dplyr::group_by(...) %>%
     dplyr::distinct(StudentIdNum, ActionInterventionCd) %>%
     dplyr::summarize(
-      num_suspensions_out = sum(ActionInterventionCd == '002'),
-      num_expulsions_out = sum(ActionInterventionCd == '003'),
-      num_suspensions_in = sum(ActionInterventionCd == '004')
+      num_suspensions_out = sum(ActionInterventionCd == "002"),
+      num_expulsions_out = sum(ActionInterventionCd == "003"),
+      num_suspensions_in = sum(ActionInterventionCd == "004")
     )
 
 }
@@ -169,12 +166,12 @@ prop_discipline <- function(table_num, table_denom, ..., level) {
 prop_graduation <- function(x, ...) {
 
   x %>%
-    dplyr::filter(`Site Flag` == 'Y') %>%
+    dplyr::filter(`Site Flag` == "Y") %>%
     dplyr::filter(!is.na(`Grad Point`)) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
       denom_graduated = dplyr::n(),
-      num_graduated = sum(`Grad Flag` == 'Y'),
+      num_graduated = sum(`Grad Flag` == "Y"),
       prop_graduated = num_graduated / denom_graduated
     )
 
@@ -194,8 +191,8 @@ prop_mastery <- function(x, ...) {
     dplyr::summarize(
       denom_basic = sum(!is.na(ach)),
       denom_mastery = sum(!is.na(ach)),
-      num_basic =   sum(ach %in% c('ADV', 'EST', 'EXC', 'GOO', 'MAS', 'MST', 'BAS')),
-      num_mastery = sum(ach %in% c('ADV', 'EST', 'EXC', 'GOO', 'MAS', 'MST')),
+      num_basic =   sum(ach %in% c("ADV", "EST", "EXC", "GOO", "MAS", "MST", "BAS")),
+      num_mastery = sum(ach %in% c("ADV", "EST", "EXC", "GOO", "MAS", "MST")),
       prop_basic = num_basic / denom_basic,
       prop_mastery = num_mastery / denom_mastery
     )
