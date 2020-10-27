@@ -98,7 +98,8 @@ rate_stability <- function(x, years, ...) {
       SiteCd,
       GradePlacementCd,
       StudentIdNum, CorrectedIDNum,
-      EntryDt, ExitDt, AggrDaysEnrlCnt,
+      EntryDt, ExitDt,
+      AggrDaysEnrlCnt,
       code_site_current
     ) %>%
     dplyr::collect() %>%

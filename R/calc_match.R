@@ -3,6 +3,20 @@
 
 
 #' @export
+levelgrades_match <- function(x) {
+
+  x %>%
+    mutate(GRADE = forcats::fct_relevel(
+      GRADE,
+      "INF", "1YR", "2YR", "PK3", "PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"
+      )
+    )
+
+}
+
+
+
+#' @export
 matchcalcs_participants <- function(x, ...) {
 
   x %>% dplyr::distinct(`STUDENT ID`, ...)
@@ -111,8 +125,8 @@ matchcalcs_results_seekingnew <- function(
   }
 
   x %>%
-    dplyr::filter(is.na(`GUARANTEED?`)) %>%
     dplyr::semi_join(matchcalcs_seekingnew(x, ...)) %>%
+    dplyr::filter(is.na(`GUARANTEED?`)) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
       n_seekingnew = length(unique(`STUDENT ID`)),
@@ -122,12 +136,15 @@ matchcalcs_results_seekingnew <- function(
       n_seekingnew_acceptednew_top3 =
         sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` %in% 1:3),
       n_seekingnew_acceptednew_top1 =
-        sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` == 1)
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` == 1),
+      n_seekingnew_acceptednew_sibling =
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
     ) %>%
     dplyr::mutate(
       rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,
       rate_acceptednew_top3 = n_seekingnew_acceptednew_top3 / n_seekingnew,
-      rate_acceptednew_top1 = n_seekingnew_acceptednew_top1 / n_seekingnew
+      rate_acceptednew_top1 = n_seekingnew_acceptednew_top1 / n_seekingnew,
+      rate_acceptednew_sibling = n_seekingnew_acceptednew_sibling / n_seekingnew
     )
 
 }
