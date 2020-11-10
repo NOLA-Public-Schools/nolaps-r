@@ -30,13 +30,14 @@ getdata_application <- function() {
       from Application__c
       where
         RecordTypeId in (
-          select Id
-          from RecordType
-          where Name in ('Round 1', 'Round 2')
+          '012d0000000tDWHAA2',
+          '0120W000001tdvtQAA',
+          '012d0000000tDWIAA2'
         ) and
         CreatedDate >= 2019-11-01T00:00:00Z
       "
-    )
+    ),
+    api_type = "Bulk 2.0"
   )
 
 }
@@ -74,15 +75,11 @@ getdata_applicationschoolranking <- function() {
         Application_School__c
       from Application_School_Ranking__c
       where
-        Application__c in (
-          select Id
-          from Application__c
-          where CreatedDate >= 2019-11-01T00:00:00Z
-        ) and
-        CreatedDate >= 2019-11-01T00:00:00Z and
-        Application_School__c != null
+        Application_School__c != null and
+        CreatedDate >= 2019-11-01T00:00:00Z
       "
-    )
+    ),
+    api_type = "Bulk 2.0"
   )
 
 }
@@ -90,7 +87,7 @@ getdata_applicationschoolranking <- function() {
 
 
 #' @export
-getdata_family <- function() {
+getdata_sibling <- function() {
 
   salesforcer::sf_query(
     glue::glue(
@@ -100,15 +97,10 @@ getdata_family <- function() {
         Student_OneApp_ID__c,
         PG_Sibling_OneApp_ID__c
       from Family_Relationship__c
-      where
-        Student_Reference__c in (
-          select Id
-          from Schoolforce__Student__c
-          where School_Year__c = '2020-2021'
-        ) and
-        Relationship_to_Student__c = 'Sibling'
+      where Relationship_to_Student__c = 'Sibling'
       "
-    )
+    ),
+    api_type = "Bulk 2.0"
   )
 
 }
@@ -147,7 +139,8 @@ getdata_student <- function() {
       from Schoolforce__Student__c
       where School_Year__c = '2020-2021'
       "
-    )
+    ),
+    api_type = "Bulk 2.0"
   )
 
 }
