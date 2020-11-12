@@ -8,7 +8,12 @@ getdata_account <- function() {
     glue::glue(
       "
       select
-        Id
+        Id,
+        School_Code_String__c,
+        Name,
+        Grade_Span_Current_SY__c,
+        Grade_Span__c,
+        Terminal_Grade__c
       from Account
       "
     )
@@ -26,7 +31,15 @@ getdata_application <- function() {
       "
       select
         Id,
-        OneApp_ID__c
+        OneApp_ID__c,
+        Grade_Applying_For__c,
+        Student_First_Name__c,
+        Student_Last_Name__c,
+        Parent_Guardian_First_Name__c,
+        Parent_Guardian_Last_Name__c,
+        Parent_Guardian_Email_Address__c,
+        Primary_Contact_Number__c,
+        Secondary_Contact_Number__c
       from Application__c
       where
         RecordTypeId in (
@@ -126,7 +139,7 @@ getdata_recordtype <- function() {
 
 
 #' @export
-getdata_student <- function() {
+getdata_student_active <- function() {
 
   salesforcer::sf_query(
     glue::glue(
@@ -134,10 +147,37 @@ getdata_student <- function() {
       select
         Id,
         OneApp_ID__c,
-        SchoolForce__School__c,
+        SchoolForce__Student_First_Name__c,
+        SchoolForce__Student_Last_Name__c,
+        Current_Grade__c,
+        SchoolForce__School__c
+      from Schoolforce__Student__c
+      where
+        SchoolForce__Active__c = TRUE
+      "
+    ),
+    api_type = "Bulk 2.0"
+  )
+
+}
+
+
+
+#' @export
+getdata_student_futureschool <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        OneApp_ID__c,
         Future_School__c
       from Schoolforce__Student__c
-      where School_Year__c = '2020-2021'
+      where
+        Recent_Record__c = 'true' and
+        Future_School__c != null and
+        School_Year__c = '2020-2021'
       "
     ),
     api_type = "Bulk 2.0"
