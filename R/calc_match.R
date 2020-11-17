@@ -211,7 +211,7 @@ matchcalcs_participants_all <- function(x, schools_waitlist, ...) {
 matchcalcs_guarantee1_only <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       rank_accepted == 1,
       rank_guaranteed == 1,
       n_choices == 1
@@ -225,7 +225,7 @@ matchcalcs_guarantee1_only <- function(x) {
 matchcalcs_guarantee1_haschoices <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       rank_accepted == 1,
       rank_guaranteed == 1,
       n_choices > 1
@@ -239,7 +239,7 @@ matchcalcs_guarantee1_haschoices <- function(x) {
 matchcalcs_acceptednew_hasguarantee <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       !is.na(rank_accepted),
       !is.na(rank_guaranteed),
       rank_accepted < rank_guaranteed
@@ -253,7 +253,7 @@ matchcalcs_acceptednew_hasguarantee <- function(x) {
 matchcalcs_acceptednew_noguarantee <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       !is.na(rank_accepted),
       is.na(rank_guaranteed)
     )
@@ -266,7 +266,7 @@ matchcalcs_acceptednew_noguarantee <- function(x) {
 matchcalcs_fallback_waiting <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       n_choices > 1,
       rank_accepted > 1,
       rank_accepted == rank_guaranteed,
@@ -281,7 +281,7 @@ matchcalcs_fallback_waiting <- function(x) {
 matchcalcs_fallback_full <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       n_choices > 1,
       rank_accepted > 1,
       rank_accepted == rank_guaranteed,
@@ -297,7 +297,7 @@ matchcalcs_fallback_full <- function(x) {
 matchcalcs_fallback_ineligible <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       n_choices > 1,
       rank_accepted > 1,
       rank_accepted == rank_guaranteed,
@@ -314,7 +314,7 @@ matchcalcs_fallback_ineligible <- function(x) {
 matchcalcs_unassigned_waiting <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       is.na(rank_accepted),
       n_waiting > 0
     )
@@ -327,7 +327,7 @@ matchcalcs_unassigned_waiting <- function(x) {
 matchcalcs_unassigned_full <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       is.na(rank_accepted),
       n_waiting == 0,
       n_full > 0
@@ -341,7 +341,7 @@ matchcalcs_unassigned_full <- function(x) {
 matchcalcs_unassigned_ineligible <- function(x) {
 
   x %>%
-    filter(
+    dplyr::filter(
       is.na(rank_accepted),
       n_waiting == 0,
       n_full == 0,
@@ -353,6 +353,7 @@ matchcalcs_unassigned_ineligible <- function(x) {
 
 
 # Summary stats -----------------------------------------------------------
+
 
 
 #' @export
@@ -379,11 +380,11 @@ matchcalcs_summary_stats <- function(x, ...) {
 
 
 #' @export
-matchcalcs_seekingnew <- function(x, ...) {
+matchcalcs_seekingnew <- function(x, schools_waitlist, ...) {
 
   x %>%
-    matchcalcs_participants_all(...) %>%
-    filter(is.na(rank_guaranteed) | rank_guaranteed != 1)
+    matchcalcs_participants_all(schools_waitlist, ...) %>%
+    dplyr::filter(is.na(rank_guaranteed) | rank_guaranteed != 1)
 
 }
 
@@ -392,6 +393,7 @@ matchcalcs_seekingnew <- function(x, ...) {
 #' @export
 matchcalcs_results_seekingnew <- function(
   x,
+  schools_waitlist,
   ...,
   exclude_ineligible = TRUE,
   exclude_notprocessed = TRUE
@@ -406,7 +408,7 @@ matchcalcs_results_seekingnew <- function(
   }
 
   x %>%
-    dplyr::semi_join(matchcalcs_seekingnew(x, ...)) %>%
+    dplyr::semi_join(matchcalcs_seekingnew(x, schools_waitlist, ...)) %>%
     dplyr::filter(is.na(`GUARANTEED?`)) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
@@ -419,7 +421,7 @@ matchcalcs_results_seekingnew <- function(
       n_seekingnew_acceptednew_top1 =
         sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` == 1),
       n_seekingnew_acceptednew_sibling =
-        sum(`ASSIGNMENT STATUS` == 'Accepted' & str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
     ) %>%
     dplyr::mutate(
       rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,

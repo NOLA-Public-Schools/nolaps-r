@@ -1,3 +1,4 @@
+#' @importFrom magrittr %>%
 
 
 
@@ -18,6 +19,38 @@ getdata_account <- function() {
       "
     )
   )
+
+}
+
+
+
+#' @export
+getdata_account_address <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        School_Code_String__c,
+        Name,
+        BillingStreet,
+        BillingCity,
+        BillingState,
+        BillingPostalCode
+      from Account
+      "
+    )
+  ) %>%
+    dplyr::select(
+      id_account = Id,
+      code_site = School_Code_String__c,
+      name_account = Name,
+      street = BillingStreet,
+      city = BillingCity,
+      state = BillingState,
+      zip = BillingPostalCode
+    )
 
 }
 
