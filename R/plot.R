@@ -288,6 +288,10 @@ plot_stack100_comp <- function(
 
 
 
+# Line --------------------------------------------------------------------
+
+
+
 #' @export
 plot_line_comp <- function(
   d,
@@ -305,22 +309,17 @@ plot_line_comp <- function(
   title_legend = NULL,
   xlab = NULL,
   ylab = NULL,
-  caption = "Louisiana Department of Education"
+  caption = captions("ldoe")
 ) {
 
-  if (percent == TRUE) {
-    d <- d %>% dplyr::mutate(label = percentify({{ y }}))
-  } else {
-    d <- d %>% dplyr::mutate(label = as.character({{ y }}))
-  }
-
-  l <-
-    d %>%
-    dplyr::filter({{ x }} == max({{ x }})) %>%
-    dplyr::arrange(desc({{ y }})) %>%
-    dplyr::pull({{ color }})
+  # l <-
+  #   d %>%
+  #   dplyr::filter({{ x }} == max({{ x }})) %>%
+  #   dplyr::arrange(desc({{ y }})) %>%
+  #   dplyr::pull({{ color }})
 
   d %>%
+    addlabels({{ y }}, digits, percent) %>%
     dplyr::mutate(label = dplyr::case_when(
       {{ x }} == min({{ x }}) ~ label,
       {{ x }} == max({{ x }}) ~ label,
@@ -328,14 +327,14 @@ plot_line_comp <- function(
       TRUE ~ ""
       )
     ) %>%
-    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }}, color = factor({{ color }}, levels = l))) +
+    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }}, color = factor({{ color }}))) +
     ggplot2::geom_line(size = 1) +
     ggrepel::geom_text_repel(
       ggplot2::aes(label = label),
       color = "black"
     ) +
     ggplot2::scale_color_manual(values = colors) +
-    labels_nolaps_line(title, subtitle, title_legend, xlab, ylab, caption) +
+    labels_nolaps_line(title, subtitle, caption, xlab, ylab, title_legend) +
     theme_line(percent, miny, maxy)
 
 }
@@ -390,10 +389,11 @@ captions <- function(x) {
 
   switch(
     x,
-    enrollment = "NOLA Public Schools enrollment data",
-    ldoe = "Louisiana Department of Education",
-    match = "NOLA Public Schools match data",
     nolaps = "NOLA Public Schools",
+    app = "NOLA Public Schools application data",
+    enrollment = "NOLA Public Schools enrollment data",
+    match = "NOLA Public Schools match data",
+    ldoe = "Louisiana Department of Education",
     nolaps_ldoe = "NOLA Public Schools analysis of LDOE data"
   )
 
