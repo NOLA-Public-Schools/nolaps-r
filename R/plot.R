@@ -253,36 +253,36 @@ plot_col_v_dodge <- function(
 
 
 #' @export
-plot_stack100_comp <- function(
+plot_stackfill_comp <- function(
   d,
   x,
   y,
-  lab_min = 0.05,
+  digits = 0,
+  lab_min = 5,
   cols = c(nolaps_red(), nolaps_yellow(), nolaps_teal(), nolaps_blue(), nolaps_navy(), "gray"),
+  title = "title",
+  subtitle = NULL,
+  caption = captions("ldoe"),
   xlab = NULL,
   ylab = NULL,
-  title_legend = "title_legend",
-  title = "title",
-  subtitle = "subtitle",
-  caption = "Louisiana Department of Education"
+  title_legend = NULL
 ) {
 
   d %>%
-    mutate(across({{ x }}, factor)) %>%
-    group_by({{ x }}, {{ y }}) %>%
-    summarize(n_records = n()) %>%
-    group_by({{ x }}) %>%
-    mutate(rate = n_records / sum(n_records)) %>%
-    ggplot(aes(x = {{ x }}, y = rate, fill = {{ y }})) +
-    geom_col() +
-    geom_text(
-      aes(label = if_else(rate >= lab_min, percentify(rate), "")),
-      position = position_fill(vjust = 0.5)
+    dplyr::mutate(dplyr::across({{ x }}, factor)) %>%
+    dplyr::group_by({{ x }}, {{ y }}) %>%
+    dplyr::summarize(n_records = dplyr::n()) %>%
+    dplyr::group_by({{ x }}) %>%
+    dplyr::mutate(prop = n_records / sum(n_records) * 100) %>%
+    ggplot2::ggplot(ggplot2::aes(x = {{ x }}, y = prop, fill = factor({{ y }}))) +
+    ggplot2::geom_col() +
+    ggplot2::geom_text(
+      ggplot2::aes(label = dplyr::if_else(prop >= lab_min, percentify(round(prop, digits)), "")),
+      position = ggplot2::position_stack(vjust = 0.5)
     ) +
     ggplot2::scale_fill_manual(values = rep(cols, 2)) +
-    style_axis_y_bar(percent = TRUE) +
-    theme_stack_v() +
-    labels_nolaps_bar(title, subtitle, title_legend, xlab, ylab, caption)
+    theme_stackfill(percent = TRUE) +
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend)
 
 }
 
@@ -390,7 +390,7 @@ captions <- function(x) {
   switch(
     x,
     nolaps = "NOLA Public Schools",
-    app = "NOLA Public Schools application data",
+    application = "NOLA Public Schools application data",
     enrollment = "NOLA Public Schools enrollment data",
     match = "NOLA Public Schools match data",
     ldoe = "Louisiana Department of Education",
@@ -483,6 +483,18 @@ axis_nolaps <- function(percent) {
 
 
 
+axis_stackfill <- function() {
+
+  ggplot2::scale_y_continuous(
+    breaks = 0,
+    labels = "",
+    expand = ggplot2::expansion(mult = c(.0, .0))
+  )
+
+}
+
+
+
 setlims_y <- function(min, max) {ggplot2::coord_cartesian(ylim = c(min, max))}
 
 
@@ -527,10 +539,13 @@ theme_line <- function(percent, miny, maxy) {
 
 
 
-theme_stack100 <- function() {
+theme_stackfill <- function(percent) {
 
   list(
-    theme_nolaps(percent)
+    theme_nolaps(percent),
+    axis_stackfill(),
+    ggplot2::geom_hline(yintercept = 0),
+    ggplot2::geom_hline(yintercept = 100)
   )
 
 }
