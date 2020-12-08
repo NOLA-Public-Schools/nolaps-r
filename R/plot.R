@@ -201,48 +201,29 @@ plot_col_v_dodge <- function(
   x,
   y,
   fill,
-  percent = FALSE,
-  digits = 0,
-  levels = NULL,
-  colors = c("gray", nolaps_blue()),
+  colors = c("gray", "darkgray"),
   title = "title",
   subtitle = NULL,
   title_legend = NULL,
   xlab = NULL,
   ylab = NULL,
-  caption = "Louisiana Department of Education",
-  ...
+  caption = captions("ldoe"),
+  percent = FALSE,
+  digits = 0
 ) {
 
-  if (percent == TRUE) {
-    label <- d %>% pull({{ y }}) %>% percentify(digits)
-  } else {
-    label <- d %>% pull({{ y }})
-  }
-
-  if (!is.null(levels)) {
-    l <- d %>% dplyr::pull({{ fill }}) %>% factor() %>% forcats::fct_relevel(levels) %>% levels()
-  } else {
-    l <- d %>% dplyr::pull({{ fill }}) %>% factor() %>% levels()
-  }
-
   d %>%
-    dplyr::mutate(label = label) %>%
-    ggplot2::ggplot(ggplot2::aes(
-      forcats::fct_rev(forcats::fct_reorder({{ x }}, {{ y }}, ...)),
-      {{ y }},
-      fill = factor({{ fill }}, levels = l)
-      )
-    ) +
-    ggplot2::geom_col(position = position_dodge()) +
+    addlabels({{ y }}, digits, percent) %>%
+    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }}, fill = {{ fill }})) +
+    ggplot2::geom_col(position = ggplot2::position_dodge()) +
     ggplot2::geom_text(
       ggplot2::aes(label = label),
-      position = position_dodge(1),
+      position = ggplot2::position_dodge(1),
       vjust = -1
     ) +
     ggplot2::scale_fill_manual(values = colors) +
-    labels_nolaps_bar(title, subtitle, title_legend, xlab, ylab, caption) +
-    theme_bar_v(percent)
+    labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
+    theme_bar(percent = FALSE)
 
 }
 
