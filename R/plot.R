@@ -169,13 +169,8 @@ plot_col_h_dodge <- function(
   }
 
   d %>%
-    mutate(label = label) %>%
-    ggplot(aes(
-      fct_reorder({{ x }}, {{ y }}, ...),
-      {{ y }},
-      fill = factor({{ fill }})
-    )
-    ) +
+    addlabels({{ y }}, digits, percent) %>%
+    ggplot2::ggplot(ggplot2::aes({{ x }}, {{ y }}, fill = {{ fill }})) +
     geom_col(position = position_dodge()) +
     geom_text(
       aes(label = label),
@@ -223,7 +218,7 @@ plot_col_v_dodge <- function(
     ) +
     ggplot2::scale_fill_manual(values = colors) +
     labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
-    theme_bar(percent = FALSE)
+    theme_bar(percent)
 
 }
 

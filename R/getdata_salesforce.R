@@ -374,7 +374,6 @@ getdata_student_3years <- function() {
         School_Year__c
       from Schoolforce__Student__c
       where
-        Recent_Record__c = 'true' and
         SchoolForce__School__c != null and
         School_Year__c in ('2018-2019', '2019-2020', '2020-2021')
       "
