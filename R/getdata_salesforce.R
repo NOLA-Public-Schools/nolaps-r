@@ -197,6 +197,55 @@ getdata_app <- function() {
 }
 
 
+#' @export
+getdata_app_1year <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        CreatedDate,
+        OneApp_ID__c,
+        Student__c,
+        Id,
+        Grade_Applying_For__c,
+        Student_First_Name__c,
+        Student_Last_Name__c,
+        Parent_Guardian_First_Name__c,
+        Parent_Guardian_Last_Name__c,
+        Parent_Guardian_Email_Address__c,
+        Primary_Contact_Number__c,
+        Secondary_Contact_Number__c,
+        RecordTypeId
+      from Application__c
+      where
+        CreatedDate >= 2020-11-01T00:00:00Z
+      "
+    ),
+    api_type = "Bulk 2.0"
+  ) %>%
+    dplyr::select(
+      date_created = CreatedDate,
+      oneappid = OneApp_ID__c,
+      id_student = Student__c,
+      id_app = Id,
+      grade_applying = Grade_Applying_For__c,
+      applicant_firstname = Student_First_Name__c,
+      applicant_lastname = Student_Last_Name__c,
+      pg_firstname = Parent_Guardian_First_Name__c,
+      pg_lastname = Parent_Guardian_Last_Name__c,
+      email = Parent_Guardian_Email_Address__c,
+      phone_1 = Primary_Contact_Number__c,
+      phone_2 = Secondary_Contact_Number__c,
+      id_recordtype = RecordTypeId
+    ) %>%
+    dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
+    dplyr::select(-id_recordtype) %>%
+    dplyr::relocate(recordtype)
+
+}
+
+
 
 #' @export
 getdata_appschool <- function() {
@@ -242,6 +291,38 @@ getdata_appschoolranking <- function() {
       where
         Application_School__c != null and
         CreatedDate >= 2018-11-01T00:00:00Z
+      "
+    ),
+    api_type = "Bulk 2.0"
+  ) %>%
+    dplyr::select(
+      id_appschoolranking = Id,
+      date_created = CreatedDate,
+      id_app = Application__c,
+      id_appschool = Application_School__c,
+      rank = Rank__c
+    )
+
+}
+
+
+
+#' @export
+getdata_appschoolranking_1year <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        CreatedDate,
+        Application__c,
+        Application_School__c,
+        Rank__c
+      from Application_School_Ranking__c
+      where
+        Application_School__c != null and
+        CreatedDate >= 2020-11-01T00:00:00Z
       "
     ),
     api_type = "Bulk 2.0"
