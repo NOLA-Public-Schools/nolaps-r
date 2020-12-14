@@ -149,6 +149,34 @@ getdata_account_open <- function() {
 
 
 #' @export
+getdata_account_highdemand <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Name,
+        School_Code_String__c,
+        High_Demand_School__c
+      from Account
+      where
+        High_Demand_School__c != null
+      "
+    )
+  ) %>%
+    dplyr::select(
+      id_account = Id,
+      name_account = Name,
+      code_site = School_Code_String__c,
+      is_highdemand = High_Demand_School__c
+    )
+
+}
+
+
+
+#' @export
 getdata_app <- function() {
 
   salesforcer::sf_query(
@@ -286,7 +314,10 @@ getdata_appschoolranking <- function() {
         CreatedDate,
         Application__c,
         Application_School__c,
-        Rank__c
+        Rank__c,
+        EC_Ranking__c,
+        EC_Program_Type__c,
+        EC_Eligibility__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
@@ -300,7 +331,10 @@ getdata_appschoolranking <- function() {
       date_created = CreatedDate,
       id_app = Application__c,
       id_appschool = Application_School__c,
-      rank = Rank__c
+      rank = Rank__c,
+      is_ec = EC_Ranking__c,
+      programtype = EC_Program_Type__c,
+      eligibility = EC_Eligibility__c
     )
 
 }
