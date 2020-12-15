@@ -244,6 +244,8 @@ getdata_app_1year <- function() {
         Parent_Guardian_Email_Address__c,
         Primary_Contact_Number__c,
         Secondary_Contact_Number__c,
+        Address_Longitude__c,
+        Address_Latitude__c,
         RecordTypeId
       from Application__c
       where
@@ -265,6 +267,8 @@ getdata_app_1year <- function() {
       email = Parent_Guardian_Email_Address__c,
       phone_1 = Primary_Contact_Number__c,
       phone_2 = Secondary_Contact_Number__c,
+      lon = Address_Longitude__c,
+      lat = Address_Latitude__c,
       id_recordtype = RecordTypeId
     ) %>%
     dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
