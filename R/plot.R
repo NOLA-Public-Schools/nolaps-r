@@ -45,13 +45,15 @@ plot_bar_v_dodge <- function(
   xlab = NULL,
   ylab = NULL,
   title_legend = NULL,
-  colors = c("gray", nolaps_blue())
+  colors = c("gray", nolaps_blue()),
+  column_exclude = NULL,
+  values_exclude = NULL
   ) {
 
   d %>%
     ggplot2::ggplot(ggplot2::aes({{ x }}, fill = {{ fill }})) +
     ggplot2::geom_bar(position = ggplot2::position_dodge()) +
-    ggplot2::geom_text(
+    ggrepel::geom_text_repel(
       stat = "count",
       ggplot2::aes(label = stat(count)),
       position = ggplot2::position_dodge(1),

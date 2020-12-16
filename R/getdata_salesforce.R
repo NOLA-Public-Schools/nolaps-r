@@ -378,6 +378,34 @@ getdata_appschoolranking_1year <- function() {
 
 
 #' @export
+getdata_gradecapacity <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        School_Name__c,
+        Grade__c,
+        Current_Active_Register__c,
+        Current_Live_Register__c
+      from Grade_Capacity__c
+      "
+    )
+  ) %>%
+    dplyr::select(
+      id_gradecapacity = Id,
+      id_account = School_Name__c,
+      grade = Grade__c,
+      currentregister_active = Current_Active_Register__c,
+      currentregister_live = Current_Live_Register__c
+    )
+
+}
+
+
+
+#' @export
 getdata_sibling <- function() {
 
   salesforcer::sf_query(
