@@ -108,7 +108,8 @@ getdata_account_contacts <- function() {
         Id,
         Name,
         School_Code_String__c,
-        Enrollment_POC_Email__c
+        Enrollment_POC_Email__c,
+        Analytics_Reports_Email_s__c
       from Account
       "
     )
@@ -117,7 +118,8 @@ getdata_account_contacts <- function() {
       id_account = Id,
       name_account = Name,
       code_site = School_Code_String__c,
-      email_enrollment = Enrollment_POC_Email__c
+      email_enrollment = Enrollment_POC_Email__c,
+      email_analytics = Analytics_Reports_Email_s__c
     )
 
 }
@@ -387,6 +389,7 @@ getdata_gradecapacity <- function() {
         Id,
         School_Name__c,
         Grade__c,
+        Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c
       from Grade_Capacity__c
@@ -397,6 +400,7 @@ getdata_gradecapacity <- function() {
       id_gradecapacity = Id,
       id_account = School_Name__c,
       grade = Grade__c,
+      seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c
     )

@@ -57,7 +57,7 @@ plot_bar_v_dodge <- function(
       stat = "count",
       ggplot2::aes(label = stat(count)),
       position = ggplot2::position_dodge(1),
-      vjust = -1
+      direction = "y"
     ) +
     ggplot2::scale_fill_manual(values = colors) +
     labels_nolaps_bar(title, subtitle, caption, xlab, ylab, title_legend) +
