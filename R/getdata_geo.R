@@ -2,12 +2,20 @@
 
 
 
+# Credentials -------------------------------------------------------------
+
+
+
 #' @export
 key_googlemaps <- function() {
 
   keyring::key_get("googlemaps")
 
 }
+
+
+
+# Geographies -------------------------------------------------------------
 
 
 
@@ -43,6 +51,38 @@ getdata_zips_orleans <- function() {
 getdata_zips_split <- function() {
 
   sf::st_read(path_data("Geographies/Zip Codes/zips_split.shp"))
+
+}
+
+
+
+# Students ----------------------------------------------------------------
+
+
+
+#' @export
+getdata_student_coordinates <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "student_coordinates")
+  )
+
+}
+
+
+
+# School coordinates ------------------------------------------------------
+
+
+
+#' @export
+getdata_school_coordinates <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema("db_owner", "school_coordinates")
+  )
 
 }
 

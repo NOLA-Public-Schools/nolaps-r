@@ -49,7 +49,8 @@ getdata_account <- function() {
         Name,
         School_Code_String__c,
         Grade_Span__c,
-        School_Status__c
+        School_Status__c,
+        Governance__c
       from Account
       "
     )
@@ -59,7 +60,8 @@ getdata_account <- function() {
       name_account = Name,
       code_site = School_Code_String__c,
       gradespan_nextyear = Grade_Span__c,
-      status = School_Status__c
+      status = School_Status__c,
+      governance = Governance__c
     )
 
 }
@@ -75,6 +77,7 @@ getdata_account_address <- function() {
       select
         Id,
         School_Code_String__c,
+        Grade_Span__c,
         Name,
         BillingStreet,
         BillingCity,
@@ -88,6 +91,7 @@ getdata_account_address <- function() {
       id_account = Id,
       name_account = Name,
       code_site = School_Code_String__c,
+      gradespan_next = Grade_Span__c,
       street = BillingStreet,
       city = BillingCity,
       state = BillingState,
@@ -282,6 +286,47 @@ getdata_app_1year <- function() {
 
 
 #' @export
+getdata_app_claimedschool <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Student__c,
+        OneApp_ID__c,
+        Student_First_Name__c,
+        Student_Last_Name__c,
+        Grade_Applying_For__c,
+        Current_School__c,
+        RecordTypeId
+      from Application__c
+      where
+        CreatedDate >= 2020-11-01T00:00:00Z and
+        Current_School__c != null
+      "
+    ),
+    api_type = "Bulk 2.0"
+  ) %>%
+    dplyr::select(
+      id_app = Id,
+      id_student = Student__c,
+      oneappid = OneApp_ID__c,
+      applicant_firstname = Student_First_Name__c,
+      applicant_lastname = Student_Last_Name__c,
+      grade_applying = Grade_Applying_For__c,
+      id_appschool_claimed = Current_School__c,
+      id_recordtype = RecordTypeId
+    ) %>%
+    dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
+    dplyr::select(-id_recordtype) %>%
+    dplyr::relocate(recordtype)
+
+}
+
+
+
+#' @export
 getdata_appschool <- function() {
 
   salesforcer::sf_query(
@@ -289,6 +334,7 @@ getdata_appschool <- function() {
       "
       select
         Id,
+        Name,
         School_Code__c,
         School__c,
         Is_Valid__c,
@@ -299,6 +345,7 @@ getdata_appschool <- function() {
   ) %>%
     dplyr::select(
       id_appschool = Id,
+      name_appschool = Name,
       code_appschool = School_Code__c,
       id_account = School__c,
       is_valid = Is_Valid__c,
@@ -380,6 +427,66 @@ getdata_appschoolranking_1year <- function() {
 
 
 #' @export
+getdata_appschoolranking_priorities <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        CreatedDate,
+        Application__c,
+        Application_School__c,
+        Rank__c,
+        Verified_Sibling__c
+      from Application_School_Ranking__c
+      where
+        Application_School__c != null and
+        CreatedDate >= 2020-11-01T00:00:00Z
+      "
+    ),
+    api_type = "Bulk 2.0"
+  ) %>%
+    dplyr::select(
+      id_appschoolranking = Id,
+      date_created = CreatedDate,
+      id_app = Application__c,
+      id_appschool = Application_School__c,
+      rank = Rank__c,
+      is_verifiedsibling = Verified_Sibling__c
+    )
+
+}
+
+
+
+#' @export
+getdata_contact <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Email,
+        LastModifiedDate
+      from Contact
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_contact = Id,
+      email = Email,
+      date_modified = LastModifiedDate
+    )
+
+}
+
+
+
+#' @export
 getdata_gradecapacity <- function() {
 
   salesforcer::sf_query(
@@ -403,6 +510,36 @@ getdata_gradecapacity <- function() {
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c
+    )
+
+}
+
+
+
+#' @export
+getdata_guardian <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Student_OneApp_ID__c,
+        Reference_Id__c
+      from Family_Relationship__c
+      where Relationship_to_Student__c in ('Guardian', 'Parent')
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      student_oneappid = Student_OneApp_ID__c,
+      id_relationship = Reference_Id__c
+    ) %>%
+    tidyr::separate(
+      col = id_relationship,
+      into = c("id_contact_student", "id_contact_guardian"),
+      sep = "_"
     )
 
 }
@@ -482,6 +619,87 @@ getdata_student_active <- function() {
       student_lastname = SchoolForce__Student_Last_Name__c,
       grade_current = Current_Grade__c,
       id_account_current = SchoolForce__School__c
+    )
+
+}
+
+
+
+#' @export
+getdata_student_active_address <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        OneApp_ID__c,
+        SchoolForce__Student_First_Name__c,
+        SchoolForce__Student_Last_Name__c,
+        Current_Grade__c,
+        SchoolForce__School__c,
+        SchoolForce__Address__c,
+        SchoolForce__City__c,
+        SchoolForce__State__c,
+        SchoolForce__Zip_Code__c
+      from Schoolforce__Student__c
+      where
+        SchoolForce__Active__c = TRUE and
+        SchoolForce__School__c != null
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_student = Id,
+      oneappid = OneApp_ID__c,
+      student_firstname = SchoolForce__Student_First_Name__c,
+      student_lastname = SchoolForce__Student_Last_Name__c,
+      grade_current = Current_Grade__c,
+      id_account_current = SchoolForce__School__c,
+      student_street = SchoolForce__Address__c,
+      student_city = SchoolForce__City__c,
+      student_state = SchoolForce__State__c,
+      student_zip = SchoolForce__Zip_Code__c
+    )
+
+}
+
+
+
+#' @export
+getdata_student_contact <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        SchoolForce__Contact_Id__c,
+        OneApp_ID__c,
+        SchoolForce__Address__c,
+        SchoolForce__City__c,
+        SchoolForce__State__c,
+        SchoolForce__Zip_Code__c,
+        SchoolForce__Email__c,
+        SchoolForce__Active__c
+      from Schoolforce__Student__c
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_student = Id,
+      id_contact = SchoolForce__Contact_Id__c,
+      oneappid = OneApp_ID__c,
+      student_street = SchoolForce__Address__c,
+      student_city = SchoolForce__City__c,
+      student_state = SchoolForce__State__c,
+      student_zip = SchoolForce__Zip_Code__c,
+      student_email = SchoolForce__Email__c,
+      is_active = SchoolForce__Active__c
     )
 
 }

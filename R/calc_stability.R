@@ -86,7 +86,7 @@ rate_stability_1year <- function(year, x, enrollment, ...) {
 
 
 #' @export
-rate_stability <- function(x, years, ...) {
+rate_stability <- function(x, years, ..., use_current = TRUE) {
 
   years_lookup <- c(years, max(years) + 1)
 
@@ -102,8 +102,13 @@ rate_stability <- function(x, years, ...) {
       AggrDaysEnrlCnt,
       code_site_current
     ) %>%
-    dplyr::collect() %>%
-    dplyr::mutate(SiteCd = code_site_current)
+    dplyr::collect()
+
+  if (use_current == TRUE) {
+
+    enrollment <- enrollment %>% dplyr::mutate(SiteCd = code_site_current)
+
+  }
 
   purrr::map_dfr(years, rate_stability_1year, x, enrollment, ...)
 
