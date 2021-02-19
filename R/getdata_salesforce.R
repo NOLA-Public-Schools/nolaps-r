@@ -487,6 +487,45 @@ getdata_contact <- function() {
 
 
 #' @export
+getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate::today()) {
+
+  salesforcer::sf_query(
+    glue::glue_safe(
+      "
+      select
+        Student__c,
+        Application__c,
+        Id,
+        Student_Has_IEP__c,
+        Student_Has_IFSP__c,
+        Foster_Care_Kinship_Subsidy__c,
+        Residency_Status__c,
+        Student_Parent_Current_Location_Living_A__c
+      from EC_Question_Responses__c
+      where
+        CreatedDate >= {date_start}T00:00:00Z
+        and CreatedDate < {date_end}T00:00:00Z
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_student = Student__c,
+      id_application = Application__c,
+      id_ec_response = Id,
+      has_iep = Student_Has_IEP__c,
+      has_ifsp = Student_Has_IFSP__c,
+      is_foster = Foster_Care_Kinship_Subsidy__c,
+      residency_status = Residency_Status__c,
+      living_arrangement = Student_Parent_Current_Location_Living_A__c
+    )
+
+}
+
+
+
+#' @export
 getdata_gradecapacity <- function() {
 
   salesforcer::sf_query(
@@ -599,6 +638,7 @@ getdata_student_active <- function() {
     glue::glue(
       "
       select
+        SchoolForce__Contact_Id__c,
         Id,
         OneApp_ID__c,
         SchoolForce__Student_First_Name__c,
@@ -613,8 +653,9 @@ getdata_student_active <- function() {
     api_type = "Bulk 2.0"
   ) %>%
     dplyr::select(
-      id_student = Id,
       oneappid = OneApp_ID__c,
+      id_contact = SchoolForce__Contact_Id__c,
+      id_student = Id,
       student_firstname = SchoolForce__Student_First_Name__c,
       student_lastname = SchoolForce__Student_Last_Name__c,
       grade_current = Current_Grade__c,
@@ -757,5 +798,41 @@ getdata_student_3years <- function() {
     )
 
 }
+
+
+
+#' @export
+getdata_student_year <- function(years = c("2020-2021")) {
+
+  years <-
+    stringr::str_flatten(years, "', '") %>%
+    stringr::str_c("('", ., "')")
+
+  salesforcer::sf_query(
+    glue::glue_safe(
+      "
+      select
+        OneApp_ID__c,
+        SchoolForce__Contact_Id__c,
+        Id
+      from Schoolforce__Student__c
+      where
+        School_Year__c in {years}
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      oneappid = OneApp_ID__c,
+      id_contact = SchoolForce__Contact_Id__c,
+      id_student = Id
+    )
+
+}
+
+
+
+
 
 
