@@ -284,15 +284,15 @@ matchcalcs_unassigned_ineligible <- function(x) {
 matchcalcs_summary_stats <- function(x, ...) {
 
   dplyr::count(matchcalcs_guarantee1_only(x), ..., name = "n_guarantee1_only") %>%
-    dplyr::left_join(dplyr::count(matchcalcs_guarantee1_haschoices(x), ..., name = "n_guarantee1_haschoices")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_acceptednew_hasguarantee(x), ..., name = "n_acceptednew_hasguarantee")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_acceptednew_noguarantee(x), ..., name = "n_acceptednew_noguarantee")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_fallback_waiting(x), ..., name = "n_fallback_waiting")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_fallback_full(x), ..., name = "n_fallback_full")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_fallback_ineligible(x), ..., name = "n_fallback_ineligible")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_unassigned_waiting(x), ..., name = "n_unassigned_waiting")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_unassigned_full(x), ..., name = "n_unassigned_full")) %>%
-    dplyr::left_join(dplyr::count(matchcalcs_unassigned_ineligible(x), ..., name = "n_unassigned_ineligible")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_guarantee1_haschoices(x), ..., name = "n_guarantee1_haschoices")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_acceptednew_hasguarantee(x), ..., name = "n_acceptednew_hasguarantee")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_acceptednew_noguarantee(x), ..., name = "n_acceptednew_noguarantee")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_fallback_waiting(x), ..., name = "n_fallback_waiting")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_fallback_full(x), ..., name = "n_fallback_full")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_fallback_ineligible(x), ..., name = "n_fallback_ineligible")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_unassigned_waiting(x), ..., name = "n_unassigned_waiting")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_unassigned_full(x), ..., name = "n_unassigned_full")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_unassigned_ineligible(x), ..., name = "n_unassigned_ineligible")) %>%
     dplyr::mutate(dplyr::across(c(n_guarantee1_only:n_unassigned_ineligible), ~ tidyr::replace_na(., 0)))
 
 }
