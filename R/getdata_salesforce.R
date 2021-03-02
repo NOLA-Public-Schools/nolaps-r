@@ -252,13 +252,18 @@ getdata_app_1year <- function() {
         Secondary_Contact_Number__c,
         Address_Longitude__c,
         Address_Latitude__c,
+        Street_Street_Name__c,
+        City__c,
+        State__c,
+        Zip_Code__c,
         RecordTypeId
       from Application__c
       where
         CreatedDate >= 2020-11-01T00:00:00Z
       "
     ),
-    api_type = "Bulk 2.0"
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       date_created = CreatedDate,
@@ -275,6 +280,10 @@ getdata_app_1year <- function() {
       phone_2 = Secondary_Contact_Number__c,
       lon = Address_Longitude__c,
       lat = Address_Latitude__c,
+      street = Street_Street_Name__c,
+      city = City__c,
+      state = State__c,
+      zip = Zip_Code__c,
       id_recordtype = RecordTypeId
     ) %>%
     dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%

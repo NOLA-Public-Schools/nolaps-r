@@ -68,8 +68,6 @@ rate_stability_1year <- function(year, x, enrollment, ...) {
     dplyr::filter(!is.na(grade_next)) %>%
     dplyr::mutate(is_sameschool = SiteCd == SiteCd_year2)
 
-  # enrollment_years_wide %>% write_csv(glue("stability_studentlevel.csv"), na = "", append = TRUE)
-
   stability <-
     enrollment_years_wide %>%
     dplyr::group_by(BegSchSessYr, ...) %>%
@@ -86,13 +84,21 @@ rate_stability_1year <- function(year, x, enrollment, ...) {
 
 
 #' @export
-rate_stability <- function(x, years, ..., use_current = TRUE) {
+rate_stability <- function(x, years, ..., enrollment = NULL, use_current = TRUE) {
 
   years_lookup <- c(years, max(years) + 1)
 
+  if (is.null(enrollment)) {
+
+    enrollment <-
+      getdata_enrollmentderivation() %>%
+      dplyr::filter(BegSchSessYr %in% years_lookup) %>%
+      dplyr::collect()
+
+  }
+
   enrollment <-
-    getdata_enrollmentderivation() %>%
-    dplyr::filter(BegSchSessYr %in% years_lookup) %>%
+    enrollment %>%
     dplyr::select(
       BegSchSessYr,
       SiteCd,
@@ -101,8 +107,7 @@ rate_stability <- function(x, years, ..., use_current = TRUE) {
       EntryDt, ExitDt,
       AggrDaysEnrlCnt,
       code_site_current
-    ) %>%
-    dplyr::collect()
+    )
 
   if (use_current == TRUE) {
 
