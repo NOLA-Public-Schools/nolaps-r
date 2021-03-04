@@ -607,7 +607,8 @@ getdata_sibling <- function() {
       where Relationship_to_Student__c = 'Sibling'
       "
     ),
-    api_type = "Bulk 2.0"
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       student_oneappid = Student_OneApp_ID__c,
@@ -659,7 +660,8 @@ getdata_student_active <- function() {
         SchoolForce__Active__c = TRUE
       "
     ),
-    api_type = "Bulk 2.0"
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       oneappid = OneApp_ID__c,
