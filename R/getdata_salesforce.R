@@ -844,6 +844,26 @@ getdata_student_year <- function(years = c("2020-2021")) {
 
 
 
+#' @export
+getdata_waitlist <- function() {
 
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Grade__c,
+        School_Name__c
+      from Waitlist_School_Ranking__c
+      where
+        CreatedDate >= 2019-11-01T00:00:00Z and
+        CreatedDate < 2020-11-01T00:00:00Z
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  )
+
+}
 
 
