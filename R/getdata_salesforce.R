@@ -226,7 +226,8 @@ getdata_app <- function() {
     ) %>%
     dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
     dplyr::select(-id_recordtype) %>%
-    dplyr::relocate(recordtype)
+    dplyr::relocate(recordtype) %>%
+    fix_grades(var = grade_applying)
 
 }
 
@@ -862,7 +863,13 @@ getdata_waitlist <- function() {
     ),
     api_type = "Bulk 2.0",
     guess_types = FALSE
-  )
+  ) %>%
+    dplyr::select(
+      id_waitlist = Id,
+      grade_applying = Grade__c,
+      name_school = School_Name__c
+    ) %>%
+    fix_grades(var = grade_applying)
 
 }
 

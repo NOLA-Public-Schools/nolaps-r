@@ -20,6 +20,11 @@ fix_grades <- function(x, var = GRADE) {
 
 
 #' @export
+grades_ec <- function() {c("INF", "1YR", "2YR", "PK3", "PK4")}
+
+
+
+#' @export
 grades_next <- function() {
 
   tibble::tribble(
