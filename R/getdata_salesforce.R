@@ -348,10 +348,12 @@ getdata_appschool <- function() {
         School_Code__c,
         School__c,
         Is_Valid__c,
-        Is_District_School__c
+        Is_District_School__c,
+        AddressLatitudeandLongitude__c
       from Application_School__c
       "
-    )
+    ),
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       id_appschool = Id,
@@ -359,7 +361,8 @@ getdata_appschool <- function() {
       code_appschool = School_Code__c,
       id_account = School__c,
       is_valid = Is_Valid__c,
-      is_districtschool = Is_District_School__c
+      is_districtschool = Is_District_School__c,
+      latlon = AddressLatitudeandLongitude__c
     )
 
 }
@@ -437,10 +440,10 @@ getdata_appschoolranking_1year <- function() {
 
 
 #' @export
-getdata_appschoolranking_priorities <- function() {
+getdata_appschoolranking_priorities <- function(start = date_appstart()) {
 
   salesforcer::sf_query(
-    glue::glue(
+    glue::glue_safe(
       "
       select
         Id,
@@ -448,14 +451,18 @@ getdata_appschoolranking_priorities <- function() {
         Application__c,
         Application_School__c,
         Rank__c,
-        Verified_Sibling__c
+        Verified_Sibling__c,
+        Distance_From_Home__c,
+        In_Proximity_Preference__c,
+        In_School_Zip_Preference__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
-        CreatedDate >= 2020-11-01T00:00:00Z
+        CreatedDate >= {start}
       "
     ),
-    api_type = "Bulk 2.0"
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       id_appschoolranking = Id,
@@ -463,7 +470,24 @@ getdata_appschoolranking_priorities <- function() {
       id_app = Application__c,
       id_appschool = Application_School__c,
       rank = Rank__c,
-      is_verifiedsibling = Verified_Sibling__c
+      is_verifiedsibling = Verified_Sibling__c,
+      distance = Distance_From_Home__c,
+      is_priority_distance = In_Proximity_Preference__c,
+      is_priority_zone = In_School_Zip_Preference__c
+    ) %>%
+    dplyr::mutate(across(c(
+      is_verifiedsibling,
+      is_priority_distance,
+      is_priority_zone
+      ),
+      as.logical
+      )
+    ) %>%
+    dplyr::mutate(across(c(
+      distance
+      ),
+      as.numeric
+      )
     )
 
 }
