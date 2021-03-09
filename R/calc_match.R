@@ -160,6 +160,20 @@ matchcalcs_guarantee1_haschoices <- function(x) {
 
 
 #' @export
+matchcalcs_accepted_belowguarantee <- function(x) {
+
+  x %>%
+    dplyr::filter(
+      !is.na(rank_accepted),
+      !is.na(rank_guaranteed),
+      rank_accepted > rank_guaranteed
+    )
+
+}
+
+
+
+#' @export
 matchcalcs_acceptednew_hasguarantee <- function(x) {
 
   x %>%
@@ -281,10 +295,11 @@ matchcalcs_unassigned_ineligible <- function(x) {
 
 
 #' @export
-matchcalcs_summary_stats <- function(x, ...) {
+matchcalcs_summarystats <- function(x, ...) {
 
   dplyr::count(matchcalcs_guarantee1_only(x), ..., name = "n_guarantee1_only") %>%
     dplyr::full_join(dplyr::count(matchcalcs_guarantee1_haschoices(x), ..., name = "n_guarantee1_haschoices")) %>%
+    dplyr::full_join(dplyr::count(matchcalcs_accepted_belowguarantee(x), ..., name = "n_accepted_belowguarantee")) %>%
     dplyr::full_join(dplyr::count(matchcalcs_acceptednew_hasguarantee(x), ..., name = "n_acceptednew_hasguarantee")) %>%
     dplyr::full_join(dplyr::count(matchcalcs_acceptednew_noguarantee(x), ..., name = "n_acceptednew_noguarantee")) %>%
     dplyr::full_join(dplyr::count(matchcalcs_fallback_waiting(x), ..., name = "n_fallback_waiting")) %>%
@@ -294,6 +309,124 @@ matchcalcs_summary_stats <- function(x, ...) {
     dplyr::full_join(dplyr::count(matchcalcs_unassigned_full(x), ..., name = "n_unassigned_full")) %>%
     dplyr::full_join(dplyr::count(matchcalcs_unassigned_ineligible(x), ..., name = "n_unassigned_ineligible")) %>%
     dplyr::mutate(dplyr::across(c(n_guarantee1_only:n_unassigned_ineligible), ~ tidyr::replace_na(., 0)))
+
+}
+
+
+
+#' @export
+matchcalcs_summarycols <- function(x) {
+
+  x %>%
+    dplyr::mutate(
+      assigned = n_acceptednew_hasguarantee + n_acceptednew_noguarantee,
+      fallback_not_ineligible = n_fallback_waiting + n_fallback_full,
+      unassigned = n_unassigned_waiting + n_unassigned_full + n_unassigned_ineligible,
+      subtotal = assigned + fallback_not_ineligible + unassigned,
+      prop_assigned = assigned / subtotal,
+      prop_fallback_not_ineligible = fallback_not_ineligible / subtotal,
+      prop_unassigned = unassigned / subtotal
+    ) %>%
+    dplyr::select(
+      GRADE,
+      assigned,
+      fallback_not_ineligible,
+      unassigned,
+      subtotal,
+      prop_assigned,
+      prop_fallback_not_ineligible,
+      prop_unassigned,
+      tidyselect::everything()
+    )
+
+}
+
+
+
+#' @export
+matchcalcs_summaryrow <- function(x, row_name) {
+
+  x %>%
+    dplyr::select(n_guarantee1_only:n_unassigned_ineligible) %>%
+    colSums() %>%
+    dplyr::bind_rows() %>%
+    dplyr::mutate(GRADE = row_name) %>%
+    matchcalcs_summarycols()
+
+}
+
+
+
+#' @export
+matchcalcs_summarystats_full <- function(x, schools_waitlist = c("323", "324", "846", "847")) {
+
+  with_bin_grade <-
+    x %>%
+    matchcalcs_participants_all(schools_waitlist) %>%
+    matchcalcs_summarystats(GRADE) %>%
+    fix_grades() %>%
+    dplyr::arrange(GRADE) %>%
+    dplyr::mutate(
+      is_inf_2yr = GRADE %in% c("INF", "1YR", "2YR"),
+      is_pk3_pk4 = GRADE %in% c("PK3", "PK4"),
+      is_k_8 = GRADE %in% c("K", "1", "2", "3", "4", "5", "6", "7", "8"),
+      is_9_12 = GRADE %in% c("9", "10", "11", "12"),
+      is_k_12 = GRADE %in% c("K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"),
+      is_pk4_12 = GRADE %in% c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+    )
+
+  summary_inf_2yr <-
+    with_bin_grade %>%
+    dplyr::filter(is_inf_2yr) %>%
+    matchcalcs_summaryrow("Grades INF - 2YR")
+
+  summary_pk3_pk4 <-
+    with_bin_grade %>%
+    dplyr::filter(is_pk3_pk4) %>%
+    matchcalcs_summaryrow("Grades PK3 - PK4")
+
+  summary_k_8 <-
+    with_bin_grade %>%
+    dplyr::filter(is_k_8) %>%
+    matchcalcs_summaryrow("Grades K - 8")
+
+  summary_9_12 <-
+    with_bin_grade %>%
+    dplyr::filter(is_9_12) %>%
+    matchcalcs_summaryrow("Grades 9 - 12")
+
+  summary_k_12 <-
+    with_bin_grade %>%
+    dplyr::filter(is_k_12) %>%
+    matchcalcs_summaryrow("Grades K - 12")
+
+  summary_pk4_12 <-
+    with_bin_grade %>%
+    dplyr::filter(is_pk4_12) %>%
+    matchcalcs_summaryrow("Grades PK4 - 12")
+
+  summary_inf_12 <-
+    with_bin_grade %>%
+    matchcalcs_summaryrow("Grades INF - 12")
+
+  summary_all <-
+    with_bin_grade %>%
+    dplyr::select(GRADE:n_unassigned_ineligible) %>%
+    matchcalcs_summarycols()
+
+  summarystats <-
+    dplyr::bind_rows(
+      summary_all,
+      summary_inf_2yr,
+      summary_pk3_pk4,
+      summary_k_8,
+      summary_9_12,
+      summary_k_12,
+      summary_pk4_12,
+      summary_inf_12
+    )
+
+  summarystats
 
 }
 

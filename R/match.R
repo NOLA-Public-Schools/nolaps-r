@@ -12,7 +12,7 @@ match_augment <- function(x) {
   students <-
     getdata_student_active() %>%
     dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    dplyr::select(oneappid, grade_current, school_current = name_account)
+    dplyr::select(oneappid, id_student, grade_current, school_current = name_account)
 
   names_matchschool <-
     appschools %>%
@@ -31,11 +31,28 @@ match_augment <- function(x) {
 #' @export
 match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
-  match <- readr::read_csv(args[1], col_types = stringr::str_dup("c", 39))
+  dir_in <- args[1]
+  dir_out <- args[2]
+
+  match <- readr::read_csv(glue::glue("{dir_in}/3_MasterMatch.csv"), col_types = stringr::str_dup("c", 39))
 
   match %>%
     match_augment() %>%
-    readr::write_excel_csv(args[2], na = "")
+    readr::write_excel_csv(glue::glue("{dir_out}/match_to_review.csv"), na = "")
+
+  results <- match %>% matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
+
+  results %>% readr::write_excel_csv(glue::glue("{dir_out}/results_by_student.csv"), na = "")
+
+  results %>%
+    dplyr::slice_sample(n = 30) %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/reviewsample_match_versus_upstream.csv"), na = "")
+
+  match %>%
+    matchcalcs_summarystats_full(schools_waitlist = c("323", "324", "846", "847")) %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/summarystats.csv"), na = "")
+
+  print("Done!")
 
 }
 
