@@ -5,18 +5,24 @@
 #' @export
 match_augment <- function(x) {
 
+  appschools <- getdata_appschool()
+
+  accounts <- getdata_account()
+
   students <-
     getdata_student_active() %>%
-    dplyr::select(oneappid, grade_current, id_account_current)
+    dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
+    dplyr::select(oneappid, grade_current, school_current = name_account)
 
-  accounts <-
-    getdata_account() %>%
-    dplyr::select(id_account, school_current = name_account)
+  names_matchschool <-
+    appschools %>%
+    dplyr::left_join(accounts, by = c("id_account")) %>%
+    dplyr::select(code_appschool, choice_name = name_account) %>%
+    dplyr::distinct()
 
   x %>%
-    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    dplyr::relocate(c(`STUDENT ID`, grade_current, school_current))
+    dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid"))
 
 }
 
