@@ -12,13 +12,24 @@ match_augment <- function(x) {
   students <-
     getdata_student_active() %>%
     dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    dplyr::select(oneappid, id_student, grade_current, school_current = name_account)
+    dplyr::select(
+      oneappid, id_student, directcert_medicaid, directcert_snap,
+      grade_current, school_current = name_account, grade_terminal
+    )
+
+  funding <-
+    appschools %>%
+    dplyr::select(code_appschool, choice_funding = ec_type) %>%
+    dplyr::distinct() %>%
+    dplyr::filter(!is.na(choice_funding))
 
   names_matchschool <-
     appschools %>%
     dplyr::left_join(accounts, by = c("id_account")) %>%
     dplyr::select(code_appschool, choice_name = name_account) %>%
     dplyr::distinct()
+  # %>%
+  #   dplyr::left_join(funding, by = c("code_appschool"))
 
   x %>%
     dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
@@ -61,7 +72,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   match %>%
     matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`) %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes_summary.csv"), na = "")
+    readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes_school.csv"), na = "")
+
+  match %>%
+    matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes_school_grade.csv"), na = "")
 
   print("Done!")
 

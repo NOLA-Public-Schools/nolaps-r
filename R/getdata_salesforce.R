@@ -37,7 +37,6 @@ mutate_code_site_group <- function(x) {
 
 
 
-
 #' @export
 getdata_account <- function() {
 
@@ -49,19 +48,22 @@ getdata_account <- function() {
         Name,
         School_Code_String__c,
         Grade_Span__c,
-        School_Status__c,
-        Governance__c
+        Terminal_Grade__c,
+        Governance__c,
+        School_Status__c
       from Account
       "
-    )
+    ),
+    guess_types = FALSE
   ) %>%
     dplyr::select(
       id_account = Id,
       name_account = Name,
       code_site = School_Code_String__c,
       gradespan_nextyear = Grade_Span__c,
-      status = School_Status__c,
-      governance = Governance__c
+      grade_terminal = Terminal_Grade__c,
+      governance = Governance__c,
+      status = School_Status__c
     )
 
 }
@@ -347,6 +349,7 @@ getdata_appschool <- function() {
         Name,
         School_Code__c,
         School__c,
+        EC_Program_Type__c,
         Is_Valid__c,
         Is_District_School__c,
         AddressLatitudeandLongitude__c
@@ -360,6 +363,7 @@ getdata_appschool <- function() {
       name_appschool = Name,
       code_appschool = School_Code__c,
       id_account = School__c,
+      ec_type = EC_Program_Type__c,
       is_valid = Is_Valid__c,
       is_districtschool = Is_District_School__c,
       latlon = AddressLatitudeandLongitude__c
@@ -673,11 +677,13 @@ getdata_student_active <- function() {
     glue::glue(
       "
       select
+        OneApp_ID__c,
         SchoolForce__Contact_Id__c,
         Id,
-        OneApp_ID__c,
         SchoolForce__Student_First_Name__c,
         SchoolForce__Student_Last_Name__c,
+        Direct_Cert_Medicaid__c,
+        Direct_Cert_SNAP__c,
         Current_Grade__c,
         SchoolForce__School__c
       from Schoolforce__Student__c
@@ -694,6 +700,8 @@ getdata_student_active <- function() {
       id_student = Id,
       student_firstname = SchoolForce__Student_First_Name__c,
       student_lastname = SchoolForce__Student_Last_Name__c,
+      directcert_medicaid = Direct_Cert_Medicaid__c,
+      directcert_snap = Direct_Cert_SNAP__c,
       grade_current = Current_Grade__c,
       id_account_current = SchoolForce__School__c
     )
