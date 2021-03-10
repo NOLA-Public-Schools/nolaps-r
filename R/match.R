@@ -34,11 +34,14 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   dir_in <- args[1]
   dir_out <- args[2]
 
-  match <- readr::read_csv(glue::glue("{dir_in}/3_MasterMatch.csv"), col_types = stringr::str_dup("c", 39))
+  match <-
+    readr::read_csv(
+      glue::glue("{dir_in}/3_MasterMatch.csv"),
+      col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
+      ) %>%
+    match_augment()
 
-  match %>%
-    match_augment() %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/match_to_review.csv"), na = "")
+  match %>% readr::write_excel_csv(glue::glue("{dir_out}/match_to_review.csv"), na = "")
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
 
@@ -46,11 +49,19 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   results %>%
     dplyr::slice_sample(n = 30) %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/reviewsample_match_versus_upstream.csv"), na = "")
+    readr::write_excel_csv(glue::glue("{dir_out}/review_sample.csv"), na = "")
 
   match %>%
     matchcalcs_summarystats_full(schools_waitlist = c("323", "324", "846", "847")) %>%
     readr::write_excel_csv(glue::glue("{dir_out}/summarystats.csv"), na = "")
+
+  match %>%
+    matchcalcs_priorityoutcomes() %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes.csv"), na = "")
+
+  match %>%
+    matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`) %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes_summary.csv"), na = "")
 
   print("Done!")
 

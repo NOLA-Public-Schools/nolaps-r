@@ -490,3 +490,53 @@ matchcalcs_results_seekingnew <- function(
 }
 
 
+
+
+# Priority summaries ------------------------------------------------------
+
+
+
+#' @export
+matchcalcs_priorityoutcomes <- function(x) {
+
+  x %>%
+    dplyr::select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`) %>%
+    dplyr::mutate(dplyr::across(`QUALIFIED PRIORITIES`, ~ stringr::str_remove(., "/$"))) %>%
+    tidyr::separate_rows(`QUALIFIED PRIORITIES`, sep = "/") %>%
+    dplyr::mutate(has = 1) %>%
+    tidyr::pivot_wider(names_from = `QUALIFIED PRIORITIES`, values_from = has) %>%
+    dplyr::select(-`NA`) %>%
+    fix_grades() %>%
+    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
+    dplyr::relocate(
+      c(
+        Guaranteed,
+        IEP,
+        Sibling,
+        `Child of Student`,
+        Geography,
+        Feeder,
+        `Staff Child`
+      ),
+      .after = `STUDENT ID`
+    ) %>%
+    dplyr::relocate(c(`Priority Score`, Ineligible), .after = tidyselect::last_col())
+
+}
+
+
+
+#' @export
+matchcalcs_priorityoutcomes_summary <- function(x, ...) {
+
+  x %>%
+    matchcalcs_priorityoutcomes() %>%
+    dplyr::group_by(...) %>%
+    dplyr::summarize(
+      n_applicants = dplyr::n(),
+      dplyr::across(c(Guaranteed:Ineligible), list(count = ~ sum(.x, na.rm = TRUE), rate = ~ sum(.x, na.rm = TRUE) / n_applicants))
+    )
+
+}
+
+
