@@ -33,6 +33,17 @@ match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
     ) %>%
     nrow()
 
+  n_apps_with_choices <- nrow(apps_with_choices)
+
+  n_apps_with_choices_in_match <-
+    apps_with_choices %>%
+    dplyr::filter(
+      oneappid %in% match$`STUDENT ID`
+    ) %>%
+    nrow()
+
+
+
   testthat::test_that("All match records in Salesforce", {
 
     testthat::expect_identical(n_match, n_match_in_salesforce)
@@ -45,6 +56,23 @@ match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
       dplyr::select(`STUDENT ID`) %>%
       dplyr::slice_sample(n = 10)
   )
+
+
+
+  testthat::test_that("All applications with a choice are in match", {
+
+    testthat::expect_identical(n_apps_with_choices, n_apps_with_choices_in_match)
+
+  })
+
+  print(
+    apps_with_choices %>%
+      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      dplyr::select(oneappid) %>%
+      dplyr::slice_sample(n = 10)
+  )
+
+
 
   print("Done!")
 
