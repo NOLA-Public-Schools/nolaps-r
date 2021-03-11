@@ -685,7 +685,8 @@ getdata_student_active <- function() {
         Direct_Cert_Medicaid__c,
         Direct_Cert_SNAP__c,
         Current_Grade__c,
-        SchoolForce__School__c
+        SchoolForce__School__c,
+        Is_Student_In_Terminal_Grade__c
       from Schoolforce__Student__c
       where
         SchoolForce__Active__c = TRUE
@@ -703,7 +704,8 @@ getdata_student_active <- function() {
       directcert_medicaid = Direct_Cert_Medicaid__c,
       directcert_snap = Direct_Cert_SNAP__c,
       grade_current = Current_Grade__c,
-      id_account_current = SchoolForce__School__c
+      id_account_current = SchoolForce__School__c,
+      is_terminalgrade = Is_Student_In_Terminal_Grade__c
     )
 
 }

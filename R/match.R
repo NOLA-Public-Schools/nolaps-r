@@ -49,7 +49,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
-      ) %>%
+    ) %>%
     match_augment()
 
   match %>% readr::write_excel_csv(glue::glue("{dir_out}/match_to_review.csv"), na = "")
@@ -77,6 +77,12 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   match %>%
     matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
     readr::write_excel_csv(glue::glue("{dir_out}/priorityoutcomes_school_grade.csv"), na = "")
+
+
+
+  match_test(args = args)
+
+
 
   print("Done!")
 
