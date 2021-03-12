@@ -259,6 +259,7 @@ getdata_app_1year <- function() {
         City__c,
         State__c,
         Zip_Code__c,
+        Address_Validated__c,
         RecordTypeId
       from Application__c
       where
@@ -287,6 +288,7 @@ getdata_app_1year <- function() {
       city = City__c,
       state = State__c,
       zip = Zip_Code__c,
+      is_addressvalidated = Address_Validated__c,
       id_recordtype = RecordTypeId
     ) %>%
     dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
@@ -352,7 +354,21 @@ getdata_appschool <- function() {
         EC_Program_Type__c,
         Is_Valid__c,
         Is_District_School__c,
-        AddressLatitudeandLongitude__c
+        AddressLatitudeandLongitude__c,
+        Grade_PK4_Zip_Preference__c,
+        Grade_K_Zip_Preference__c,
+        Grade_1_Zip_Preference__c,
+        Grade_2_Zip_Preference__c,
+        Grade_3_Zip_Preference__c,
+        Grade_4_Zip_Preference__c,
+        Grade_5_Zip_Preference__c,
+        Grade_6_Zip_Preference__c,
+        Grade_7_Zip_Preference__c,
+        Grade_8_Zip_Preference__c,
+        Grade_9_Zip_Preference__c,
+        Grade_10_Zip_Preference__c,
+        Grade_11_Zip_Preference__c,
+        Grade_12_Zip_Preference__c
       from Application_School__c
       "
     ),
@@ -366,7 +382,21 @@ getdata_appschool <- function() {
       ec_type = EC_Program_Type__c,
       is_valid = Is_Valid__c,
       is_districtschool = Is_District_School__c,
-      latlon = AddressLatitudeandLongitude__c
+      latlon = AddressLatitudeandLongitude__c,
+      zonepref_PK4 = Grade_PK4_Zip_Preference__c,
+      zonepref_K = Grade_K_Zip_Preference__c,
+      zonepref_1 = Grade_1_Zip_Preference__c,
+      zonepref_2 = Grade_2_Zip_Preference__c,
+      zonepref_3 = Grade_3_Zip_Preference__c,
+      zonepref_4 = Grade_4_Zip_Preference__c,
+      zonepref_5 = Grade_5_Zip_Preference__c,
+      zonepref_6 = Grade_6_Zip_Preference__c,
+      zonepref_7 = Grade_7_Zip_Preference__c,
+      zonepref_8 = Grade_8_Zip_Preference__c,
+      zonepref_9 = Grade_9_Zip_Preference__c,
+      zonepref_10 = Grade_10_Zip_Preference__c,
+      zonepref_11 = Grade_11_Zip_Preference__c,
+      zonepref_12 = Grade_12_Zip_Preference__c
     )
 
 }
