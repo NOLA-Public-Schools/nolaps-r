@@ -7,16 +7,6 @@ match_test <- function(match, dir_out) {
 
 
 
-  # dir_in <- args[1]
-  #
-  # match <-
-  #   readr::read_csv(
-  #     glue::glue("{dir_in}/3_MasterMatch.csv"),
-  #     col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
-  #   )
-
-
-
   apps <- getdata_app_1year() %>% dplyr::filter(recordtype == "Round 1")
 
   choices <- getdata_appschoolranking_1year() %>% dplyr::filter(id_app %in% apps$id_app)

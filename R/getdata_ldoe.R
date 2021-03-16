@@ -98,6 +98,18 @@ getdata_disadvantage <- function() {
 
 
 #' @export
+getdata_discipline <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe_test(),
+    dbplyr::in_schema('db_owner', 'discipline')
+  )
+
+}
+
+
+
+#' @export
 getdata_enrollmentderivation <- function() {
 
   dplyr::tbl(
