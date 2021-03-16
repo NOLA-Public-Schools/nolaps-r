@@ -80,7 +80,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  match_test(args = args)
+  match_test(match = match, dir_out = dir_out)
 
 
 

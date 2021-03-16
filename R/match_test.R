@@ -3,17 +3,17 @@
 
 
 #' @export
-match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
+match_test <- function(match, dir_out) {
 
 
 
-  dir_in <- args[1]
-
-  match <-
-    readr::read_csv(
-      glue::glue("{dir_in}/3_MasterMatch.csv"),
-      col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
-    )
+  # dir_in <- args[1]
+  #
+  # match <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_in}/3_MasterMatch.csv"),
+  #     col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
+  #   )
 
 
 
@@ -68,12 +68,14 @@ match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   })
 
-  print(
+  missing_from_salesforce <-
     match %>%
-      dplyr::filter(!(`STUDENT ID` %in% apps_with_choices$oneappid | `STUDENT ID` %in% students$oneappid)) %>%
-      dplyr::select(`STUDENT ID`) %>%
-      dplyr::slice_sample(n = 10)
-  )
+    dplyr::filter(!(`STUDENT ID` %in% apps_with_choices$oneappid | `STUDENT ID` %in% students$oneappid)) %>%
+    dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
+    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+
+  missing_from_salesforce %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/missing_from_salesforce.csv"), na = "")
 
 
 
@@ -83,12 +85,14 @@ match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   })
 
-  print(
+  missing_apps_with_choices <-
     apps_with_choices %>%
-      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      dplyr::select(oneappid, id_app) %>%
-      dplyr::slice_sample(n = 10)
-  )
+    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    dplyr::select(oneappid, id_student, id_app) %>%
+    dplyr::arrange(oneappid)
+
+  missing_apps_with_choices %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/missing_apps_with_choices.csv"), na = "")
 
 
 
@@ -98,12 +102,14 @@ match_test <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   })
 
-  print(
+  missing_students_nonterminal <-
     students %>%
-      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      dplyr::select(oneappid, id_student) %>%
-      dplyr::slice_sample(n = 10)
-  )
+    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
+    dplyr::arrange(school_current, grade_current, oneappid)
+
+  missing_students_nonterminal %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/missing_students_nonterminal.csv"), na = "")
 
 
 
