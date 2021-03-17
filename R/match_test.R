@@ -50,6 +50,18 @@ match_test <- function(match, dir_out) {
     dplyr::filter(oneappid %in% match$`STUDENT ID`) %>%
     nrow()
 
+  bad_match_grades <-
+    match %>%
+    dplyr::left_join(
+      getdata_appschool_with_account_gradespan(),
+      by = c("CHOICE SCHOOL" = "code_appschool")
+    ) %>%
+    dplyr::rowwise() %>%
+    dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
+    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+
 
 
   testthat::test_that("All match records are in Salesforce", {
@@ -100,6 +112,17 @@ match_test <- function(match, dir_out) {
 
   missing_students_nonterminal %>%
     readr::write_excel_csv(glue::glue("{dir_out}/missing_students_nonterminal.csv"), na = "")
+
+
+
+  testthat::test_that("No match record involves a grade that will not exist next year", {
+
+    testthat::expect_identical(nrow(bad_match_grades), 0)
+
+  })
+
+  bad_match_grades %>%
+    readr::write_excel_csv(glue::glue("{dir_out}/bad_match_grades.csv"), na = "")
 
 
 

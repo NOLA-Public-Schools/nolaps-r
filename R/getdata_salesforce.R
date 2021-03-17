@@ -133,6 +133,21 @@ getdata_account_contacts <- function() {
 
 
 #' @export
+getdata_account_gradespan <- function() {
+
+  getdata_account() %>%
+    dplyr::select(id_account, gradespan_nextyear) %>%
+    tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
+    fix_grades(gradespan_nextyear) %>%
+    dplyr::arrange(gradespan_nextyear) %>%
+    dplyr::group_by(id_account) %>%
+    dplyr::summarize(gradespan_nextyear_vector = list(gradespan_nextyear))
+
+}
+
+
+
+#' @export
 getdata_account_open <- function() {
 
   salesforcer::sf_query(
@@ -398,6 +413,35 @@ getdata_appschool <- function() {
       zonepref_11 = Grade_11_Zip_Preference__c,
       zonepref_12 = Grade_12_Zip_Preference__c
     )
+
+}
+
+
+
+#' @export
+getdata_appschool_with_account_gradespan <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        School_Code__c,
+        School__r.Grade_Span__c
+      from Application_School__c
+      "
+    ),
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      code_appschool = School_Code__c,
+      gradespan_nextyear = School__r.Grade_Span__c
+    ) %>%
+    dplyr::distinct() %>%
+    tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
+    fix_grades(gradespan_nextyear) %>%
+    dplyr::arrange(gradespan_nextyear) %>%
+    dplyr::group_by(code_appschool) %>%
+    dplyr::summarize(gradespan_nextyear_vector = list(gradespan_nextyear))
 
 }
 
