@@ -559,11 +559,12 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
     glue::glue_safe(
       "
       select
-        Id,
-        CreatedDate,
+        Application__r.OneApp_ID__c,
         Application__c,
-        Application_School__c,
+        Id,
         Rank__c,
+        Application_School__c,
+        Application_School__r.School_Code__c,
         Verified_Sibling__c,
         Distance_From_Home__c,
         In_Proximity_Preference__c,
@@ -571,6 +572,8 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
       from Application_School_Ranking__c
       where
         Application_School__c != null and
+        Application__r.RecordType.Name = 'Round 1' and
+        Application__r.CreatedDate >= {start} and
         CreatedDate >= {start}
       "
     ),
@@ -578,11 +581,12 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
     guess_types = FALSE
   ) %>%
     dplyr::select(
-      id_appschoolranking = Id,
-      date_created = CreatedDate,
+      oneappid = Application__r.OneApp_ID__c,
       id_app = Application__c,
-      id_appschool = Application_School__c,
+      id_appschoolranking = Id,
       rank = Rank__c,
+      id_appschool = Application_School__c,
+      code_appschool = Application_School__r.School_Code__c,
       is_verifiedsibling = Verified_Sibling__c,
       distance = Distance_From_Home__c,
       is_priority_distance = In_Proximity_Preference__c,

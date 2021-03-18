@@ -24,33 +24,82 @@ match_test <- function(match, dir_out) {
 
 
 
-  n_match <- nrow(match)
+# Invalid match records ---------------------------------------------------
 
-  n_match_in_salesforce <-
+
+
+  missing_from_salesforce <-
     match %>%
-    dplyr::filter(
-      `STUDENT ID` %in% apps_with_choices$oneappid
-      | `STUDENT ID` %in% students$oneappid
-    ) %>%
-    nrow()
+    dplyr::filter(!(`STUDENT ID` %in% apps_with_choices$oneappid | `STUDENT ID` %in% students$oneappid)) %>%
+    dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
+    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-  n_apps_with_choices <- nrow(apps_with_choices)
+  testthat::test_that("All match records are in Salesforce", {
 
-  n_apps_with_choices_in_match <-
+    testthat::expect_equal(nrow(missing_from_salesforce), 0)
+
+  })
+
+  if (nrow(missing_from_salesforce) > 0) {
+
+    missing_from_salesforce %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/missing_from_salesforce.csv"), na = "")
+
+  }
+
+
+
+# Missing match records ---------------------------------------------------
+
+
+
+  missing_apps_with_choices <-
     apps_with_choices %>%
-    dplyr::filter(
-      oneappid %in% match$`STUDENT ID`
-    ) %>%
-    nrow()
+    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    dplyr::select(oneappid, id_student, id_app) %>%
+    dplyr::arrange(oneappid)
 
-  n_students_nonterminal <- nrow(students)
+  testthat::test_that("All applications with a choice are in match", {
 
-  n_students_nonterminal_in_match <-
+    testthat::expect_equal(nrow(missing_apps_with_choices), 0)
+
+  })
+
+  if (nrow(missing_apps_with_choices) > 0) {
+
+    missing_apps_with_choices %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/missing_apps_with_choices.csv"), na = "")
+
+  }
+
+
+
+  missing_students_nonterminal <-
     students %>%
-    dplyr::filter(oneappid %in% match$`STUDENT ID`) %>%
-    nrow()
+    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
+    dplyr::arrange(school_current, grade_current, oneappid)
 
-  bad_match_grades <-
+  testthat::test_that("All non-terminal current students are in match", {
+
+    testthat::expect_equal(nrow(missing_students_nonterminal), 0)
+
+  })
+
+  if (nrow(missing_students_nonterminal) > 0) {
+
+    missing_students_nonterminal %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/missing_students_nonterminal.csv"), na = "")
+
+  }
+
+
+
+# Non-existent grades -----------------------------------------------------
+
+
+
+  grades_nonexistent <-
     match %>%
     dplyr::left_join(
       getdata_appschool_with_account_gradespan(),
@@ -62,79 +111,18 @@ match_test <- function(match, dir_out) {
     dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
     dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-
-
-# -------------------------------------------------------------------------
-
-
-
-  testthat::test_that("All match records are in Salesforce", {
-
-    testthat::expect_identical(n_match, n_match_in_salesforce)
-
-  })
-
-  missing_from_salesforce <-
-    match %>%
-    dplyr::filter(!(`STUDENT ID` %in% apps_with_choices$oneappid | `STUDENT ID` %in% students$oneappid)) %>%
-    dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
-    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
-
-  missing_from_salesforce %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/missing_from_salesforce.csv"), na = "")
-
-
-
-# -------------------------------------------------------------------------
-
-
-
-  testthat::test_that("All applications with a choice are in match", {
-
-    testthat::expect_identical(n_apps_with_choices, n_apps_with_choices_in_match)
-
-  })
-
-  missing_apps_with_choices <-
-    apps_with_choices %>%
-    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(oneappid, id_student, id_app) %>%
-    dplyr::arrange(oneappid)
-
-  missing_apps_with_choices %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/missing_apps_with_choices.csv"), na = "")
-
-
-
-  testthat::test_that("All non-terminal current students are in match", {
-
-    testthat::expect_identical(n_students_nonterminal, n_students_nonterminal_in_match)
-
-  })
-
-  missing_students_nonterminal <-
-    students %>%
-    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
-    dplyr::arrange(school_current, grade_current, oneappid)
-
-  missing_students_nonterminal %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/missing_students_nonterminal.csv"), na = "")
-
-
-
-# -------------------------------------------------------------------------
-
-
-
   testthat::test_that("No match record involves a grade that will not exist next year", {
 
-    testthat::expect_identical(nrow(bad_match_grades), 0)
+    testthat::expect_equal(nrow(grades_nonexistent), 0)
 
   })
 
-  bad_match_grades %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/bad_match_grades.csv"), na = "")
+  if (nrow(grades_nonexistent) > 0) {
+
+    grades_nonexistent %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/grades_nonexistent.csv"), na = "")
+
+  }
 
 
 
@@ -142,14 +130,16 @@ match_test <- function(match, dir_out) {
 
 # TODO same grade issues
 
-# -------------------------------------------------------------------------
+# Eligibility -------------------------------------------------------------
 
 
+
+  asr_eligibility <- getdata_appschoolranking_eligibility()
 
   ineligible_accepted <-
     match %>%
     dplyr::left_join(
-      getdata_appschoolranking_eligibility(),
+      asr_eligibility,
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::filter(eligibility == "Ineligible") %>%
@@ -162,9 +152,9 @@ match_test <- function(match, dir_out) {
       id_appschoolranking, programtype, eligibility
     )
 
-  testthat::test_that("No student is assigned to a choice marked ineligible in Salesforce", {
+  testthat::test_that("No student is assigned to an ineligible choice", {
 
-    testthat::expect_identical(nrow(ineligible_accepted), 0)
+    testthat::expect_equal(nrow(ineligible_accepted), 0)
 
   })
 
@@ -174,6 +164,39 @@ match_test <- function(match, dir_out) {
       readr::write_excel_csv(glue::glue("{dir_out}/ineligible_accepted.csv"), na = "")
 
   }
+
+  ineligible_marked_eligible <-
+    match %>%
+    dplyr::left_join(
+      asr_eligibility,
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+    ) %>%
+    dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible") %>%
+    dplyr::filter(eligibility == "Ineligible") %>%
+    dplyr::select(
+      `STUDENT ID`,
+      `CHOICE RANK`, `CHOICE SCHOOL`,
+      `ASSIGNMENT STATUS`, `ELIGIBLE?`, `GUARANTEED?`,
+      `SEAT TYPE`, `PRIORITY TYPE`, `QUALIFIED PRIORITIES`,
+      id_appschoolranking, programtype, eligibility
+    )
+
+  testthat::test_that("No choice is marked eligible in match but ineligible in Salesforce", {
+
+    testthat::expect_equal(nrow(ineligible_marked_eligible), 0)
+
+  })
+
+  if (nrow(ineligible_marked_eligible) > 0) {
+
+    ineligible_accepted %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/ineligible_marked_eligible.csv"), na = "")
+
+  }
+
+
+
+# Priorities --------------------------------------------------------------
 
 
 
