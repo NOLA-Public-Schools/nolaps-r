@@ -518,6 +518,41 @@ getdata_appschoolranking_1year <- function() {
 
 
 #' @export
+getdata_appschoolranking_eligibility <- function(start = date_appstart()) {
+
+  salesforcer::sf_query(
+    glue::glue_safe(
+      "
+      select
+        Id,
+        Application__r.OneApp_ID__c,
+        Application_School__r.School_Code__c,
+        EC_Program_Type__c,
+        EC_Eligibility__c
+      from Application_School_Ranking__c
+      where
+        Application_School__c != null and
+        Application__r.RecordType.Name = 'Round 1' and
+        Application__r.CreatedDate >= {start} and
+        CreatedDate >= {start}
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_appschoolranking = Id,
+      oneappid = Application__r.OneApp_ID__c,
+      code_appschool = Application_School__r.School_Code__c,
+      programtype = EC_Program_Type__c,
+      eligibility = EC_Eligibility__c
+    )
+
+}
+
+
+
+#' @export
 getdata_appschoolranking_priorities <- function(start = date_appstart()) {
 
   salesforcer::sf_query(

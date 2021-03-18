@@ -45,6 +45,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   dir_in <- args[1]
   dir_out <- args[2]
 
+  # if(!dir.exists()){}
+
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),

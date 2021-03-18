@@ -64,6 +64,10 @@ match_test <- function(match, dir_out) {
 
 
 
+# -------------------------------------------------------------------------
+
+
+
   testthat::test_that("All match records are in Salesforce", {
 
     testthat::expect_identical(n_match, n_match_in_salesforce)
@@ -78,6 +82,10 @@ match_test <- function(match, dir_out) {
 
   missing_from_salesforce %>%
     readr::write_excel_csv(glue::glue("{dir_out}/missing_from_salesforce.csv"), na = "")
+
+
+
+# -------------------------------------------------------------------------
 
 
 
@@ -115,6 +123,10 @@ match_test <- function(match, dir_out) {
 
 
 
+# -------------------------------------------------------------------------
+
+
+
   testthat::test_that("No match record involves a grade that will not exist next year", {
 
     testthat::expect_identical(nrow(bad_match_grades), 0)
@@ -123,6 +135,45 @@ match_test <- function(match, dir_out) {
 
   bad_match_grades %>%
     readr::write_excel_csv(glue::glue("{dir_out}/bad_match_grades.csv"), na = "")
+
+
+
+# -------------------------------------------------------------------------
+
+# TODO same grade issues
+
+# -------------------------------------------------------------------------
+
+
+
+  ineligible_accepted <-
+    match %>%
+    dplyr::left_join(
+      getdata_appschoolranking_eligibility(),
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+    ) %>%
+    dplyr::filter(eligibility == "Ineligible") %>%
+    dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
+    dplyr::select(
+      `STUDENT ID`,
+      `CHOICE RANK`, `CHOICE SCHOOL`,
+      `ASSIGNMENT STATUS`, `ELIGIBLE?`, `GUARANTEED?`,
+      `SEAT TYPE`, `PRIORITY TYPE`, `QUALIFIED PRIORITIES`,
+      id_appschoolranking, programtype, eligibility
+    )
+
+  testthat::test_that("No student is assigned to a choice marked ineligible in Salesforce", {
+
+    testthat::expect_identical(nrow(ineligible_accepted), 0)
+
+  })
+
+  if (nrow(ineligible_accepted) > 0) {
+
+    ineligible_accepted %>%
+      readr::write_excel_csv(glue::glue("{dir_out}/ineligible_accepted.csv"), na = "")
+
+  }
 
 
 
