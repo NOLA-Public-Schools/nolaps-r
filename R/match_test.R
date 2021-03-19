@@ -3,7 +3,30 @@
 
 
 #' @export
-match_test <- function(match, dir_out) {
+filter_priority <- function(x, priority, prioritytable) {
+
+  doesnthave_all <-
+    prioritytable %>%
+    dplyr::filter(Grade == "ALL", {{ priority }} == 0) %>%
+    dplyr::distinct(`School Code`)
+
+  doesnthave_grade <-
+    prioritytable %>%
+    dplyr::filter(Grade != "ALL", {{ priority }} == 0) %>%
+    dplyr::distinct(`School Code`, Grade)
+
+  x %>%
+    dplyr::anti_join(doesnthave_grade, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade")) %>%
+    dplyr::anti_join(doesnthave_all, by = c("CHOICE SCHOOL" = "School Code")) %>%
+    dplyr::filter(is.na(Ineligible)) %>%
+    dplyr::filter(is.na({{ priority }}))
+
+}
+
+
+
+#' @export
+match_test <- function(match, dir_out, prioritytable) {
 
 
 
@@ -189,7 +212,7 @@ match_test <- function(match, dir_out) {
 
   if (nrow(ineligible_marked_eligible) > 0) {
 
-    ineligible_accepted %>%
+    ineligible_marked_eligible %>%
       readr::write_excel_csv(glue::glue("{dir_out}/ineligible_marked_eligible.csv"), na = "")
 
   }
@@ -197,6 +220,52 @@ match_test <- function(match, dir_out) {
 
 
 # Priorities --------------------------------------------------------------
+
+
+
+  match_priorities <-
+    match %>%
+    matchcalcs_priorityoutcomes() %>%
+    dplyr::left_join(
+      getdata_appschoolranking_priorities(),
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+    )
+
+  # Distance
+
+  missing_distance <-
+    match_priorities %>%
+    filter_priority(`Child of Student`, prioritytable) %>%
+    dplyr::filter(is_priority_distance)
+
+  invalid_distance <-
+    match_priorities %>%
+    dplyr::filter(!is.na(`Child of Student`)) %>%
+    dplyr::filter(!is_priority_distance)
+
+  testthat::test_that(
+    "Distance - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_distance), 0)
+      testthat::expect_equal(nrow(invalid_distance), 0)
+
+  })
+
+  write_if_bad <- function(x) {
+
+    if (nrow(x) > 0) {
+
+      filename <- deparse(substitute(x))
+      readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
+
+    }
+
+  }
+
+  write_if_bad(missing_distance)
+  write_if_bad(invalid_distance)
+
+  # Zone
 
 
 

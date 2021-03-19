@@ -59,6 +59,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment() %>%
     fix_grades()
 
+  prioritytable <- readr::read_csv(
+    glue::glue("{dir_in}/Final Inputs/PriorityTable.csv")
+  )
+
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/match_to_review.csv"), na = "")
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
@@ -87,7 +91,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  match_test(match = match, dir_out = dir_review)
+  match_test(match = match, dir_out = dir_review, prioritytable = prioritytable)
 
 
 
