@@ -560,6 +560,7 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
       "
       select
         Application__r.OneApp_ID__c,
+        Application__r.Grade_Applying_For__c,
         Application__c,
         Id,
         Rank__c,
@@ -582,6 +583,7 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
   ) %>%
     dplyr::select(
       oneappid = Application__r.OneApp_ID__c,
+      grade_applying = Application__r.Grade_Applying_For__c,
       id_app = Application__c,
       id_appschoolranking = Id,
       rank = Rank__c,
@@ -799,10 +801,13 @@ getdata_student_active <- function() {
         Direct_Cert_SNAP__c,
         Current_Grade__c,
         SchoolForce__School__c,
+        SchoolForce__School__r.School_Code_String__c,
         Is_Student_In_Terminal_Grade__c
       from Schoolforce__Student__c
       where
-        SchoolForce__Active__c = TRUE
+        SchoolForce__Active__c = TRUE and
+        SchoolForce__School__c != null
+
       "
     ),
     api_type = "Bulk 2.0",
@@ -818,6 +823,7 @@ getdata_student_active <- function() {
       directcert_snap = Direct_Cert_SNAP__c,
       grade_current = Current_Grade__c,
       id_account_current = SchoolForce__School__c,
+      code_site = SchoolForce__School__r.School_Code_String__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c
     )
 

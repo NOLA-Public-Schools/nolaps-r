@@ -64,7 +64,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     glue::glue("{dir_external}/PriorityTable.csv")
   )
 
-  match %>% readr::write_excel_csv(glue::glue("{dir_review}/match_to_review.csv"), na = "")
+  match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
 

@@ -168,36 +168,36 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   asr_eligibility <- getdata_appschoolranking_eligibility()
 
-  ineligible_accepted <-
-    match %>%
-    dplyr::left_join(
-      asr_eligibility,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    dplyr::filter(eligibility == "Ineligible") %>%
-    dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
-    dplyr::select(
-      `STUDENT ID`,
-      `CHOICE RANK`, `CHOICE SCHOOL`,
-      `ASSIGNMENT STATUS`, `ELIGIBLE?`, `GUARANTEED?`,
-      `SEAT TYPE`, `PRIORITY TYPE`, `QUALIFIED PRIORITIES`,
-      id_appschoolranking, programtype, eligibility
-    )
+  # ineligible_accepted <-
+  #   match %>%
+  #   dplyr::left_join(
+  #     asr_eligibility,
+  #     by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+  #   ) %>%
+  #   dplyr::filter(eligibility == "Ineligible") %>%
+  #   dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
+  #   dplyr::select(
+  #     `STUDENT ID`,
+  #     `CHOICE RANK`, `CHOICE SCHOOL`,
+  #     `ASSIGNMENT STATUS`, `ELIGIBLE?`, `GUARANTEED?`,
+  #     `SEAT TYPE`, `PRIORITY TYPE`, `QUALIFIED PRIORITIES`,
+  #     id_appschoolranking, programtype, eligibility
+  #   )
+  #
+  # testthat::test_that("No student is assigned to an ineligible choice", {
+  #
+  #   testthat::expect_equal(nrow(ineligible_accepted), 0)
+  #
+  # })
+  #
+  # if (nrow(ineligible_accepted) > 0) {
+  #
+  #   ineligible_accepted %>%
+  #     readr::write_excel_csv(glue::glue("{dir_out}/ineligible_accepted.csv"), na = "")
+  #
+  # }
 
-  testthat::test_that("No student is assigned to an ineligible choice", {
-
-    testthat::expect_equal(nrow(ineligible_accepted), 0)
-
-  })
-
-  if (nrow(ineligible_accepted) > 0) {
-
-    ineligible_accepted %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/ineligible_accepted.csv"), na = "")
-
-  }
-
-  ineligible_marked_eligible <-
+  invalid_eligibility_partial <-
     match %>%
     dplyr::left_join(
       asr_eligibility,
@@ -215,16 +215,11 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   testthat::test_that("No choice is marked eligible in match but ineligible in Salesforce", {
 
-    testthat::expect_equal(nrow(ineligible_marked_eligible), 0)
+    testthat::expect_equal(nrow(invalid_eligibility_partial), 0)
 
   })
 
-  if (nrow(ineligible_marked_eligible) > 0) {
-
-    ineligible_marked_eligible %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/ineligible_marked_eligible.csv"), na = "")
-
-  }
+  write_if_bad(invalid_eligibility_partial, dir_out)
 
 
 
@@ -239,6 +234,23 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
       getdata_appschoolranking_priorities(),
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     )
+
+  prioritykey <- readr::read_csv(
+    glue::glue("{dir_external}/priority-key.csv")
+  )
+
+  key_feeder <-
+    prioritykey %>%
+    dplyr::select(
+      code_site = `Site Code`,
+      grade_current = `You are in grade`,
+      grade_applying = `And you are applying to`,
+      feeder = `Feeder School (Active Students feed into x)`
+    ) %>%
+    dplyr::filter(feeder != "-") %>%
+    dplyr::distinct()
+
+
 
   # Distance
 
@@ -324,6 +336,49 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   write_if_bad(missing_iep, dir_out)
   write_if_bad(invalid_iep, dir_out)
+
+  # Feeder
+
+  students_feeder <-
+    getdata_student_active() %>%
+    dplyr::filter(code_site %in% key_feeder$code_site) %>%
+    dplyr::select(oneappid, code_site, grade_current) %>%
+    fix_grades(grade_current)
+
+  asr_feeder <-
+    getdata_appschoolranking_priorities() %>%
+    dplyr::filter(oneappid %in% students_feeder$oneappid) %>%
+    dplyr::select(oneappid, grade_applying, code_appschool) %>%
+    fix_grades(grade_applying)
+
+  shouldhave <-
+    asr_feeder %>%
+    dplyr::left_join(students_feeder, by = "oneappid") %>%
+    dplyr::left_join(key_feeder, by = c("code_site", "grade_current", "grade_applying")) %>%
+    dplyr::relocate(c(code_site, grade_current), .before = grade_applying) %>%
+    dplyr::mutate(gets_feeder = stringr::str_detect(feeder, code_appschool)) %>%
+    dplyr::filter(gets_feeder == TRUE)
+
+  missing_feeder <-
+    match_priorities %>%
+    filter_priority(Feeder, prioritytable) %>%
+    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+
+  invalid_feeder <-
+    match_priorities %>%
+    dplyr::filter(!is.na(Feeder)) %>%
+    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+
+  testthat::test_that(
+    "Feeder - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_feeder), 0)
+      testthat::expect_equal(nrow(invalid_feeder), 0)
+
+    })
+
+  write_if_bad(missing_feeder, dir_out)
+  write_if_bad(invalid_feeder, dir_out)
 
 
 
