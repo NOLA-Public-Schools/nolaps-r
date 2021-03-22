@@ -65,24 +65,29 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 
 
-  missing_from_salesforce <-
+  see <-
+    readr::read_csv(
+      glue::glue("{dir_external}/additional-student-information-rows.csv")
+    ) %>%
+    dplyr::pull(`Student ID`)
+
+  invalid_participants <-
     match %>%
-    dplyr::filter(!(`STUDENT ID` %in% apps_with_choices$oneappid | `STUDENT ID` %in% students$oneappid)) %>%
+    dplyr::filter(
+      !(`STUDENT ID` %in% apps_with_choices$oneappid)
+      & !(`STUDENT ID` %in% students$oneappid)
+      & !(`STUDENT ID` %in% see)
+    ) %>%
     dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
     dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-  testthat::test_that("All match records are in Salesforce", {
+  testthat::test_that("All match participants trace back to application, roll-forward, or scholarship file", {
 
-    testthat::expect_equal(nrow(missing_from_salesforce), 0)
+    testthat::expect_equal(nrow(invalid_participants), 0)
 
   })
 
-  if (nrow(missing_from_salesforce) > 0) {
-
-    missing_from_salesforce %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/missing_from_salesforce.csv"), na = "")
-
-  }
+  write_if_bad(invalid_participants, dir_out)
 
 
 
@@ -90,7 +95,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 
 
-  missing_apps_with_choices <-
+  missing_apps <-
     apps_with_choices %>%
     dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
     dplyr::select(oneappid, id_student, id_app) %>%
@@ -98,20 +103,15 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   testthat::test_that("All applications with a choice are in match", {
 
-    testthat::expect_equal(nrow(missing_apps_with_choices), 0)
+    testthat::expect_equal(nrow(missing_apps), 0)
 
   })
 
-  if (nrow(missing_apps_with_choices) > 0) {
-
-    missing_apps_with_choices %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/missing_apps_with_choices.csv"), na = "")
-
-  }
+  write_if_bad(missing_apps)
 
 
 
-  missing_students_nonterminal <-
+  missing_rollforwards <-
     students %>%
     dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
     dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
@@ -119,22 +119,23 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   testthat::test_that("All non-terminal current students are in match", {
 
-    testthat::expect_equal(nrow(missing_students_nonterminal), 0)
+    testthat::expect_equal(nrow(missing_rollforwards), 0)
 
   })
 
-  if (nrow(missing_students_nonterminal) > 0) {
-
-    missing_students_nonterminal %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/missing_students_nonterminal.csv"), na = "")
-
-  }
+  write_if_bad(missing_rollforwards, dir_out)
 
 
 
 # Non-existent grades -----------------------------------------------------
 
 
+
+  autoineligibilities <-
+    readr::read_csv(
+      glue::glue("{dir_external}/auto-ineligibilities.csv"),
+      col_types = "cc"
+    )
 
   invalid_grades <-
     match %>%
@@ -145,8 +146,10 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
     dplyr::rowwise() %>%
     dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
     dplyr::ungroup() %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) >= 9) %>%
     dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
-    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
+    dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
 
   testthat::test_that("No match record involves a grade that will not exist next year", {
 
