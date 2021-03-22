@@ -3,6 +3,20 @@
 
 
 #' @export
+write_if_bad <- function(x, dir_out) {
+
+  if (nrow(x) > 0) {
+
+    filename <- deparse(substitute(x))
+    readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
+
+  }
+
+}
+
+
+
+#' @export
 filter_priority <- function(x, priority, prioritytable) {
 
   doesnthave_all <-
@@ -26,7 +40,7 @@ filter_priority <- function(x, priority, prioritytable) {
 
 
 #' @export
-match_test <- function(match, dir_out, prioritytable) {
+match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 
 
@@ -122,7 +136,7 @@ match_test <- function(match, dir_out, prioritytable) {
 
 
 
-  grades_nonexistent <-
+  invalid_grades <-
     match %>%
     dplyr::left_join(
       getdata_appschool_with_account_gradespan(),
@@ -136,16 +150,11 @@ match_test <- function(match, dir_out, prioritytable) {
 
   testthat::test_that("No match record involves a grade that will not exist next year", {
 
-    testthat::expect_equal(nrow(grades_nonexistent), 0)
+    testthat::expect_equal(nrow(invalid_grades), 0)
 
   })
 
-  if (nrow(grades_nonexistent) > 0) {
-
-    grades_nonexistent %>%
-      readr::write_excel_csv(glue::glue("{dir_out}/grades_nonexistent.csv"), na = "")
-
-  }
+  write_if_bad(invalid_grades, dir_out)
 
 
 
@@ -233,6 +242,10 @@ match_test <- function(match, dir_out, prioritytable) {
 
   # Distance
 
+  validatedgeo <- readr::read_csv(
+    glue::glue("{dir_external}/validated-geo.csv")
+  )
+
   missing_distance <-
     match_priorities %>%
     filter_priority(`Child of Student`, prioritytable) %>%
@@ -251,21 +264,66 @@ match_test <- function(match, dir_out, prioritytable) {
 
   })
 
-  write_if_bad <- function(x) {
-
-    if (nrow(x) > 0) {
-
-      filename <- deparse(substitute(x))
-      readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
-
-    }
-
-  }
-
-  write_if_bad(missing_distance)
-  write_if_bad(invalid_distance)
+  write_if_bad(missing_distance, dir_out)
+  write_if_bad(invalid_distance, dir_out)
 
   # Zone
+
+  missing_zone <-
+    match_priorities %>%
+    filter_priority(`Geography`, prioritytable) %>%
+    dplyr::filter(
+      (is_priority_zone & !(`CHOICE SCHOOL` %in% c("323", "324")))
+      | (is_priority_zone & (`CHOICE SCHOOL` %in% c("323", "324")) & `STUDENT ID` %in% validatedgeo$`OneApp ID`)
+    )
+
+  invalid_zone <-
+    match_priorities %>%
+    dplyr::filter(!is.na(`Geography`)) %>%
+    dplyr::filter(
+      (!is_priority_zone)
+      | (is_priority_zone & (`CHOICE SCHOOL` %in% c("323", "324")) & !(`STUDENT ID` %in% validatedgeo$`OneApp ID`))
+    )
+
+  testthat::test_that(
+    "Zone - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_zone), 0)
+      testthat::expect_equal(nrow(invalid_zone), 0)
+
+    })
+
+  write_if_bad(missing_zone, dir_out)
+  write_if_bad(invalid_zone, dir_out)
+
+  # IEP
+
+  external <- readr::read_csv(glue::glue("{dir_external}/iep.csv"))
+
+  missing_iep <-
+    match_priorities %>%
+    filter_priority(IEP, prioritytable) %>%
+    dplyr::filter(
+      (`STUDENT ID` %in% external$`OneApp ID`)
+    )
+
+  invalid_iep <-
+    match_priorities %>%
+    dplyr::filter(!is.na(IEP)) %>%
+    dplyr::filter(
+      !(`STUDENT ID` %in% external$`OneApp ID`)
+    )
+
+  testthat::test_that(
+    "IEP - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_iep), 0)
+      testthat::expect_equal(nrow(invalid_iep), 0)
+
+    })
+
+  write_if_bad(missing_iep, dir_out)
+  write_if_bad(invalid_iep, dir_out)
 
 
 

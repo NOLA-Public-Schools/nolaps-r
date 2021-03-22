@@ -44,6 +44,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_in <- args[1]
   dir_out <- args[2]
+  dir_external <- glue::glue("{dir_in}/Final Inputs")
 
   dir_business <- glue::glue("{dir_out}/business")
   dir_review <- glue::glue("{dir_out}/review")
@@ -60,7 +61,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     fix_grades()
 
   prioritytable <- readr::read_csv(
-    glue::glue("{dir_in}/Final Inputs/PriorityTable.csv")
+    glue::glue("{dir_external}/PriorityTable.csv")
   )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/match_to_review.csv"), na = "")
@@ -91,7 +92,12 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  match_test(match = match, dir_out = dir_review, prioritytable = prioritytable)
+  match_test(
+    match = match,
+    dir_external = dir_external,
+    dir_out = dir_review,
+    prioritytable = prioritytable
+  )
 
 
 
