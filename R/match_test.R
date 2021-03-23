@@ -226,7 +226,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 
 
-# Priorities --------------------------------------------------------------
+# Guarantees --------------------------------------------------------------
 
 
 
@@ -241,6 +241,74 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   prioritykey <- readr::read_csv(
     glue::glue("{dir_external}/priority-key.csv")
   )
+
+  key_guarantee <-
+    prioritykey %>%
+    dplyr::select(
+      code_site = `Site Code`,
+      grade_current = `You are in grade`,
+      guarantee = `Guaranteed (Active Students have guarantee to x)`,
+    ) %>%
+    dplyr::filter(guarantee != "-") %>%
+    dplyr::distinct()
+
+  students_guarantee <-
+    getdata_student_active() %>%
+    dplyr::filter(code_site %in% key_guarantee$code_site) %>%
+    dplyr::select(oneappid, code_site, grade_current) %>%
+    fix_grades(grade_current)
+
+  appschools <-
+    getdata_appschool() %>%
+    dplyr::distinct(code_appschool, code_site) %>%
+    dplyr::filter(complete.cases(.))
+
+  key_guarantee_fixed <-
+    key_guarantee %>%
+    dplyr::filter(stringr::str_detect(guarantee, "_R$")) %>%
+    dplyr::mutate(guarantee_r = stringr::str_remove(guarantee, "_R")) %>%
+    dplyr::left_join(appschools, by = c("guarantee_r" = "code_site")) %>%
+    dplyr::select(code_site, grade_current, guarantee = code_appschool)
+
+  key_guarantee <-
+    key_guarantee %>%
+    dplyr::filter(stringr::str_detect(guarantee, "_R$", negate = TRUE)) %>%
+    dplyr::bind_rows(key_guarantee_fixed) %>%
+    dplyr::distinct() %>%
+    dplyr::filter(!stringr::str_detect(guarantee, "_N$"))
+
+  shouldhave <-
+    students_guarantee %>%
+    dplyr::left_join(key_guarantee, by = c("code_site", "grade_current")) %>%
+    dplyr::filter(!is.na(guarantee))
+
+  missing_guarantee <-
+    match_priorities %>%
+    dplyr::filter(is.na(Guaranteed)) %>%
+    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee"))
+
+  invalid_guarantee <-
+    match_priorities %>%
+    dplyr::filter(!is.na(Guaranteed)) %>%
+    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9)
+
+  testthat::test_that(
+    "Guarantee - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_guarantee), 0)
+      testthat::expect_equal(nrow(invalid_guarantee), 0)
+
+    })
+
+  write_if_bad(missing_guarantee, dir_out)
+  write_if_bad(invalid_guarantee, dir_out)
+
+
+
+# Priorities --------------------------------------------------------------
+
+
 
   key_feeder <-
     prioritykey %>%
