@@ -92,6 +92,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
+  match_notification(
+    match = match,
+    dir_out = dir_business
+  )
+
   match_test(
     match = match,
     dir_external = dir_external,
