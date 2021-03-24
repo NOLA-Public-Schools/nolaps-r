@@ -63,7 +63,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 # Invalid match records ---------------------------------------------------
 
-
+  print("Invalid match records")
 
   see <-
     readr::read_csv(
@@ -93,7 +93,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 # Missing match records ---------------------------------------------------
 
-
+  print("Missing applications")
 
   missing_apps <-
     apps_with_choices %>%
@@ -109,7 +109,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   write_if_bad(missing_apps)
 
-
+  print("Missing roll-forwards")
 
   missing_rollforwards <-
     students %>%
@@ -129,7 +129,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 # Non-existent grades -----------------------------------------------------
 
-
+  print("Invalid grades")
 
   autoineligibilities <-
     readr::read_csv(
@@ -200,6 +200,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   #
   # }
 
+  print("Invalid eligibility per Salesforce")
+
   invalid_eligibility_partial <-
     match %>%
     dplyr::left_join(
@@ -228,7 +230,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 # Guarantees --------------------------------------------------------------
 
-
+  print("Guarantee")
 
   match_priorities <-
     match %>%
@@ -241,6 +243,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   prioritykey <- readr::read_csv(
     glue::glue("{dir_external}/priority-key.csv")
   )
+
+  external <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
 
   key_guarantee <-
     prioritykey %>%
@@ -291,7 +295,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
     match_priorities %>%
     dplyr::filter(!is.na(Guaranteed)) %>%
     dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9)
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    dplyr::filter(!(`STUDENT ID` %in% external$`OneApp ID`))
 
   testthat::test_that(
     "Guarantee - everyone has it that should; no one has it that shouldn't", {
@@ -325,6 +330,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   # Distance
 
+  print("Distance")
+
   validatedgeo <- readr::read_csv(
     glue::glue("{dir_external}/validated-geo.csv")
   )
@@ -351,6 +358,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   write_if_bad(invalid_distance, dir_out)
 
   # Zone
+
+  print("Zone")
 
   missing_zone <-
     match_priorities %>%
@@ -381,6 +390,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   # IEP
 
+  print("IEP")
+
   external <- readr::read_csv(glue::glue("{dir_external}/iep.csv"))
 
   missing_iep <-
@@ -409,6 +420,8 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   write_if_bad(invalid_iep, dir_out)
 
   # Feeder
+
+  print("Feeder")
 
   students_feeder <-
     getdata_student_active() %>%
