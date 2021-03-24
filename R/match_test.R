@@ -262,25 +262,6 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
     dplyr::select(oneappid, code_site, grade_current) %>%
     fix_grades(grade_current)
 
-  appschools <-
-    getdata_appschool() %>%
-    dplyr::distinct(code_appschool, code_site) %>%
-    dplyr::filter(complete.cases(.))
-
-  key_guarantee_fixed <-
-    key_guarantee %>%
-    dplyr::filter(stringr::str_detect(guarantee, "_R$")) %>%
-    dplyr::mutate(guarantee_r = stringr::str_remove(guarantee, "_R")) %>%
-    dplyr::left_join(appschools, by = c("guarantee_r" = "code_site")) %>%
-    dplyr::select(code_site, grade_current, guarantee = code_appschool)
-
-  key_guarantee <-
-    key_guarantee %>%
-    dplyr::filter(stringr::str_detect(guarantee, "_R$", negate = TRUE)) %>%
-    dplyr::bind_rows(key_guarantee_fixed) %>%
-    dplyr::distinct() %>%
-    dplyr::filter(!stringr::str_detect(guarantee, "_N$"))
-
   shouldhave <-
     students_guarantee %>%
     dplyr::left_join(key_guarantee, by = c("code_site", "grade_current")) %>%
