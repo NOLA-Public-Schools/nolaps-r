@@ -20,7 +20,8 @@ match_notification <- function(match, dir_out) {
   fallback <-
     participants %>%
     dplyr::filter(
-      (`STUDENT ID` %in% matchcalcs_fallback_waiting(participants)$`STUDENT ID`)
+      (`STUDENT ID` %in% matchcalcs_guarantee1_haschoices(participants)$`STUDENT ID`)
+      | (`STUDENT ID` %in% matchcalcs_fallback_waiting(participants)$`STUDENT ID`)
       | (`STUDENT ID` %in% matchcalcs_fallback_full(participants)$`STUDENT ID`)
       | (`STUDENT ID` %in% matchcalcs_fallback_ineligible(participants)$`STUDENT ID`)
     ) %>%
@@ -39,7 +40,6 @@ match_notification <- function(match, dir_out) {
     participants %>%
     dplyr::filter(
       (`STUDENT ID` %in% matchcalcs_guarantee1_only(participants)$`STUDENT ID`)
-      | (`STUDENT ID` %in% matchcalcs_guarantee1_haschoices(participants)$`STUDENT ID`)
     ) %>%
     dplyr::pull(`STUDENT ID`)
 
