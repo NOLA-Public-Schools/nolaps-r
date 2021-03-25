@@ -244,7 +244,12 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
     glue::glue("{dir_external}/priority-key.csv")
   )
 
-  external <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
+  oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
+
+  codes <-
+    getdata_appschool() %>%
+    dplyr::distinct(code_appschool, code_site) %>%
+    dplyr::filter(complete.cases(.))
 
   key_guarantee <-
     prioritykey %>%
@@ -270,14 +275,18 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   missing_guarantee <-
     match_priorities %>%
     dplyr::filter(is.na(Guaranteed)) %>%
-    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee"))
+    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
+    dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
 
   invalid_guarantee <-
     match_priorities %>%
     dplyr::filter(!is.na(Guaranteed)) %>%
     dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::filter(!(`STUDENT ID` %in% external$`OneApp ID`))
+    dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
+    dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+    dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
 
   testthat::test_that(
     "Guarantee - everyone has it that should; no one has it that shouldn't", {
