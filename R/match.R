@@ -3,6 +3,52 @@
 
 
 #' @export
+match_lookup_account <- function(x) {
+
+  accepted <-
+    x %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    dplyr::distinct(code_appschool = `CHOICE SCHOOL`) %>%
+    dplyr::arrange(code_appschool)
+
+  appschools <-
+    getdata_appschool() %>%
+    dplyr::select(code_appschool, code_site, id_account) %>%
+    dplyr::filter(complete.cases(.)) %>%
+    dplyr::distinct()
+
+  accounts <-
+    getdata_account() %>%
+    dplyr::select(code_site, id_account) %>%
+    dplyr::filter(complete.cases(.)) %>%
+    dplyr::distinct()
+
+  schools_scholarship <-
+    accepted %>%
+    dplyr::filter(stringr::str_detect(code_appschool, "_[NR]$")) %>%
+    dplyr::mutate(code_site = stringr::str_remove(code_appschool, "_[NR]$")) %>%
+    dplyr::left_join(accounts, by = c("code_site")) %>%
+    dplyr::select(code_appschool, id_account)
+
+  schools_nonscholarship <-
+    accepted %>%
+    dplyr::filter(stringr::str_detect(code_appschool, "_[NR]$", negate = TRUE)) %>%
+    dplyr::left_join(appschools, by = c("code_appschool")) %>%
+    dplyr::select(code_appschool, id_account)
+
+  lookup_account <-
+    dplyr::bind_rows(
+      schools_scholarship,
+      schools_nonscholarship
+    )
+
+  lookup_account
+
+}
+
+
+
+#' @export
 match_augment <- function(x) {
 
   appschools <- getdata_appschool()
@@ -24,9 +70,10 @@ match_augment <- function(x) {
     dplyr::filter(!is.na(choice_funding))
 
   names_matchschool <-
-    appschools %>%
+    x %>%
+    match_lookup_account() %>%
     dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::select(code_appschool, choice_name = name_account) %>%
+    dplyr::select(code_appschool, choice_name = name_account, id_account) %>%
     dplyr::distinct()
   # %>%
   #   dplyr::left_join(funding, by = c("code_appschool"))
@@ -90,7 +137,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
     readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school_grade.csv"), na = "")
 
-
+  match_placement(
+    match = match,
+    dir_out = dir_business
+  )
 
   match_notification(
     match = match,

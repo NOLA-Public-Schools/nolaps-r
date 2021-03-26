@@ -969,6 +969,32 @@ getdata_student_3years <- function() {
 
 
 #' @export
+getdata_student_recent <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        OneApp_ID__c,
+        Id
+      from Schoolforce__Student__c
+      where
+        Recent_Record__c = 'true'
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      oneappid = OneApp_ID__c,
+      id_student = Id
+    )
+
+}
+
+
+
+#' @export
 getdata_student_year <- function(years = c("2020-2021")) {
 
   years <-

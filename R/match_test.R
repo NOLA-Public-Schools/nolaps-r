@@ -140,13 +140,13 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   invalid_grades <-
     match %>%
     dplyr::left_join(
-      getdata_appschool_with_account_gradespan(),
-      by = c("CHOICE SCHOOL" = "code_appschool")
+      getdata_account_gradespan(),
+      by = c("id_account")
     ) %>%
     dplyr::rowwise() %>%
     dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) >= 9) %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
     dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
     dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
     dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))

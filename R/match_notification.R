@@ -97,6 +97,8 @@ match_notification <- function(match, dir_out) {
   participants_lettertypes %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
 
+  invisible(participants_lettertypes)
+
 
 
 }
