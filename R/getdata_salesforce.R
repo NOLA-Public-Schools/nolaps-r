@@ -38,6 +38,20 @@ mutate_code_site_group <- function(x) {
 
 
 #' @export
+getdata_soql <- function(args = commandArgs(trailingOnly = TRUE)) {
+
+  soql <- args[1]
+  file_out <- args[2]
+
+  salesforcer::sf_query(soql, guess_types = FALSE) %>%
+    readr::write_excel_csv(file_out, na = "") %>%
+    print()
+
+}
+
+
+
+#' @export
 getdata_account <- function() {
 
   salesforcer::sf_query(
