@@ -139,6 +139,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
     readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school_grade.csv"), na = "")
 
+  # TODO
+  # waitlist
+
   match_placement(
     match = match,
     dir_out = dir_business
