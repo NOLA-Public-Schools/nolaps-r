@@ -87,17 +87,52 @@ match_notification <- function(match, dir_out) {
       is_guaranteed ~ "guaranteed",
 
       TRUE ~ "other"
+      )
     )
+
+
+
+  apps <- getdata_app_1year() %>% dplyr::select(-grade_applying)
+
+  account_lookup <- match_lookup_account(match)
+
+  accounts <- getdata_account_address()
+
+  notifications <-
+    participants_lettertypes %>%
+    dplyr::rename(
+      oneappid = `STUDENT ID`,
+      grade_applying = GRADE
     ) %>%
-    dplyr::mutate(across(lettertype, ~ forcats::fct_relevel(., c("guaranteed", "see"), after = Inf))) %>%
-    dplyr::relocate(lettertype, .after = `STUDENT ID`)
+    dplyr::left_join(apps, by = "oneappid") %>%
+    dplyr::left_join(account_lookup, by = c("school_accepted" = "code_appschool")) %>%
+    dplyr::left_join(accounts, by = c("id_account")) %>%
+    dplyr::mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
+    dplyr::select(
+      lettertype, oneappid, grade_applying,
+      applicant_firstname:phone_2,
+      school_name = name_account,
+      school_address, school_phone = phone, welcome, registration,
+      school_accepted, id_account,
+      tidyselect::everything()
+    )
 
-
-
-  participants_lettertypes %>%
+  notifications %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
 
-  invisible(participants_lettertypes)
+  write_lettertypes <- function(x, dir_out) {
+
+    notifications %>%
+      dplyr::filter(lettertype == x) %>%
+      readr::write_excel_csv(glue::glue(dir_out, "/", x, ".csv"), na = "")
+
+  }
+
+  dir.create(glue::glue("{dir_out}/notifications"))
+
+  purrr::walk(unique(notifications$lettertype), write_lettertypes, dir_out = glue::glue("{dir_out}/notifications"))
+
+  invisible(notifications)
 
 
 

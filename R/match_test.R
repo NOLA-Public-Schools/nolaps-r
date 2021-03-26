@@ -44,7 +44,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
 
 
-  apps <- getdata_app_1year() %>% dplyr::filter(recordtype == "Round 1")
+  apps <- getdata_app_1year()
 
   choices <- getdata_appschoolranking_1year() %>% dplyr::filter(id_app %in% apps$id_app)
 

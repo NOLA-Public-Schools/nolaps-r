@@ -98,7 +98,11 @@ getdata_account_address <- function() {
         BillingStreet,
         BillingCity,
         BillingState,
-        BillingPostalCode
+        BillingPostalCode,
+        Phone,
+        Registration_Details__c,
+        School_Welcome_Message__c,
+        Uniforms_Required__c
       from Account
       "
     )
@@ -111,7 +115,11 @@ getdata_account_address <- function() {
       street = BillingStreet,
       city = BillingCity,
       state = BillingState,
-      zip = BillingPostalCode
+      zip = BillingPostalCode,
+      phone = Phone,
+      registration = Registration_Details__c,
+      welcome = School_Welcome_Message__c,
+      uniforms = Uniforms_Required__c
     )
 
 }
@@ -264,7 +272,7 @@ getdata_app <- function() {
 
 
 #' @export
-getdata_app_1year <- function() {
+getdata_app_1year <- function(start = date_appstart()) {
 
   salesforcer::sf_query(
     glue::glue(
@@ -288,11 +296,11 @@ getdata_app_1year <- function() {
         City__c,
         State__c,
         Zip_Code__c,
-        Address_Validated__c,
-        RecordTypeId
+        Address_Validated__c
       from Application__c
       where
-        CreatedDate >= 2020-11-01T00:00:00Z
+        RecordType.Name = 'Round 1' and
+        CreatedDate >= {start}
       "
     ),
     api_type = "Bulk 2.0",
@@ -317,12 +325,8 @@ getdata_app_1year <- function() {
       city = City__c,
       state = State__c,
       zip = Zip_Code__c,
-      is_addressvalidated = Address_Validated__c,
-      id_recordtype = RecordTypeId
-    ) %>%
-    dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
-    dplyr::select(-id_recordtype) %>%
-    dplyr::relocate(recordtype)
+      is_addressvalidated = Address_Validated__c
+    )
 
 }
 

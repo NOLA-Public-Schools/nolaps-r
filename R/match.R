@@ -91,9 +91,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_in <- args[1]
   dir_out <- args[2]
+
   dir_external <- glue::glue("{dir_in}/Final Inputs")
 
   dir_business <- glue::glue("{dir_out}/business")
+
   dir_review <- glue::glue("{dir_out}/review")
 
   if(!dir.exists(dir_business)){dir.create(dir_business)}
