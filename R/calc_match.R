@@ -555,10 +555,10 @@ matchcalcs_results_seekingnew_unassigned <- function(
   }
 
   matchcalcs_seekingnew(x, schools_waitlist, ...) %>%
-    filter(is.na(rank_accepted)) %>%
+    dplyr::filter(is.na(rank_accepted)) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
-      n_seekingnew_unassigned = n(),
+      n_seekingnew_unassigned = dplyr::n(),
       n_seekingnew_unassigned_k9 = sum(GRADE %in% c("K", "9")),
       n_seekingnew_unassigned_3orless = sum(n_choices <= 3),
     ) %>%
