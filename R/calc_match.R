@@ -104,6 +104,17 @@ matchcalcs_participants_n_waiting <- function(x, schools_waitlist, ...) {
 
 
 #' @export
+matchcalcs_participants_sibling <- function(x, ...) {
+
+  x %>%
+    dplyr::filter(stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling")) %>%
+    dplyr::distinct(`STUDENT ID`, ...)
+
+}
+
+
+
+#' @export
 matchcalcs_participants_all <- function(x, schools_waitlist, ...) {
 
   x %>%
@@ -466,25 +477,94 @@ matchcalcs_results_seekingnew <- function(
 
   x %>%
     dplyr::semi_join(matchcalcs_seekingnew(x, schools_waitlist, ...)) %>%
-    dplyr::filter(is.na(`GUARANTEED?`)) %>%
     dplyr::group_by(...) %>%
     dplyr::summarize(
       n_seekingnew = length(unique(`STUDENT ID`)),
       n_seekingnew_rank1 = sum(`CHOICE RANK` == 1),
       n_seekingnew_acceptednew =
-        sum(`ASSIGNMENT STATUS` == 'Accepted'),
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`)),
       n_seekingnew_acceptednew_top3 =
-        sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` %in% 1:3),
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`) & `CHOICE RANK` %in% 1:3),
       n_seekingnew_acceptednew_top1 =
-        sum(`ASSIGNMENT STATUS` == 'Accepted' & `CHOICE RANK` == 1),
-      n_seekingnew_acceptednew_sibling =
-        sum(`ASSIGNMENT STATUS` == 'Accepted' & stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`) & `CHOICE RANK` == 1),
+      n_seekingnew_fallback =
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & !is.na(`GUARANTEED?`)),
+      n_seekingnew_unassigned = n_seekingnew - n_seekingnew_acceptednew - n_seekingnew_fallback
     ) %>%
     dplyr::mutate(
       rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,
       rate_acceptednew_top3 = n_seekingnew_acceptednew_top3 / n_seekingnew,
       rate_acceptednew_top1 = n_seekingnew_acceptednew_top1 / n_seekingnew,
+      rate_fallback = n_seekingnew_fallback / n_seekingnew,
+      rate_unassigned = n_seekingnew_unassigned / n_seekingnew
+    )
+
+}
+
+
+
+#' @export
+matchcalcs_results_seekingnew_sibling <- function(
+  x,
+  schools_waitlist,
+  ...,
+  exclude_ineligible = TRUE,
+  exclude_notprocessed = TRUE
+) {
+
+  if (exclude_ineligible == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Ineligible')
+  }
+
+  if (exclude_notprocessed == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Not Processed')
+  }
+
+  x %>%
+    dplyr::semi_join(matchcalcs_seekingnew(x, schools_waitlist, ...)) %>%
+    dplyr::semi_join(matchcalcs_participants_sibling(x, ...)) %>%
+    dplyr::group_by(...) %>%
+    dplyr::summarize(
+      n_seekingnew = length(unique(`STUDENT ID`)),
+      n_seekingnew_acceptednew_sibling =
+        sum(`ASSIGNMENT STATUS` == 'Accepted' & stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
+    ) %>%
+    dplyr::mutate(
       rate_acceptednew_sibling = n_seekingnew_acceptednew_sibling / n_seekingnew
+    )
+
+}
+
+
+
+#' @export
+matchcalcs_results_seekingnew_unassigned <- function(
+  x,
+  schools_waitlist,
+  ...,
+  exclude_ineligible = TRUE,
+  exclude_notprocessed = TRUE
+) {
+
+  if (exclude_ineligible == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Ineligible')
+  }
+
+  if (exclude_notprocessed == TRUE) {
+    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != 'Not Processed')
+  }
+
+  matchcalcs_seekingnew(x, schools_waitlist, ...) %>%
+    filter(is.na(rank_accepted)) %>%
+    dplyr::group_by(...) %>%
+    dplyr::summarize(
+      n_seekingnew_unassigned = n(),
+      n_seekingnew_unassigned_k9 = sum(GRADE %in% c("K", "9")),
+      n_seekingnew_unassigned_3orless = sum(n_choices <= 3),
+    ) %>%
+    dplyr::mutate(
+      rate_k9 = n_seekingnew_unassigned_k9 / n_seekingnew_unassigned,
+      rate_3orless = n_seekingnew_unassigned_3orless / n_seekingnew_unassigned
     )
 
 }
