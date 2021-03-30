@@ -1,4 +1,34 @@
 #' @importFrom magrittr %>%
+#' @importFrom dplyr arrange filter mutate select
+#' @importFrom dplyr group_by ungroup summarize
+#' @importFrom dplyr left_join
+#' @importFrom dplyr n
+
+
+
+#' @export
+match_notification_waitlists <- function(match, schools_waitlist = c("323", "324", "846", "847")) {
+
+  match %>%
+    filter(!(GRADE %in% grades_ec())) %>%
+    filter(`CHOICE SCHOOL` %in% schools_waitlist) %>%
+    filter(`ASSIGNMENT STATUS` %in% c(
+      "Waiting List",
+      "Waiting List - Family Link Rejection"
+      )
+    ) %>%
+    select(`STUDENT ID`, `CHOICE RANK`, waitlist_school = choice_name, `WAITLIST RANK`) %>%
+    group_by(`STUDENT ID`) %>%
+    arrange(`CHOICE RANK`) %>%
+    mutate(waitlist_slot = 1:n()) %>%
+    ungroup() %>%
+    select(-`CHOICE RANK`) %>%
+    tidyr::pivot_wider(
+      names_from = waitlist_slot,
+      values_from = c(waitlist_school, `WAITLIST RANK`)
+    )
+
+}
 
 
 
@@ -14,6 +44,7 @@ match_notification <- function(match, dir_out) {
     dplyr::filter(
       (`STUDENT ID` %in% matchcalcs_acceptednew_hasguarantee(participants)$`STUDENT ID`)
       | (`STUDENT ID` %in% matchcalcs_acceptednew_noguarantee(participants)$`STUDENT ID`)
+      | (`STUDENT ID` %in% matchcalcs_accepted_belowguarantee(participants)$`STUDENT ID`)
     ) %>%
     dplyr::pull(`STUDENT ID`)
 
@@ -104,15 +135,17 @@ match_notification <- function(match, dir_out) {
       oneappid = `STUDENT ID`,
       grade_applying = GRADE
     ) %>%
-    dplyr::left_join(apps, by = "oneappid") %>%
-    dplyr::left_join(account_lookup, by = c("school_accepted" = "code_appschool")) %>%
-    dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
-    dplyr::select(
+    left_join(apps, by = "oneappid") %>%
+    left_join(account_lookup, by = c("school_accepted" = "code_appschool")) %>%
+    left_join(accounts, by = c("id_account")) %>%
+    mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
+    left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
+    select(
       lettertype, oneappid, grade_applying,
       applicant_firstname:phone_2,
       school_name = name_account,
       school_address, school_phone = phone, welcome, registration,
+      waitlist_school_1:`WAITLIST RANK_4`,
       school_accepted, id_account,
       tidyselect::everything()
     )
