@@ -52,11 +52,13 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
 
   accounts <- getdata_account()
 
+  oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
+
   students <-
     getdata_student_active() %>%
     dplyr::filter(!is.na(id_account_current)) %>%
     dplyr::filter(is_terminalgrade == "false") %>%
-    dplyr::filter(grade_current != 12) %>%
+    dplyr::filter(grade_current != 12 | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))) %>%
     dplyr::left_join(accounts, by = c("id_account_current" = "id_account"))
 
 
@@ -244,9 +246,7 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
     glue::glue("{dir_external}/priority-key.csv")
   )
 
-  oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
-
-  codes <-
+ codes <-
     getdata_appschool() %>%
     dplyr::distinct(code_appschool, code_site) %>%
     dplyr::filter(complete.cases(.))
@@ -329,7 +329,10 @@ match_test <- function(match, dir_external, dir_out, prioritytable) {
   missing_distance <-
     match_priorities %>%
     filter_priority(`Child of Student`, prioritytable) %>%
-    dplyr::filter(is_priority_distance)
+    dplyr::filter(
+      (is_priority_distance & !(`CHOICE SCHOOL` %in% c("323", "324")))
+      | (is_priority_distance & (`CHOICE SCHOOL` %in% c("323", "324")) & `STUDENT ID` %in% validatedgeo$`OneApp ID`)
+    )
 
   invalid_distance <-
     match_priorities %>%

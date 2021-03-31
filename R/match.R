@@ -109,6 +109,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment() %>%
     fix_grades()
 
+  overmatches <- readr::read_csv(
+    glue::glue("{dir_external}/sibling-overmatches.csv"),
+    col_types = stringr::str_dup("c", 3)
+  )
+
   prioritytable <- readr::read_csv(
     glue::glue("{dir_external}/PriorityTable.csv")
   )
@@ -142,7 +147,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
   # TODO
-  # waitlist
+  # waitlist output
+  # overmatch for notifications and portal letters
+  # additional notification fields
 
 
 
@@ -153,6 +160,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   match_placement(
     match = match,
+    overmatches = overmatches,
     dir_out = dir_business
   )
 

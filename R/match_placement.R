@@ -3,19 +3,26 @@
 
 
 #' @export
-match_placement <- function(match, dir_out) {
+match_placement <- function(match, overmatches, dir_out) {
 
   # TODO
-  # overmatch
   # match fields
+
+  overmatches <-
+    match %>%
+    dplyr::semi_join(overmatches) %>%
+    dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account)
 
   placements <-
     match %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
     dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
+    dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account) %>%
+    dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
+    dplyr::bind_rows(overmatches) %>%
     dplyr::left_join(getdata_student_recent(), by = c("STUDENT ID" = "oneappid")) %>%
     dplyr::select(
-      id_student = id_student.y,
+      id_student_recent,
       id_account_future = id_account,
       grade_future = GRADE
     ) %>%

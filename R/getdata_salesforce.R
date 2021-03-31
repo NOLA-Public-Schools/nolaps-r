@@ -64,7 +64,8 @@ getdata_account <- function() {
         Grade_Span__c,
         Terminal_Grade__c,
         Governance__c,
-        School_Status__c
+        School_Status__c,
+        Enrollment_POC_Email__c
       from Account
       "
     ),
@@ -77,7 +78,8 @@ getdata_account <- function() {
       gradespan_nextyear = Grade_Span__c,
       grade_terminal = Terminal_Grade__c,
       governance = Governance__c,
-      status = School_Status__c
+      status = School_Status__c,
+      email_enrollment = Enrollment_POC_Email__c
     )
 
 }
@@ -994,7 +996,13 @@ getdata_student_recent <- function() {
       "
       select
         OneApp_ID__c,
-        Id
+        Id,
+        SchoolForce__Student_First_Name__c,
+        SchoolForce__Student_Last_Name__c,
+        SchoolForce__Date_of_Birth__c,
+        Current_Grade__c,
+        SchoolForce__Active__c,
+        SchoolForce__School__r.Name
       from Schoolforce__Student__c
       where
         Recent_Record__c = 'true'
@@ -1005,8 +1013,15 @@ getdata_student_recent <- function() {
   ) %>%
     dplyr::select(
       oneappid = OneApp_ID__c,
-      id_student = Id
-    )
+      id_student_recent = Id,
+      student_firstname = SchoolForce__Student_First_Name__c,
+      student_lastname = SchoolForce__Student_Last_Name__c,
+      student_dob = SchoolForce__Date_of_Birth__c,
+      grade_current = Current_Grade__c,
+      is_active = SchoolForce__Active__c,
+      school_current = SchoolForce__School__r.Name
+    ) %>%
+    dplyr::mutate(dplyr::across(is_active, as.logical))
 
 }
 
