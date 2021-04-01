@@ -33,7 +33,7 @@ match_notification_waitlists <- function(match, schools_waitlist = c("323", "324
 
 
 #' @export
-match_notification <- function(match, dir_out) {
+match_notification <- function(match, overmatches, dir_out) {
 
   participants <-
     match %>%
@@ -46,7 +46,9 @@ match_notification <- function(match, dir_out) {
       | (`STUDENT ID` %in% matchcalcs_acceptednew_noguarantee(participants)$`STUDENT ID`)
       | (`STUDENT ID` %in% matchcalcs_accepted_belowguarantee(participants)$`STUDENT ID`)
     ) %>%
-    dplyr::pull(`STUDENT ID`)
+    dplyr::pull(`STUDENT ID`) %>%
+    c(dplyr::pull(overmatches, `STUDENT ID`)) %>%
+    unique()
 
   fallback <-
     participants %>%
@@ -78,6 +80,8 @@ match_notification <- function(match, dir_out) {
     match %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
     dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
+    dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
+    dplyr::bind_rows(overmatches) %>%
     dplyr::select(`STUDENT ID`, school_accepted = `CHOICE SCHOOL`) %>%
     dplyr::mutate(is_scholarship = stringr::str_detect(school_accepted, "_[NR]$"))
 
@@ -140,14 +144,39 @@ match_notification <- function(match, dir_out) {
     left_join(accounts, by = c("id_account")) %>%
     mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
     left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
+    left_join(nolaps::schools_eval, by = "code_site") %>%
+    fix_grades(grade_applying) %>%
+    fix_grades(grade_terminal) %>%
+    mutate(gets_snippet_exitgrade = (grade_applying == grade_terminal)) %>%
+    mutate(snippet_exitgrade = dplyr::if_else(gets_snippet_exitgrade, glue::glue(
+      "
+      Please note: Grade {grade_applying} at {name_account} does not continue after this year.
+      To continue in public school, an application will be required next year.
+      "
+      ),
+      NA_character_
+      )
+    ) %>%
+    mutate(snippet_eval = dplyr::if_else(gets_snippet_eval, glue::glue(
+      "
+      As your child prepares for school this upcoming year, NOLA Public Schools Child Search Program and ReNEW Charter Schools are offering vision, hearing, and speech screenings prior to the beginning of the 2021-2022 school year.
+      In addition, throughout the year, the Child Search Office provides educational evaluations in cases where there may be suspicion of any special learning challenges or disabilities.
+      To schedule an appointment for your child, please contact the Child Search Office at 504-304-4988 or use our online Child Search Form at www.nolapublicschools.com, under the Child Search Tab.
+      "
+      ),
+      NA_character_
+      )
+    ) %>%
+    mutate(deadline = getdata_registration()[[1]][[1]]) %>%
     select(
       lettertype, oneappid, grade_applying,
       applicant_firstname:phone_2,
       school_name = name_account,
-      school_address, school_phone = phone, welcome, registration,
+      school_address, school_phone = phone,
+      welcome, registration, deadline,
       waitlist_school_1:`WAITLIST RANK_4`,
-      school_accepted, id_account,
-      tidyselect::everything()
+      snippet_exitgrade,
+      snippet_eval
     )
 
   notifications %>%

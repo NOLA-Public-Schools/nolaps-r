@@ -104,7 +104,8 @@ getdata_account_address <- function() {
         Phone,
         Registration_Details__c,
         School_Welcome_Message__c,
-        Uniforms_Required__c
+        Uniforms_Required__c,
+        Terminal_Grade__c
       from Account
       "
     )
@@ -121,7 +122,8 @@ getdata_account_address <- function() {
       phone = Phone,
       registration = Registration_Details__c,
       welcome = School_Welcome_Message__c,
-      uniforms = Uniforms_Required__c
+      uniforms = Uniforms_Required__c,
+      grade_terminal = Terminal_Grade__c
     )
 
 }
@@ -754,6 +756,29 @@ getdata_guardian <- function() {
       col = id_relationship,
       into = c("id_contact_student", "id_contact_guardian"),
       sep = "_"
+    )
+
+}
+
+
+
+#' @export
+getdata_registration <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        K12_MR_Registration_Deadline__c,
+        EC_MR_Registration_Deadline__c
+      from application_settings__c
+      "
+    ),
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      deadline_k12 = K12_MR_Registration_Deadline__c,
+      deadline_ec = EC_MR_Registration_Deadline__c
     )
 
 }

@@ -5,9 +5,6 @@
 #' @export
 match_placement <- function(match, overmatches, dir_out) {
 
-  # TODO
-  # match fields
-
   overmatches <-
     match %>%
     dplyr::semi_join(overmatches) %>%

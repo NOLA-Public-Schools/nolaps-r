@@ -111,7 +111,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   overmatches <- readr::read_csv(
     glue::glue("{dir_external}/sibling-overmatches.csv"),
-    col_types = stringr::str_dup("c", 3)
+    col_types = "ccic"
   )
 
   prioritytable <- readr::read_csv(
@@ -148,8 +148,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   # TODO
   # waitlist output
-  # overmatch for notifications and portal letters
-  # additional notification fields
+  # overmatch for portal letters
+  # Spanish letters
 
 
 
@@ -166,6 +166,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   match_notification(
     match = match,
+    overmatches = overmatches,
     dir_out = dir_business
   )
 
