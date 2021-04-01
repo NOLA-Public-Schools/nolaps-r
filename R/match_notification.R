@@ -179,6 +179,8 @@ match_notification <- function(match, overmatches, dir_out) {
       snippet_eval
     )
 
+  match_notification_salesforce(notifications = notifications, dir_out = dir_out)
+
   notifications %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
 
