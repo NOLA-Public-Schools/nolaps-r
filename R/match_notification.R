@@ -173,7 +173,7 @@ match_notification <- function(match, overmatches, dir_out) {
       applicant_firstname:phone_2,
       school_name = name_account,
       school_address, school_phone = phone,
-      welcome, registration, deadline,
+      school_welcome = welcome, school_registration = registration, deadline,
       waitlist_school_1:`WAITLIST RANK_4`,
       snippet_exitgrade,
       snippet_eval
