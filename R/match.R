@@ -148,7 +148,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   # TODO
   # waitlist output
-  # overmatch for portal letters
   # Spanish letters
 
 
