@@ -14,7 +14,8 @@ match_notification_salesforce <- function(notifications, dir_out) {
       oneappid,
       id_student_recent,
       lettertype_salesforce,
-      matchtype
+      matchtype,
+      is_scholarship
     )
 
   letters_salesforce %>%

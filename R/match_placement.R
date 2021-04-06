@@ -18,10 +18,12 @@ match_placement <- function(match, overmatches, dir_out) {
     dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
     dplyr::bind_rows(overmatches) %>%
     dplyr::left_join(getdata_student_recent(), by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::mutate(is_scholarship = stringr::str_detect(`CHOICE SCHOOL`, "_[NR]$")) %>%
     dplyr::select(
       id_student_recent,
       id_account_future = id_account,
-      grade_future = GRADE
+      grade_future = GRADE,
+      is_scholarship
     ) %>%
     dplyr::mutate(
       id_schoolyear = "a100W000009Reex",

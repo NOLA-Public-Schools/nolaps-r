@@ -176,7 +176,8 @@ match_notification <- function(match, overmatches, dir_out) {
       school_welcome = welcome, school_registration = registration, deadline,
       waitlist_school_1:`WAITLIST RANK_4`,
       snippet_exitgrade,
-      snippet_eval
+      snippet_eval,
+      is_scholarship
     )
 
   match_notification_salesforce(notifications = notifications, dir_out = dir_out)
