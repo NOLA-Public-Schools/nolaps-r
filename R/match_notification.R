@@ -93,8 +93,9 @@ match_notification <- function(match, overmatches, dir_out) {
     dplyr::mutate(is_acceptednew = `STUDENT ID` %in% acceptednew) %>%
     dplyr::mutate(is_fallback = `STUDENT ID` %in% fallback) %>%
     dplyr::mutate(is_unassigned = `STUDENT ID` %in% unassigned) %>%
-    dplyr::mutate(is_guaranteed = `STUDENT ID` %in% guaranteed) %>%
-    dplyr::left_join(schools_accepted, by = "STUDENT ID")
+    dplyr::mutate(is_guaranteed = !is.na(rank_guaranteed)) %>%
+    dplyr::left_join(schools_accepted, by = "STUDENT ID") %>%
+    dplyr::mutate(is_assigned = !is.na(school_accepted))
 
   participants_lettertypes <-
     participants_aug %>%
@@ -177,6 +178,9 @@ match_notification <- function(match, overmatches, dir_out) {
       waitlist_school_1:`WAITLIST RANK_4`,
       snippet_exitgrade,
       snippet_eval,
+      id_account,
+      is_assigned,
+      is_guaranteed,
       is_scholarship
     )
 

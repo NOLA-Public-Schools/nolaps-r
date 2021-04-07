@@ -152,9 +152,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  match_briefing(
+  match_test(
     match = match,
-    dir_out = dir_business
+    dir_external = dir_external,
+    dir_out = dir_review,
+    prioritytable = prioritytable
   )
 
   match_placement(
@@ -169,11 +171,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     dir_out = dir_business
   )
 
-  match_test(
+  match_briefing(
     match = match,
-    dir_external = dir_external,
-    dir_out = dir_review,
-    prioritytable = prioritytable
+    dir_out = dir_business
   )
 
 
