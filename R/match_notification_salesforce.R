@@ -12,7 +12,7 @@ match_notification_salesforce <- function(notifications, dir_out) {
     dplyr::left_join(getdata_student_recent(), by = c("oneappid")) %>%
     dplyr::mutate(is_newmatch = dplyr::if_else(
       is_assigned
-      & (!is_active | (is_active & (school_name != school_current))),
+      & (!is_active | (is_active & (name_account != school_current))),
       TRUE,
       FALSE
       )
@@ -25,10 +25,9 @@ match_notification_salesforce <- function(notifications, dir_out) {
       is_assigned,
       is_newmatch,
       is_guaranteed,
-      is_scholarship
-    ) %>%
-    dplyr::mutate(is_guaranteed_scholarship = is_guaranteed & is_scholarship)
-
+      is_scholarship,
+      is_guaranteed_scholarship
+    )
 
   letters_salesforce %>%
     readr::write_excel_csv(glue::glue("{dir_out}/letters_salesforce.csv"), na = "")

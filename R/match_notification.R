@@ -17,7 +17,7 @@ match_notification_waitlists <- function(match, schools_waitlist = c("323", "324
       "Waiting List - Family Link Rejection"
       )
     ) %>%
-    select(`STUDENT ID`, `CHOICE RANK`, waitlist_school = choice_name, `WAITLIST RANK`) %>%
+    select(`STUDENT ID`, `CHOICE RANK`, waitlist_school = choice_name, waitlist_rank = `WAITLIST RANK`) %>%
     group_by(`STUDENT ID`) %>%
     arrange(`CHOICE RANK`) %>%
     mutate(waitlist_slot = 1:n()) %>%
@@ -25,7 +25,7 @@ match_notification_waitlists <- function(match, schools_waitlist = c("323", "324
     select(-`CHOICE RANK`) %>%
     tidyr::pivot_wider(
       names_from = waitlist_slot,
-      values_from = c(waitlist_school, `WAITLIST RANK`)
+      values_from = c(waitlist_school, waitlist_rank)
     )
 
 }
@@ -169,20 +169,25 @@ match_notification <- function(match, overmatches, dir_out) {
       )
     ) %>%
     mutate(deadline = getdata_registration()[[1]][[1]]) %>%
+    mutate(school_name = stringr::str_squish(stringr::str_remove(name_account, "\\(DO NOT PLACE\\)"))) %>%
     select(
       lettertype, oneappid, grade_applying,
       applicant_firstname:phone_2,
-      school_name = name_account,
+      school_name,
       school_address, school_phone = phone,
       school_welcome = welcome, school_registration = registration, deadline,
-      waitlist_school_1:`WAITLIST RANK_4`,
+      waitlist_school_1:waitlist_rank_4,
       snippet_exitgrade,
       snippet_eval,
+      language_app, language_pref,
       id_account,
+      name_account,
       is_assigned,
       is_guaranteed,
       is_scholarship
-    )
+    ) %>%
+    mutate(is_guaranteed_scholarship = is_guaranteed & is_scholarship) %>%
+    arrange(oneappid)
 
   match_notification_salesforce(notifications = notifications, dir_out = dir_out)
 
@@ -193,11 +198,32 @@ match_notification <- function(match, overmatches, dir_out) {
 
     notifications %>%
       dplyr::filter(lettertype == x) %>%
-      readr::write_excel_csv(glue::glue(dir_out, "/", x, ".csv"), na = "")
+      readr::write_excel_csv(glue::glue(dir_out, "/all/", x, ".csv"), na = "")
+
+    spanish <-
+      notifications %>%
+      dplyr::filter(language_app == "Spanish" | language_pref == "Spanish") %>%
+      dplyr::filter(lettertype == x)
+
+    if (nrow(spanish) > 0) {
+      readr::write_excel_csv(spanish, glue::glue(dir_out, "/spanish/", x, ".csv"), na = "")
+    }
+
+    vietnamese <-
+      notifications %>%
+      dplyr::filter(language_app == "Vietnamese" | language_pref == "Vietnamese") %>%
+      dplyr::filter(lettertype == x)
+
+    if (nrow(vietnamese) > 0) {
+      readr::write_excel_csv(vietnamese, glue::glue(dir_out, "/vietnamese/", x, ".csv"), na = "")
+    }
 
   }
 
   dir.create(glue::glue("{dir_out}/notifications"))
+  dir.create(glue::glue("{dir_out}/notifications/all"))
+  dir.create(glue::glue("{dir_out}/notifications/spanish"))
+  dir.create(glue::glue("{dir_out}/notifications/vietnamese"))
 
   purrr::walk(unique(notifications$lettertype), write_lettertypes, dir_out = glue::glue("{dir_out}/notifications"))
 

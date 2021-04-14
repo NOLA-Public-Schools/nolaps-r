@@ -146,12 +146,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  # TODO
-  # waitlist output
-  # Spanish letters
-
-
-
   match_test(
     match = match,
     dir_external = dir_external,

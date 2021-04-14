@@ -162,12 +162,16 @@ getdata_account_contacts <- function() {
 getdata_account_gradespan <- function() {
 
   getdata_account() %>%
-    dplyr::select(id_account, gradespan_nextyear) %>%
+    dplyr::select(id_account, governance, grade_terminal, gradespan_nextyear) %>%
     tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
     fix_grades(gradespan_nextyear) %>%
     dplyr::arrange(gradespan_nextyear) %>%
-    dplyr::group_by(id_account) %>%
-    dplyr::summarize(gradespan_nextyear_vector = list(gradespan_nextyear))
+    dplyr::group_by(id_account, governance, grade_terminal) %>%
+    dplyr::summarize(
+      grade_max = max(gradespan_nextyear),
+      gradespan_nextyear_vector = list(gradespan_nextyear)
+    ) %>%
+    dplyr::ungroup()
 
 }
 
@@ -291,9 +295,11 @@ getdata_app_1year <- function(start = date_appstart()) {
         Student_Last_Name__c,
         Parent_Guardian_First_Name__c,
         Parent_Guardian_Last_Name__c,
-        Parent_Guardian_Email_Address__c,
+        Creator_Email__c,
         Primary_Contact_Number__c,
         Secondary_Contact_Number__c,
+        Application_Language__c,
+        Preferred_Language__c,
         Address_Longitude__c,
         Address_Latitude__c,
         Street_Street_Name__c,
@@ -320,9 +326,11 @@ getdata_app_1year <- function(start = date_appstart()) {
       applicant_lastname = Student_Last_Name__c,
       pg_firstname = Parent_Guardian_First_Name__c,
       pg_lastname = Parent_Guardian_Last_Name__c,
-      email = Parent_Guardian_Email_Address__c,
+      email = Creator_Email__c,
       phone_1 = Primary_Contact_Number__c,
       phone_2 = Secondary_Contact_Number__c,
+      language_app = Application_Language__c,
+      language_pref = Preferred_Language__c,
       lon = Address_Longitude__c,
       lat = Address_Latitude__c,
       street = Street_Street_Name__c,
@@ -779,7 +787,8 @@ getdata_registration <- function() {
     dplyr::select(
       deadline_k12 = K12_MR_Registration_Deadline__c,
       deadline_ec = EC_MR_Registration_Deadline__c
-    )
+    ) %>%
+    dplyr::mutate(dplyr::across(.fns = as.character))
 
 }
 
@@ -966,18 +975,25 @@ getdata_student_futureschool <- function() {
     glue::glue(
       "
       select
-        Id,
         OneApp_ID__c,
+        Id,
+        Future_School_Grade__c,
         Future_School__c
       from Schoolforce__Student__c
       where
         Recent_Record__c = 'true' and
-        Future_School__c != null and
-        School_Year__c = '2020-2021'
+        Future_School__c != null
       "
     ),
-    api_type = "Bulk 2.0"
-  )
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      oneappid = OneApp_ID__c,
+      id_student = Id,
+      grade_future = Future_School_Grade__c,
+      id_account_future = Future_School__c
+    )
 
 }
 
@@ -1007,6 +1023,62 @@ getdata_student_3years <- function() {
       oneappid = OneApp_ID__c,
       id_account_current = SchoolForce__School__c,
       year_student = School_Year__c
+    )
+
+}
+
+
+
+#' @export
+getdata_student_matchletter <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Placement_Letter_Year__c,
+        Placement_Letter_Template__c,
+        OneApp_ID__c,
+        Id,
+        Future_School__c,
+        Future_School__r.Name,
+        Future_School__r.School_Code_String__c,
+        Future_School__r.BillingStreet,
+        Future_School__r.BillingCity,
+        Future_School__r.BillingState,
+        Future_School__r.BillingPostalCode,
+        Future_School__r.Phone,
+        Future_School__r.Registration_Details__c,
+        Future_School__r.School_Welcome_Message__c,
+        Future_School__r.Uniforms_Required__c
+      from Schoolforce__Student__c
+      where
+        Placement_Letter_Template__c != null and
+        Placement_Letter_Year__c = 'SY 20-21' and
+        Recent_Record__c = 'true' and
+        Request_Details__c != 'DC4: Extended illness, incapacitation, or death of student'
+
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      year_matchletter = Placement_Letter_Year__c,
+      lettertype = Placement_Letter_Template__c,
+      id_student = Id,
+      oneappid = OneApp_ID__c,
+      name_account_future = Future_School__r.Name,
+      street = Future_School__r.BillingStreet,
+      city = Future_School__r.BillingCity,
+      state = Future_School__r.BillingState,
+      zip = Future_School__r.BillingPostalCode,
+      school_phone = Future_School__r.Phone,
+      school_registration = Future_School__r.Registration_Details__c,
+      school_welcome = Future_School__r.School_Welcome_Message__c,
+      school_uniforms = Future_School__r.Uniforms_Required__c,
+      id_account_future = Future_School__c,
+      code_site = Future_School__r.School_Code_String__c
     )
 
 }

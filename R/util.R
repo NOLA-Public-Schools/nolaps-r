@@ -17,7 +17,7 @@ fix_grades <- function(x, var = GRADE) {
       "INF", "1YR", "2YR", "PK3", "PK4",
       "K", "1", "2", "3", "4", "5", "6", "7", "8",
       "9", "10", "11", "12"
-      )
+      ), ordered = TRUE
       )
     )
 
