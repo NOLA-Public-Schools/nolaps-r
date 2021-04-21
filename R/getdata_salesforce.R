@@ -230,7 +230,7 @@ getdata_account_highdemand <- function() {
 
 
 #' @export
-getdata_app <- function() {
+getdata_app_3year <- function() {
 
   salesforcer::sf_query(
     glue::glue(
@@ -280,10 +280,10 @@ getdata_app <- function() {
 
 
 #' @export
-getdata_app_1year <- function(start = date_appstart()) {
+getdata_app <- function(round = "Round 1", start = date_appstart()) {
 
   salesforcer::sf_query(
-    glue::glue(
+    glue::glue_safe(
       "
       select
         CreatedDate,
@@ -309,7 +309,7 @@ getdata_app_1year <- function(start = date_appstart()) {
         Address_Validated__c
       from Application__c
       where
-        RecordType.Name = 'Round 1' and
+        RecordType.Name = '{round}' and
         CreatedDate >= {start}
       "
     ),
@@ -480,7 +480,7 @@ getdata_appschool_with_account_gradespan <- function() {
 
 
 #' @export
-getdata_appschoolranking <- function() {
+getdata_appschoolranking_3year <- function() {
 
   salesforcer::sf_query(
     glue::glue(
@@ -518,31 +518,44 @@ getdata_appschoolranking <- function() {
 
 
 #' @export
-getdata_appschoolranking_1year <- function() {
+getdata_appschoolranking <- function(round = "Round 1", start = date_appstart()) {
 
   salesforcer::sf_query(
-    glue::glue(
+    glue::glue_safe(
       "
       select
-        Id,
         CreatedDate,
         Application__c,
+        Id,
+        Rank__c,
         Application_School__c,
-        Rank__c
+        Application_School__r.School__c,
+        Verified_Sibling__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
-        CreatedDate >= 2020-11-01T00:00:00Z
+        CreatedDate >= {start} and
+        Application__r.RecordType.Name = '{round}' and
+        Application__r.CreatedDate >= {start}
       "
     ),
-    api_type = "Bulk 2.0"
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
   ) %>%
     dplyr::select(
-      id_appschoolranking = Id,
       date_created = CreatedDate,
       id_app = Application__c,
+      id_appschoolranking = Id,
+      rank = Rank__c,
       id_appschool = Application_School__c,
-      rank = Rank__c
+      id_account = Application_School__r.School__c,
+      is_verifiedsibling = Verified_Sibling__c
+    ) %>%
+    dplyr::mutate(across(c(
+      is_verifiedsibling
+      ),
+      as.logical
+      )
     )
 
 }
@@ -858,7 +871,9 @@ getdata_student_active <- function() {
         Current_Grade__c,
         SchoolForce__School__c,
         SchoolForce__School__r.School_Code_String__c,
-        Is_Student_In_Terminal_Grade__c
+        Is_Student_In_Terminal_Grade__c,
+        Future_School_Grade__c,
+        Future_School__c
       from Schoolforce__Student__c
       where
         SchoolForce__Active__c = TRUE and
@@ -880,7 +895,9 @@ getdata_student_active <- function() {
       grade_current = Current_Grade__c,
       id_account_current = SchoolForce__School__c,
       code_site = SchoolForce__School__r.School_Code_String__c,
-      is_terminalgrade = Is_Student_In_Terminal_Grade__c
+      is_terminalgrade = Is_Student_In_Terminal_Grade__c,
+      grade_future = Future_School_Grade__c,
+      id_account_future = Future_School__c
     )
 
 }

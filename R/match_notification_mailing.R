@@ -83,7 +83,7 @@ match_notification_mailing <- function(match, dir_out) {
     arrange(oneappid)
 
   notifications %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
+    readr::write_excel_csv(glue::glue("{dir_out}/notifications_summary.csv"), na = "")
 
   write_lettertypes <- function(x, dir_out) {
 
