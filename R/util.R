@@ -8,6 +8,11 @@ date_appstart <- function() {"2020-11-01T00:00:00Z"}
 
 
 #' @export
+date_appstart_3year <- function() {"2018-11-01T00:00:00Z"}
+
+
+
+#' @export
 fix_grades <- function(x, var = GRADE) {
 
   x %>%
@@ -26,7 +31,27 @@ fix_grades <- function(x, var = GRADE) {
 
 
 #' @export
+grades <- function() {c(
+  "INF", "1YR", "2YR", "PK3", "PK4",
+  "K", "1", "2", "3", "4", "5", "6", "7", "8",
+  "9", "10", "11", "12"
+  )
+}
+
+
+
+#' @export
 grades_ec <- function() {c("INF", "1YR", "2YR", "PK3", "PK4")}
+
+
+
+#' @export
+grades_k8 <- function() {c("K", "1", "2", "3", "4", "5", "6", "7", "8")}
+
+
+
+#' @export
+grades_inf8 <- function() {c(grades_ec(), grades_k8())}
 
 
 

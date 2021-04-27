@@ -230,56 +230,6 @@ getdata_account_highdemand <- function() {
 
 
 #' @export
-getdata_app_3year <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        CreatedDate,
-        OneApp_ID__c,
-        Student__c,
-        Id,
-        Grade_Applying_For__c,
-        Student_First_Name__c,
-        Student_Last_Name__c,
-        Parent_Guardian_First_Name__c,
-        Parent_Guardian_Last_Name__c,
-        Parent_Guardian_Email_Address__c,
-        Primary_Contact_Number__c,
-        Secondary_Contact_Number__c,
-        RecordTypeId
-      from Application__c
-      where
-        CreatedDate >= 2018-11-01T00:00:00Z
-      "
-    ),
-    api_type = "Bulk 2.0"
-  ) %>%
-    dplyr::select(
-      date_created = CreatedDate,
-      oneappid = OneApp_ID__c,
-      id_student = Student__c,
-      id_app = Id,
-      grade_applying = Grade_Applying_For__c,
-      applicant_firstname = Student_First_Name__c,
-      applicant_lastname = Student_Last_Name__c,
-      pg_firstname = Parent_Guardian_First_Name__c,
-      pg_lastname = Parent_Guardian_Last_Name__c,
-      email = Parent_Guardian_Email_Address__c,
-      phone_1 = Primary_Contact_Number__c,
-      phone_2 = Secondary_Contact_Number__c,
-      id_recordtype = RecordTypeId
-    ) %>%
-    dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
-    dplyr::select(-id_recordtype) %>%
-    dplyr::relocate(recordtype) %>%
-    fix_grades(var = grade_applying)
-
-}
-
-
-#' @export
 getdata_app <- function(round = "Round 1", start = date_appstart()) {
 
   salesforcer::sf_query(
@@ -295,6 +245,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Student_Last_Name__c,
         Parent_Guardian_First_Name__c,
         Parent_Guardian_Last_Name__c,
+        Parent_Guardian_Email_Address__c,
         Creator_Email__c,
         Primary_Contact_Number__c,
         Secondary_Contact_Number__c,
@@ -306,7 +257,9 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         City__c,
         State__c,
         Zip_Code__c,
-        Address_Validated__c
+        Address_Validated__c,
+        Student__r.SchoolForce__School__c,
+        Student__r.Future_School__c
       from Application__c
       where
         RecordType.Name = '{round}' and
@@ -326,6 +279,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       applicant_lastname = Student_Last_Name__c,
       pg_firstname = Parent_Guardian_First_Name__c,
       pg_lastname = Parent_Guardian_Last_Name__c,
+      pg_email = Parent_Guardian_Email_Address__c,
       email = Creator_Email__c,
       phone_1 = Primary_Contact_Number__c,
       phone_2 = Secondary_Contact_Number__c,
@@ -337,8 +291,20 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       city = City__c,
       state = State__c,
       zip = Zip_Code__c,
-      is_addressvalidated = Address_Validated__c
-    )
+      is_addressvalidated = Address_Validated__c,
+      id_account_current = Student__r.SchoolForce__School__c,
+      id_account_future = Student__r.Future_School__c
+    ) %>%
+    fix_grades(var = grade_applying)
+
+}
+
+
+
+#' @export
+getdata_app_3year <- function(round = "Round 1", start = date_appstart_3year()) {
+
+  getdata_app(round = round, start = start)
 
 }
 
@@ -480,44 +446,6 @@ getdata_appschool_with_account_gradespan <- function() {
 
 
 #' @export
-getdata_appschoolranking_3year <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Id,
-        CreatedDate,
-        Application__c,
-        Application_School__c,
-        Rank__c,
-        EC_Ranking__c,
-        EC_Program_Type__c,
-        EC_Eligibility__c
-      from Application_School_Ranking__c
-      where
-        Application_School__c != null and
-        CreatedDate >= 2018-11-01T00:00:00Z
-      "
-    ),
-    api_type = "Bulk 2.0"
-  ) %>%
-    dplyr::select(
-      id_appschoolranking = Id,
-      date_created = CreatedDate,
-      id_app = Application__c,
-      id_appschool = Application_School__c,
-      rank = Rank__c,
-      is_ec = EC_Ranking__c,
-      programtype = EC_Program_Type__c,
-      eligibility = EC_Eligibility__c
-    )
-
-}
-
-
-
-#' @export
 getdata_appschoolranking <- function(round = "Round 1", start = date_appstart()) {
 
   salesforcer::sf_query(
@@ -526,17 +454,25 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       select
         CreatedDate,
         Application__c,
+        Application__r.Grade_Applying_For__c,
         Id,
         Rank__c,
-        Application_School__c,
         Application_School__r.School__c,
+        Application_School__c,
+        Application_School__r.School_Code__c,
+        EC_Ranking__c,
+        EC_Program_Type__c,
+        EC_Eligibility__c,
+        Distance_From_Home__c,
+        In_Proximity_Preference__c,
+        In_School_Zip_Preference__c,
         Verified_Sibling__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
-        CreatedDate >= {start} and
         Application__r.RecordType.Name = '{round}' and
-        Application__r.CreatedDate >= {start}
+        Application__r.CreatedDate >= {start} and
+        CreatedDate >= {start}
       "
     ),
     api_type = "Bulk 2.0",
@@ -545,104 +481,25 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
     dplyr::select(
       date_created = CreatedDate,
       id_app = Application__c,
+      grade_applying = Application__r.Grade_Applying_For__c,
       id_appschoolranking = Id,
       rank = Rank__c,
-      id_appschool = Application_School__c,
       id_account = Application_School__r.School__c,
+      id_appschool = Application_School__c,
+      code_appschool = Application_School__r.School_Code__c,
+      is_ec = EC_Ranking__c,
+      programtype = EC_Program_Type__c,
+      eligibility = EC_Eligibility__c,
+      distance = Distance_From_Home__c,
+      is_priority_distance = In_Proximity_Preference__c,
+      is_priority_zone = In_School_Zip_Preference__c,
       is_verifiedsibling = Verified_Sibling__c
     ) %>%
     dplyr::mutate(across(c(
-      is_verifiedsibling
-      ),
-      as.logical
-      )
-    )
-
-}
-
-
-
-#' @export
-getdata_appschoolranking_eligibility <- function(start = date_appstart()) {
-
-  salesforcer::sf_query(
-    glue::glue_safe(
-      "
-      select
-        Id,
-        Application__r.OneApp_ID__c,
-        Application_School__r.School_Code__c,
-        EC_Program_Type__c,
-        EC_Eligibility__c
-      from Application_School_Ranking__c
-      where
-        Application_School__c != null and
-        Application__r.RecordType.Name = 'Round 1' and
-        Application__r.CreatedDate >= {start} and
-        CreatedDate >= {start}
-      "
-    ),
-    api_type = "Bulk 2.0",
-    guess_types = FALSE
-  ) %>%
-    dplyr::select(
-      id_appschoolranking = Id,
-      oneappid = Application__r.OneApp_ID__c,
-      code_appschool = Application_School__r.School_Code__c,
-      programtype = EC_Program_Type__c,
-      eligibility = EC_Eligibility__c
-    )
-
-}
-
-
-
-#' @export
-getdata_appschoolranking_priorities <- function(start = date_appstart()) {
-
-  salesforcer::sf_query(
-    glue::glue_safe(
-      "
-      select
-        Application__r.OneApp_ID__c,
-        Application__r.Grade_Applying_For__c,
-        Application__c,
-        Id,
-        Rank__c,
-        Application_School__c,
-        Application_School__r.School_Code__c,
-        Verified_Sibling__c,
-        Distance_From_Home__c,
-        In_Proximity_Preference__c,
-        In_School_Zip_Preference__c
-      from Application_School_Ranking__c
-      where
-        Application_School__c != null and
-        Application__r.RecordType.Name = 'Round 1' and
-        Application__r.CreatedDate >= {start} and
-        CreatedDate >= {start}
-      "
-    ),
-    api_type = "Bulk 2.0",
-    guess_types = FALSE
-  ) %>%
-    dplyr::select(
-      oneappid = Application__r.OneApp_ID__c,
-      grade_applying = Application__r.Grade_Applying_For__c,
-      id_app = Application__c,
-      id_appschoolranking = Id,
-      rank = Rank__c,
-      id_appschool = Application_School__c,
-      code_appschool = Application_School__r.School_Code__c,
-      is_verifiedsibling = Verified_Sibling__c,
-      distance = Distance_From_Home__c,
-      is_priority_distance = In_Proximity_Preference__c,
-      is_priority_zone = In_School_Zip_Preference__c
-    ) %>%
-    dplyr::mutate(across(c(
-      is_verifiedsibling,
+      is_ec,
       is_priority_distance,
-      is_priority_zone
+      is_priority_zone,
+      is_verifiedsibling
       ),
       as.logical
       )
@@ -652,7 +509,17 @@ getdata_appschoolranking_priorities <- function(start = date_appstart()) {
       ),
       as.numeric
       )
-    )
+    ) %>%
+    fix_grades(var = grade_applying)
+
+}
+
+
+
+#' @export
+getdata_appschoolranking_3year <- function(round = "Round 1", start = date_appstart_3year()) {
+
+  getdata_appschoolranking(round = round, start = start)
 
 }
 
