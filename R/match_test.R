@@ -35,6 +35,7 @@ filter_priority <- function(x, priority, prioritytable) {
     dplyr::filter(is.na(Ineligible)) %>%
     dplyr::filter(is.na({{ priority }}))
 
+
 }
 
 
