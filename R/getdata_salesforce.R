@@ -61,11 +61,22 @@ getdata_account <- function() {
         Id,
         Name,
         School_Code_String__c,
-        Grade_Span__c,
-        Terminal_Grade__c,
         Governance__c,
         School_Status__c,
-        Enrollment_POC_Email__c
+        High_Demand_School__c,
+        Grade_Span__c,
+        Terminal_Grade__c,
+        CMO_Group__c,
+        Enrollment_POC_Email__c,
+        Analytics_Reports_Email_s__c,
+        BillingStreet,
+        BillingCity,
+        BillingState,
+        BillingPostalCode,
+        Phone,
+        Registration_Details__c,
+        School_Welcome_Message__c,
+        Uniforms_Required__c
       from Account
       "
     ),
@@ -75,46 +86,14 @@ getdata_account <- function() {
       id_account = Id,
       name_account = Name,
       code_site = School_Code_String__c,
-      gradespan_nextyear = Grade_Span__c,
-      grade_terminal = Terminal_Grade__c,
       governance = Governance__c,
       status = School_Status__c,
-      email_enrollment = Enrollment_POC_Email__c
-    )
-
-}
-
-
-
-#' @export
-getdata_account_address <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Id,
-        School_Code_String__c,
-        Grade_Span__c,
-        Name,
-        BillingStreet,
-        BillingCity,
-        BillingState,
-        BillingPostalCode,
-        Phone,
-        Registration_Details__c,
-        School_Welcome_Message__c,
-        Uniforms_Required__c,
-        Terminal_Grade__c
-      from Account
-      "
-    )
-  ) %>%
-    dplyr::select(
-      id_account = Id,
-      name_account = Name,
-      code_site = School_Code_String__c,
-      gradespan_next = Grade_Span__c,
+      is_highdemand = High_Demand_School__c,
+      gradespan_nextyear = Grade_Span__c,
+      grade_terminal = Terminal_Grade__c,
+      cmo = CMO_Group__c,
+      email_enrollment = Enrollment_POC_Email__c,
+      email_analytics = Analytics_Reports_Email_s__c,
       street = BillingStreet,
       city = BillingCity,
       state = BillingState,
@@ -122,36 +101,13 @@ getdata_account_address <- function() {
       phone = Phone,
       registration = Registration_Details__c,
       welcome = School_Welcome_Message__c,
-      uniforms = Uniforms_Required__c,
-      grade_terminal = Terminal_Grade__c
-    )
-
-}
-
-
-
-#' @export
-getdata_account_contacts <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Id,
-        Name,
-        School_Code_String__c,
-        Enrollment_POC_Email__c,
-        Analytics_Reports_Email_s__c
-      from Account
-      "
-    )
-  ) %>%
-    dplyr::select(
-      id_account = Id,
-      name_account = Name,
-      code_site = School_Code_String__c,
-      email_enrollment = Enrollment_POC_Email__c,
-      email_analytics = Analytics_Reports_Email_s__c
+      uniforms = Uniforms_Required__c
+    ) %>%
+    dplyr::mutate(dplyr::across(c(
+      is_highdemand
+      ),
+      as.logical
+      )
     )
 
 }
@@ -172,30 +128,6 @@ getdata_account_gradespan <- function() {
       gradespan_nextyear_vector = list(gradespan_nextyear)
     ) %>%
     dplyr::ungroup()
-
-}
-
-
-
-#' @export
-getdata_account_open <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Id,
-        Name
-      from Account
-      where
-        School_Status__c = 'Open'
-      "
-    )
-  ) %>%
-    dplyr::select(
-      id_account = Id,
-      name_account = Name
-    )
 
 }
 
@@ -362,7 +294,11 @@ getdata_appschool <- function() {
         Name,
         School_Code__c,
         School__c,
+        School__r.Name,
         School__r.School_Code_String__c,
+        School__r.Governance__c,
+        School__r.Grade_Span__c,
+        Early_Childhood_School__c,
         EC_Program_Type__c,
         Is_Valid__c,
         Is_District_School__c,
@@ -391,7 +327,11 @@ getdata_appschool <- function() {
       name_appschool = Name,
       code_appschool = School_Code__c,
       id_account = School__c,
+      name_account = School__r.Name,
       code_site = School__r.School_Code_String__c,
+      governance = School__r.Governance__c,
+      gradespan_account_nextyear = School__r.Grade_Span__c,
+      is_ec = Early_Childhood_School__c,
       ec_type = EC_Program_Type__c,
       is_valid = Is_Valid__c,
       is_districtschool = Is_District_School__c,
@@ -410,36 +350,15 @@ getdata_appschool <- function() {
       zonepref_10 = Grade_10_Zip_Preference__c,
       zonepref_11 = Grade_11_Zip_Preference__c,
       zonepref_12 = Grade_12_Zip_Preference__c
-    )
-
-}
-
-
-
-#' @export
-getdata_appschool_with_account_gradespan <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        School_Code__c,
-        School__r.Grade_Span__c
-      from Application_School__c
-      "
-    ),
-    guess_types = FALSE
-  ) %>%
-    dplyr::select(
-      code_appschool = School_Code__c,
-      gradespan_nextyear = School__r.Grade_Span__c
     ) %>%
-    dplyr::distinct() %>%
-    tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
-    fix_grades(gradespan_nextyear) %>%
-    dplyr::arrange(gradespan_nextyear) %>%
-    dplyr::group_by(code_appschool) %>%
-    dplyr::summarize(gradespan_nextyear_vector = list(gradespan_nextyear))
+    dplyr::mutate(dplyr::across(c(
+      is_ec,
+      is_valid,
+      is_districtschool
+      ),
+      as.logical
+      )
+    )
 
 }
 
@@ -603,6 +522,8 @@ getdata_gradecapacity <- function() {
         Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c,
+        Match_Target__c,
+        Future_Match_Target__c,
         Future_10_1_Target__c
       from Grade_Capacity__c
       "
@@ -617,7 +538,9 @@ getdata_gradecapacity <- function() {
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c,
-      target_future = Future_10_1_Target__c
+      target_match = Match_Target__c,
+      target_match_future = Future_Match_Target__c,
+      target_101_future = Future_10_1_Target__c
     ) %>%
     fix_grades(var = grade)
 
@@ -803,6 +726,13 @@ format_student <- function(x) {
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
       grade_future = Future_School_Grade__c,
       id_account_future = Future_School__c
+    ) %>%
+    dplyr::mutate(across(c(
+      is_active,
+      is_recent
+      ),
+      as.logical
+      )
     )
 
 }

@@ -594,8 +594,7 @@ matchcalcs_priorityoutcomes <- function(x) {
         Sibling,
         `Child of Student`,
         Geography,
-        Feeder,
-        `Staff Child`
+        Feeder
       ),
       .after = `STUDENT ID`
     ) %>%

@@ -3,7 +3,7 @@
 
 
 #' @export
-match_lookup_account <- function(x) {
+match_lookup_account <- function(x, appschools, accounts) {
 
   accepted <-
     x %>%
@@ -12,13 +12,13 @@ match_lookup_account <- function(x) {
     dplyr::arrange(code_appschool)
 
   appschools <-
-    getdata_appschool() %>%
+    appschools %>%
     dplyr::select(code_appschool, code_site, id_account) %>%
     dplyr::filter(complete.cases(.)) %>%
     dplyr::distinct()
 
   accounts <-
-    getdata_account() %>%
+    accounts %>%
     dplyr::select(code_site, id_account) %>%
     dplyr::filter(complete.cases(.)) %>%
     dplyr::distinct()
@@ -49,34 +49,30 @@ match_lookup_account <- function(x) {
 
 
 #' @export
-match_augment <- function(x) {
+match_augment <- function(x, appschools, accounts, students) {
 
-  appschools <- getdata_appschool()
+  # appschools <- getdata_appschool()
 
-  accounts <- getdata_account()
+  # funding <-
+  #   appschools %>%
+  #   dplyr::select(code_appschool, choice_funding = ec_type) %>%
+  #   dplyr::distinct() %>%
+  #   dplyr::filter(!is.na(choice_funding))
+
+  names_matchschool <-
+    x %>%
+    match_lookup_account(appschools = appschools, accounts = accounts) %>%
+    dplyr::left_join(accounts, by = c("id_account")) %>%
+    dplyr::select(code_appschool, choice_name = name_account, id_account) %>%
+    dplyr::distinct()
 
   students <-
-    getdata_student_active() %>%
+    students %>%
     dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
     dplyr::select(
       oneappid, id_student, directcert_medicaid, directcert_snap,
       grade_current, school_current = name_account, grade_terminal
     )
-
-  funding <-
-    appschools %>%
-    dplyr::select(code_appschool, choice_funding = ec_type) %>%
-    dplyr::distinct() %>%
-    dplyr::filter(!is.na(choice_funding))
-
-  names_matchschool <-
-    x %>%
-    match_lookup_account() %>%
-    dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::select(code_appschool, choice_name = name_account, id_account) %>%
-    dplyr::distinct()
-  # %>%
-  #   dplyr::left_join(funding, by = c("code_appschool"))
 
   x %>%
     dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
@@ -101,32 +97,34 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
+  accounts <- getdata_account()
+  appschools <- getdata_appschool()
+
+  students_recent <- getdata_student_recent()
+  students_active <- students_recent %>% dplyr::filter(is_active)
+
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment() %>%
+    match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
     fix_grades()
 
-  overmatches <- readr::read_csv(
-    glue::glue("{dir_external}/sibling-overmatches.csv"),
-    col_types = "ccic"
-  )
+  # overmatches <- readr::read_csv(
+  #   glue::glue("{dir_external}/sibling-overmatches.csv"),
+  #   col_types = "ccic"
+  # )
 
-  prioritytable <- readr::read_csv(
-    glue::glue("{dir_external}/PriorityTable.csv")
-  )
+  # prioritytable <- readr::read_csv(
+  #   glue::glue("{dir_external}/PriorityTable.csv")
+  # )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
 
   results %>% readr::write_excel_csv(glue::glue("{dir_review}/results_by_student.csv"), na = "")
-
-  results %>%
-    dplyr::slice_sample(n = 30) %>%
-    readr::write_excel_csv(glue::glue("{dir_review}/review_sample.csv"), na = "")
 
   match %>%
     matchcalcs_summarystats_full(schools_waitlist = c("323", "324", "846", "847")) %>%
@@ -146,29 +144,29 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  match_test(
-    match = match,
-    dir_external = dir_external,
-    dir_out = dir_review,
-    prioritytable = prioritytable
-  )
+  # match_test(
+  #   match = match,
+  #   dir_external = dir_external,
+  #   dir_out = dir_review,
+  #   prioritytable = prioritytable
+  # )
 
-  match_placement(
-    match = match,
-    overmatches = overmatches,
-    dir_out = dir_business
-  )
-
-  match_notification(
-    match = match,
-    overmatches = overmatches,
-    dir_out = dir_business
-  )
-
-  match_briefing(
-    match = match,
-    dir_out = dir_business
-  )
+  # match_placement(
+  #   match = match,
+  #   overmatches = overmatches,
+  #   dir_out = dir_business
+  # )
+  #
+  # match_notification(
+  #   match = match,
+  #   overmatches = overmatches,
+  #   dir_out = dir_business
+  # )
+  #
+  # match_briefing(
+  #   match = match,
+  #   dir_out = dir_business
+  # )
 
 
 
