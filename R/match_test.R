@@ -94,8 +94,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
         !(`STUDENT ID` %in% apps_with_choices$oneappid)
         & !(`STUDENT ID` %in% students_futureschool$oneappid)
       ) %>%
-      dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
-      dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+      dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
+      dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
     test_text <- "All match participants trace back to application with choices or recent student with future school."
 
@@ -109,7 +109,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_participants, dir_out)
 
-  return(NULL)
+
 
 # Missing match records ---------------------------------------------------
 
@@ -118,7 +118,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   missing_apps <-
     apps_with_choices %>%
     dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(oneappid, id_student, id_app) %>%
+    dplyr::select(id_student, id_app, oneappid) %>%
     dplyr::arrange(oneappid)
 
   testthat::test_that("All applications with a choice are in match", {
@@ -127,7 +127,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   })
 
-  write_if_bad(missing_apps)
+  write_if_bad(missing_apps, dir_out)
+
+  return(NULL)
 
   print("Missing roll-forwards")
 

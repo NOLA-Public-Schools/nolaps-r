@@ -94,7 +94,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_review <- glue::glue("{dir_out}/review")
 
-  if(!dir.exists(dir_business)){dir.create(dir_business)}
+  # if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
   accounts <- getdata_account()
