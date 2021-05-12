@@ -103,6 +103,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   students_recent <- getdata_student_recent()
   students_active <- students_recent %>% dplyr::filter(is_active)
 
+  apps <- getdata_app(round = "Round 2")
+  choices <- getdata_appschoolranking(round = "Round 2")
+
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
@@ -144,12 +147,15 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  # match_test(
-  #   match = match,
-  #   dir_external = dir_external,
-  #   dir_out = dir_review,
-  #   prioritytable = prioritytable
-  # )
+  match_test(
+    match = match,
+    dir_external = dir_external,
+    dir_out = dir_review,
+    round = "Round 2",
+    students = students_recent,
+    apps = apps,
+    choices = choices
+  )
 
   # match_placement(
   #   match = match,
