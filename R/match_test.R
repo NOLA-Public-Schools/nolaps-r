@@ -118,10 +118,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   missing_apps <-
     apps_with_choices %>%
     dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(id_student, id_app, oneappid) %>%
+    dplyr::select(id_student, oneappid, id_app) %>%
     dplyr::arrange(oneappid)
 
-  testthat::test_that("All applications with a choice are in match", {
+  testthat::test_that("All applications with a choice are in match.", {
 
     testthat::expect_equal(nrow(missing_apps), 0)
 
@@ -129,23 +129,37 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(missing_apps, dir_out)
 
-  return(NULL)
-
   print("Missing roll-forwards")
 
-  missing_rollforwards <-
-    students %>%
-    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
-    dplyr::arrange(school_current, grade_current, oneappid)
+  if (round == "Round 1") {
 
-  testthat::test_that("All non-terminal current students are in match", {
+    missing_rollforwards <-
+      students %>%
+      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
+      dplyr::arrange(school_current, grade_current, oneappid)
+
+  } else if (round == "Round 2") {
+
+    missing_rollforwards <-
+      students_futureschool %>%
+      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      dplyr::select(id_student, oneappid, grade_future, name_account_future) %>%
+      dplyr::arrange(name_account_future, grade_future, oneappid)
+
+    test_text <- "All recent students with future school are in match."
+
+  }
+
+  testthat::test_that(test_text, {
 
     testthat::expect_equal(nrow(missing_rollforwards), 0)
 
   })
 
   write_if_bad(missing_rollforwards, dir_out)
+
+  return(NULL)
 
 
 

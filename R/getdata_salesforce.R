@@ -690,7 +690,9 @@ query_student <- function() {
       SchoolForce__School__r.School_Code_String__c,
       Is_Student_In_Terminal_Grade__c,
       Future_School_Grade__c,
-      Future_School__c
+      Future_School__c,
+      Future_School__r.Name,
+      Future_School__r.School_Code_String__c
     from Schoolforce__Student__c
     "
   )
@@ -725,7 +727,9 @@ format_student <- function(x) {
       code_site = SchoolForce__School__r.School_Code_String__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
       grade_future = Future_School_Grade__c,
-      id_account_future = Future_School__c
+      id_account_future = Future_School__c,
+      name_account_future = Future_School__r.Name,
+      code_site_future = Future_School__r.School_Code_String__c
     ) %>%
     dplyr::mutate(across(c(
       is_active,
@@ -733,7 +737,9 @@ format_student <- function(x) {
       ),
       as.logical
       )
-    )
+    ) %>%
+    fix_grades(grade_current) %>%
+    fix_grades(grade_future)
 
 }
 
