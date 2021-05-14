@@ -118,11 +118,11 @@ getdata_account <- function() {
 getdata_account_gradespan <- function() {
 
   getdata_account() %>%
-    dplyr::select(id_account, governance, grade_terminal, gradespan_nextyear) %>%
+    dplyr::select(id_account, gradespan_nextyear) %>%
     tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
     fix_grades(gradespan_nextyear) %>%
     dplyr::arrange(gradespan_nextyear) %>%
-    dplyr::group_by(id_account, governance, grade_terminal) %>%
+    dplyr::group_by(id_account) %>%
     dplyr::summarize(
       grade_max = max(gradespan_nextyear),
       gradespan_nextyear_vector = list(gradespan_nextyear)

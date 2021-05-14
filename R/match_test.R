@@ -159,19 +159,17 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(missing_rollforwards, dir_out)
 
-  return(NULL)
-
 
 
 # Non-existent grades -----------------------------------------------------
 
   print("Invalid grades")
 
-  autoineligibilities <-
-    readr::read_csv(
-      glue::glue("{dir_external}/auto-ineligibilities.csv"),
-      col_types = "cc"
-    )
+  # autoineligibilities <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_external}/auto-ineligibilities.csv"),
+  #     col_types = "cc"
+  #   )
 
   invalid_grades <-
     match %>%
@@ -183,17 +181,21 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
-    dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
-    dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
+    dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
+    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-  testthat::test_that("No match record involves a grade that will not exist next year", {
+  # %>%
+  #   dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
+
+  testthat::test_that("No match record involves a grade that will not exist next year.", {
 
     testthat::expect_equal(nrow(invalid_grades), 0)
 
   })
 
   write_if_bad(invalid_grades, dir_out)
+
+  return(NULL)
 
 
 
