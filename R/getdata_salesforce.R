@@ -372,6 +372,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       "
       select
         CreatedDate,
+        Application__r.OneApp_ID__c,
         Application__c,
         Application__r.Grade_Applying_For__c,
         Id,
@@ -399,6 +400,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
   ) %>%
     dplyr::select(
       date_created = CreatedDate,
+      oneappid = Application__r.OneApp_ID__c,
       id_app = Application__c,
       grade_applying = Application__r.Grade_Applying_For__c,
       id_appschoolranking = Id,

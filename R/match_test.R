@@ -195,8 +195,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_grades, dir_out)
 
-  return(NULL)
-
 
 
 # -------------------------------------------------------------------------
@@ -206,8 +204,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 # Eligibility -------------------------------------------------------------
 
 
-
-  asr_eligibility <- getdata_appschoolranking_eligibility()
 
   # ineligible_accepted <-
   #   match %>%
@@ -238,12 +234,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   #
   # }
 
-  print("Invalid eligibility per Salesforce")
+  print("Invalid per Salesforce")
 
   invalid_eligibility_partial <-
     match %>%
     dplyr::left_join(
-      asr_eligibility,
+      choices,
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible") %>%
@@ -263,6 +259,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   })
 
   write_if_bad(invalid_eligibility_partial, dir_out)
+
+  return(NULL)
 
 
 
