@@ -68,6 +68,7 @@ getdata_account <- function() {
         Terminal_Grade__c,
         CMO_Group__c,
         Enrollment_POC_Email__c,
+        Designated_Content_Approver__c,
         Analytics_Reports_Email_s__c,
         BillingStreet,
         BillingCity,
@@ -93,6 +94,7 @@ getdata_account <- function() {
       grade_terminal = Terminal_Grade__c,
       cmo = CMO_Group__c,
       email_enrollment = Enrollment_POC_Email__c,
+      email_approver = Designated_Content_Approver__c,
       email_analytics = Analytics_Reports_Email_s__c,
       street = BillingStreet,
       city = BillingCity,
@@ -526,7 +528,8 @@ getdata_gradecapacity <- function() {
         Current_Live_Register__c,
         Match_Target__c,
         Future_Match_Target__c,
-        Future_10_1_Target__c
+        Future_10_1_Target__c,
+        Requested_Round_2_Target__c
       from Grade_Capacity__c
       "
     ),
@@ -542,7 +545,8 @@ getdata_gradecapacity <- function() {
       currentregister_live = Current_Live_Register__c,
       target_match = Match_Target__c,
       target_match_future = Future_Match_Target__c,
-      target_101_future = Future_10_1_Target__c
+      target_101_future = Future_10_1_Target__c,
+      target_requested_round_2 = Requested_Round_2_Target__c
     ) %>%
     fix_grades(var = grade)
 
