@@ -19,10 +19,12 @@ dataload_value <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   print(input_data)
 
-  salesforcer::sf_update(
-    input_data = input_data,
-    object_name = object_name
-  ) %>%
-    dplyr::pull(errors)
+  result <-
+    salesforcer::sf_update(
+      input_data = input_data,
+      object_name = object_name
+    )
+
+  print(result)
 
 }
