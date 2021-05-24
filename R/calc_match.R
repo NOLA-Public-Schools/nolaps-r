@@ -586,19 +586,7 @@ matchcalcs_priorityoutcomes <- function(x) {
     tidyr::pivot_wider(names_from = `QUALIFIED PRIORITIES`, values_from = has) %>%
     dplyr::select(-`NA`) %>%
     fix_grades() %>%
-    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
-    dplyr::relocate(
-      c(
-        Guaranteed,
-        IEP,
-        Sibling,
-        `Child of Student`,
-        Geography,
-        Feeder
-      ),
-      .after = `STUDENT ID`
-    ) %>%
-    dplyr::relocate(c(`Priority Score`, Ineligible), .after = tidyselect::last_col())
+    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
 }
 
