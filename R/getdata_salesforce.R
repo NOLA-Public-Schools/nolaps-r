@@ -172,8 +172,10 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       select
         CreatedDate,
         OneApp_ID__c,
+        Student__r.SchoolForce__Contact_Id__c,
         Student__c,
         Id,
+        Student__r.Current_Grade__c,
         Grade_Applying_For__c,
         Student_First_Name__c,
         Student_Last_Name__c,
@@ -193,7 +195,9 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Zip_Code__c,
         Address_Validated__c,
         Student__r.SchoolForce__School__c,
-        Student__r.Future_School__c
+        Student__r.Future_School__c,
+        Current_School__c,
+        Current_School__r.School__c
       from Application__c
       where
         RecordType.Name = '{round}' and
@@ -206,8 +210,10 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
     dplyr::select(
       date_created = CreatedDate,
       oneappid = OneApp_ID__c,
+      id_contact = Student__r.SchoolForce__Contact_Id__c,
       id_student = Student__c,
       id_app = Id,
+      grade_current = Student__r.Current_Grade__c,
       grade_applying = Grade_Applying_For__c,
       applicant_firstname = Student_First_Name__c,
       applicant_lastname = Student_Last_Name__c,
@@ -227,8 +233,11 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       zip = Zip_Code__c,
       is_addressvalidated = Address_Validated__c,
       id_account_current = Student__r.SchoolForce__School__c,
-      id_account_future = Student__r.Future_School__c
+      id_account_future = Student__r.Future_School__c,
+      id_appschool_claimed = Current_School__c,
+      id_account_claimed = Current_School__r.School__c
     ) %>%
+    fix_grades(var = grade_current) %>%
     fix_grades(var = grade_applying)
 
 }
@@ -239,47 +248,6 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
 getdata_app_3year <- function(round = "Round 1", start = date_appstart_3year()) {
 
   getdata_app(round = round, start = start)
-
-}
-
-
-
-#' @export
-getdata_app_claimedschool <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Id,
-        Student__c,
-        OneApp_ID__c,
-        Student_First_Name__c,
-        Student_Last_Name__c,
-        Grade_Applying_For__c,
-        Current_School__c,
-        RecordTypeId
-      from Application__c
-      where
-        CreatedDate >= 2020-11-01T00:00:00Z and
-        Current_School__c != null
-      "
-    ),
-    api_type = "Bulk 2.0"
-  ) %>%
-    dplyr::select(
-      id_app = Id,
-      id_student = Student__c,
-      oneappid = OneApp_ID__c,
-      applicant_firstname = Student_First_Name__c,
-      applicant_lastname = Student_Last_Name__c,
-      grade_applying = Grade_Applying_For__c,
-      id_appschool_claimed = Current_School__c,
-      id_recordtype = RecordTypeId
-    ) %>%
-    dplyr::left_join(getdata_recordtype(), by = "id_recordtype") %>%
-    dplyr::select(-id_recordtype) %>%
-    dplyr::relocate(recordtype)
 
 }
 
