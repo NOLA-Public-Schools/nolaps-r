@@ -97,7 +97,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
       dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-    test_text <- "All match participants trace back to application with choices or recent student with future school."
+    test_text <- "All match participants trace back to application with choices or recent student with future school"
 
   }
 
@@ -121,7 +121,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::select(id_student, oneappid, id_app) %>%
     dplyr::arrange(oneappid)
 
-  testthat::test_that("All applications with a choice are in match.", {
+  testthat::test_that("All applications with a choice are in match", {
 
     testthat::expect_equal(nrow(missing_apps), 0)
 
@@ -147,7 +147,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       dplyr::select(id_student, oneappid, grade_future, name_account_future) %>%
       dplyr::arrange(name_account_future, grade_future, oneappid)
 
-    test_text <- "All recent students with future school are in match."
+    test_text <- "All recent students with future school are in match"
 
   }
 
@@ -187,7 +187,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   # %>%
   #   dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
 
-  testthat::test_that("No match record involves a grade that will not exist next year.", {
+  testthat::test_that("No match record involves a grade that will not exist next year", {
 
     testthat::expect_equal(nrow(invalid_grades), 0)
 
@@ -273,7 +273,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     )
 
   prioritykey <- readr::read_csv(
-    glue::glue("{dir_external}/priority-key.csv")
+    glue::glue("{dir_external}/priority-key.csv"),
+    col_types = "cccccccccccccccccccc"
   )
 
 # Guarantees --------------------------------------------------------------

@@ -579,7 +579,7 @@ matchcalcs_results_seekingnew_unassigned <- function(
 matchcalcs_priorityoutcomes <- function(x) {
 
   x %>%
-    dplyr::select(id_account, choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`) %>%
+    dplyr::select(id_student, choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`, id_account) %>%
     dplyr::mutate(dplyr::across(`QUALIFIED PRIORITIES`, ~ stringr::str_remove(., "/$"))) %>%
     tidyr::separate_rows(`QUALIFIED PRIORITIES`, sep = "/") %>%
     dplyr::mutate(has = 1) %>%
