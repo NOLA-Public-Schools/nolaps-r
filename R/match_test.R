@@ -41,7 +41,7 @@ filter_priority <- function(x, priority, prioritytable) {
 
 
 #' @export
-match_test <- function(match, dir_external, dir_out, round, students, apps, choices) {
+match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools) {
 
 
 
@@ -260,30 +260,27 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_eligibility_partial, dir_out)
 
-  return(NULL)
 
 
-
-# Guarantees --------------------------------------------------------------
-
-  print("Guarantee")
+# Priorities --------------------------------------------------------------
 
   match_priorities <-
     match %>%
     matchcalcs_priorityoutcomes() %>%
     dplyr::left_join(
-      getdata_appschoolranking_priorities(),
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+      choices,
+      by = c("STUDENT ID" = "oneappid", "id_account")
     )
 
   prioritykey <- readr::read_csv(
     glue::glue("{dir_external}/priority-key.csv")
   )
 
- codes <-
-    getdata_appschool() %>%
-    dplyr::distinct(code_appschool, code_site) %>%
-    dplyr::filter(complete.cases(.))
+# Guarantees --------------------------------------------------------------
+
+  print("Guarantee")
+
+
 
   key_guarantee <-
     prioritykey %>%
@@ -295,32 +292,44 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::filter(guarantee != "-") %>%
     dplyr::distinct()
 
-  students_guarantee <-
-    getdata_student_active() %>%
-    dplyr::filter(code_site %in% key_guarantee$code_site) %>%
-    dplyr::select(oneappid, code_site, grade_current) %>%
-    fix_grades(grade_current)
+  if (round == "Round 1") {
 
-  shouldhave <-
-    students_guarantee %>%
-    dplyr::left_join(key_guarantee, by = c("code_site", "grade_current")) %>%
-    dplyr::filter(!is.na(guarantee))
+    students_guarantee <-
+      getdata_student_active() %>%
+      dplyr::filter(code_site %in% key_guarantee$code_site) %>%
+      dplyr::select(oneappid, code_site, grade_current) %>%
+      fix_grades(grade_current)
+
+    shouldhave <-
+      students_guarantee %>%
+      dplyr::left_join(key_guarantee, by = c("code_site", "grade_current")) %>%
+      dplyr::filter(!is.na(guarantee))
+
+  } else if (round == "Round 2") {
+
+    shouldhave <-
+      students_futureschool %>%
+      dplyr::select(oneappid, guarantee = id_account_future)
+
+  }
 
   missing_guarantee <-
     match_priorities %>%
     dplyr::filter(is.na(Guaranteed)) %>%
-    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
-    dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
+    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "id_account" = "guarantee"))
+  # %>%
+  #   dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
 
   invalid_guarantee <-
     match_priorities %>%
     dplyr::filter(!is.na(Guaranteed)) %>%
-    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee")) %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
-    dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
+    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "id_account" = "guarantee")) %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9)
+  # %>%
+  #   dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
+  #   dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
+  #   dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+  #   dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
 
   testthat::test_that(
     "Guarantee - everyone has it that should; no one has it that shouldn't", {
@@ -332,6 +341,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(missing_guarantee, dir_out)
   write_if_bad(invalid_guarantee, dir_out)
+
+  return(NULL)
 
 
 

@@ -154,7 +154,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     round = "Round 2",
     students = students_recent,
     apps = apps,
-    choices = choices
+    choices = choices,
+    appschools = appschools
   )
 
   # match_placement(
