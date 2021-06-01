@@ -285,6 +285,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     ) %>%
     dplyr::filter(
       (student_dob > "2016-09-30" & !(GRADE %in% grades_ec()))
+      | (student_dob > "2006-09-30" & (`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8")
       | ineligible_badgrades
       | ineligible_expelled
       | ineligible_noreturn
