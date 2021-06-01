@@ -277,7 +277,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     )
 
   prioritytable <- readr::read_csv(
-    glue::glue("{dir_external}/PriorityTable.csv")
+    glue::glue("{dir_external}/PriorityTable.csv"),
+    col_types = "ccdddddddddddddddddddddddddddddddddd"
   )
 
   prioritykey <- readr::read_csv(
@@ -415,6 +416,39 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   write_if_bad(missing_feeder, dir_out)
   write_if_bad(invalid_feeder, dir_out)
 
+
+
+  # IEP
+
+  print("IEP")
+
+  iep <- readr::read_csv(glue::glue("{dir_external}/iep.csv"), col_types = "c")
+
+  missing_iep <-
+    match_priorities %>%
+    filter_priority(IEP, prioritytable) %>%
+    dplyr::filter(
+      (`STUDENT ID` %in% iep$`OneApp ID`)
+    )
+
+  invalid_iep <-
+    match_priorities %>%
+    dplyr::filter(!is.na(IEP)) %>%
+    dplyr::filter(
+      !(`STUDENT ID` %in% iep$`OneApp ID`)
+    )
+
+  testthat::test_that(
+    "IEP - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(missing_iep), 0)
+      testthat::expect_equal(nrow(invalid_iep), 0)
+
+    })
+
+  write_if_bad(missing_iep, dir_out)
+  write_if_bad(invalid_iep, dir_out)
+
   return(NULL)
 
 
@@ -481,37 +515,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(missing_zone, dir_out)
   write_if_bad(invalid_zone, dir_out)
-
-  # IEP
-
-  print("IEP")
-
-  external <- readr::read_csv(glue::glue("{dir_external}/iep.csv"))
-
-  missing_iep <-
-    match_priorities %>%
-    filter_priority(IEP, prioritytable) %>%
-    dplyr::filter(
-      (`STUDENT ID` %in% external$`OneApp ID`)
-    )
-
-  invalid_iep <-
-    match_priorities %>%
-    dplyr::filter(!is.na(IEP)) %>%
-    dplyr::filter(
-      !(`STUDENT ID` %in% external$`OneApp ID`)
-    )
-
-  testthat::test_that(
-    "IEP - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_iep), 0)
-      testthat::expect_equal(nrow(invalid_iep), 0)
-
-    })
-
-  write_if_bad(missing_iep, dir_out)
-  write_if_bad(invalid_iep, dir_out)
 
 
 
