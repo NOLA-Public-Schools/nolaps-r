@@ -211,23 +211,21 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 # Eligibility -------------------------------------------------------------
 
   # TODO
-  # age
   # gt
 
   print("Invalid eligibility")
 
-  asr_ineligible <-
-    choices %>%
-    dplyr::filter(eligibility == "Ineligible") %>%
-    dplyr::mutate(ineligible_asr = TRUE)
+  dob <-
+    students %>%
+    dplyr::select(oneappid, student_dob)
 
-  ineligibilities <-
+  badgrades <-
     readr::read_csv(
-      glue::glue("{dir_external}/student-ineligibilities.csv"),
-      col_types = "ccccccc"
+      glue::glue("{dir_external}/auto-ineligibilities.csv"),
+      col_types = "cc"
     ) %>%
-    dplyr::select(oneappid = `OneApp ID`, code_appschool = `App Code`) %>%
-    dplyr::mutate(ineligible_ineligibilities = TRUE)
+    dplyr::select(code_appschool = `School Code`, grade = `Grade`) %>%
+    dplyr::mutate(ineligible_badgrades = TRUE)
 
   expelled <-
     readr::read_csv(
@@ -245,24 +243,29 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::select(oneappid = `OneApp ID`, code_appschool = `Referring School App Code`) %>%
     dplyr::mutate(ineligible_noreturn = TRUE)
 
-  badgrades <-
+  asr_ineligible <-
+    choices %>%
+    dplyr::filter(eligibility == "Ineligible") %>%
+    dplyr::mutate(ineligible_asr = TRUE)
+
+  ineligibilities <-
     readr::read_csv(
-      glue::glue("{dir_external}/auto-ineligibilities.csv"),
-      col_types = "cc"
+      glue::glue("{dir_external}/student-ineligibilities.csv"),
+      col_types = "ccccccc"
     ) %>%
-    dplyr::select(code_appschool = `School Code`, grade = `Grade`) %>%
-    dplyr::mutate(ineligible_badgrades = TRUE)
+    dplyr::select(oneappid = `OneApp ID`, code_appschool = `App Code`) %>%
+    dplyr::mutate(ineligible_ineligibilities = TRUE)
 
   invalid_eligibility <-
     match %>%
     dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible") %>%
     dplyr::left_join(
-      asr_ineligible,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+      dob,
+      by = c("STUDENT ID" = "oneappid")
     ) %>%
     dplyr::left_join(
-      ineligibilities,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+      badgrades,
+      by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
     ) %>%
     dplyr::left_join(
       expelled,
@@ -273,17 +276,21 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::left_join(
-      badgrades,
-      by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
+      asr_ineligible,
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+    ) %>%
+    dplyr::left_join(
+      ineligibilities,
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::filter(
-      ineligible_asr
-      | (ineligible_ineligibilities & is.na(`GUARANTEED?`))
+      (student_dob > "2016-09-30" & !(GRADE %in% grades_ec()))
+      | ineligible_badgrades
       | ineligible_expelled
       | ineligible_noreturn
-      | ineligible_badgrades
+      | (ineligible_asr & is.na(`GUARANTEED?`))
+      | (ineligible_ineligibilities & is.na(`GUARANTEED?`))
     )
-
 
   testthat::test_that("No choice is marked eligible in match but ineligible in Salesforce or external input", {
 

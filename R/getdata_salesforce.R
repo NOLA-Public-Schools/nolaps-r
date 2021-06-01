@@ -712,6 +712,12 @@ format_student <- function(x) {
       as.logical
       )
     ) %>%
+    dplyr::mutate(across(c(
+      student_dob
+      ),
+      lubridate::as_date
+      )
+    ) %>%
     fix_grades(grade_current) %>%
     fix_grades(grade_future)
 
