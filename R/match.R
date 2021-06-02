@@ -63,7 +63,7 @@ match_augment <- function(x, appschools, accounts, students) {
     x %>%
     match_lookup_account(appschools = appschools, accounts = accounts) %>%
     dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::select(code_appschool, choice_name = name_account, id_account) %>%
+    dplyr::select(code_appschool, choice_name = name_account, id_account, is_highdemand) %>%
     dplyr::distinct()
 
   students <-

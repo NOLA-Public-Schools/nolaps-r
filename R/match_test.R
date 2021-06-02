@@ -212,6 +212,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # TODO
   # gt
+  # scholarship
 
   print("Invalid eligibility")
 
@@ -286,7 +287,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::filter(
       (student_dob > "2016-09-30" & !(GRADE %in% grades_ec()))
       | (student_dob > "2006-09-30" & (`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8")
-      | ineligible_badgrades
+      | (ineligible_badgrades & is.na(`GUARANTEED?`))
       | ineligible_expelled
       | ineligible_noreturn
       | (ineligible_asr & is.na(`GUARANTEED?`))
@@ -322,6 +323,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     glue::glue("{dir_external}/priority-key.csv"),
     col_types = "cccccccccccccccccccc"
   )
+
+
 
 # Guarantees --------------------------------------------------------------
 
@@ -362,8 +365,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities %>%
     dplyr::filter(is.na(Guaranteed)) %>%
     dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "id_account" = "guarantee"))
-  # %>%
-  #   dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
 
   invalid_guarantee <-
     match_priorities %>%
@@ -486,9 +487,35 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   write_if_bad(missing_iep, dir_out)
   write_if_bad(invalid_iep, dir_out)
 
+
+
+  # Verified sibling
+
+  print("Verified sibling")
+
+  invalid_sibling_verified <-
+    match_priorities %>%
+    dplyr::filter(is_highdemand) %>%
+    dplyr::filter(!is.na(Sibling)) %>%
+    dplyr::filter(!is_verifiedsibling)
+
+  missing_sibling_verified <-
+    match_priorities %>%
+    filter_priority(Sibling, prioritytable) %>%
+    dplyr::filter(is_verifiedsibling)
+
+  testthat::test_that(
+    "Verified sibling - everyone has it that should; no one has it that shouldn't", {
+
+      testthat::expect_equal(nrow(invalid_sibling_verified), 0)
+      testthat::expect_equal(nrow(missing_sibling_verified), 0)
+
+    })
+
+  write_if_bad(invalid_sibling_verified, dir_out)
+  write_if_bad(missing_sibling_verified, dir_out)
+
   return(NULL)
-
-
 
   # Distance
 
