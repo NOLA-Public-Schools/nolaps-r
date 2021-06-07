@@ -304,6 +304,155 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
+# Family ------------------------------------------------------------------
+
+
+
+  siblings <- getdata_sibling()
+
+  sibling_edges <-
+    siblings %>%
+    dplyr::filter(
+      student_oneappid %in% choices$oneappid,
+      sibling_oneappid %in% choices$oneappid
+    ) %>%
+    dplyr::select(from = student_oneappid, to = sibling_oneappid) %>%
+    dplyr::arrange(from, to)
+
+  families_comp <-
+    tidygraph::tbl_graph(edges = sibling_edges, directed = FALSE) %>%
+    tidygraph::to_components()
+
+  familify <- function(i) {
+
+    tibble::as_tibble(families_comp[[i]]) %>% dplyr::mutate(id_family = i)
+
+  }
+
+  families <-
+    purrr::map_dfr(1:length(families_comp), familify) %>%
+    dplyr::rename(oneappid = name)
+
+  students_dob <-
+    families %>%
+    dplyr::left_join(dob, by = "oneappid")
+
+  twins <-
+    students_dob %>%
+    dplyr::select(id_family, student_dob) %>%
+    dplyr::count(id_family, student_dob, sort = T) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::mutate(is_twin = TRUE) %>%
+    dplyr::select(-n) %>%
+    dplyr::left_join(students_dob, by = c("id_family", "student_dob")) %>%
+    dplyr::select(oneappid, is_twin)
+
+  pref_nested <-
+    families %>%
+    dplyr::left_join(match, by = c("oneappid" = "STUDENT ID")) %>%
+    dplyr::left_join(twins, by = "oneappid") %>%
+    dplyr::select(id_family, is_twin, oneappid, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
+    dplyr::arrange(id_family, is_twin, oneappid, `CHOICE RANK`) %>%
+    tidyr::nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`))
+
+  count_twin <-
+    pref_nested %>%
+    dplyr::filter(is_twin) %>%
+    dplyr::count(id_family, data, name = "n_twin") %>%
+    dplyr::filter(n_twin > 1)
+
+  students_with_family <-
+    pref_nested %>%
+    dplyr::count(id_family, data) %>%
+    dplyr::filter(n > 1) %>%
+    dplyr::group_by(id_family) %>%
+    dplyr::mutate(subid_family = 1:n()) %>%
+    dplyr::left_join(pref_nested, by = c("id_family", "data")) %>%
+    dplyr::left_join(count_twin, by = c("id_family", "data")) %>%
+    dplyr::mutate(id_family = stringr::str_c(id_family, subid_family, sep = ".")) %>%
+    dplyr::mutate(is_twin = dplyr::if_else(is_twin & !is.na(n_twin), TRUE, FALSE)) %>%
+    tidyr::replace_na(list(is_twin = FALSE)) %>%
+    dplyr::mutate(is_family = TRUE) %>%
+    dplyr::select(oneappid, id_family, is_twin, is_family)
+
+  print("Twin")
+
+  invalid_twin <-
+    match %>%
+    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(!is.na(`TWIN?`)) %>%
+    dplyr::filter(!is_twin) %>%
+    dplyr::select(`FAMILY ID`, `STUDENT ID`) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(`FAMILY ID`, `STUDENT ID`)
+
+  missing_twin <-
+    match %>%
+    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(is.na(`TWIN?`)) %>%
+    dplyr::filter(is_twin) %>%
+    dplyr::arrange(id_family) %>%
+    dplyr::select(id_family, `STUDENT ID`) %>%
+    dplyr::distinct()
+
+  testthat::test_that(
+    "All siblings with applications, same birthdate, and same match choices are marked as twins",
+    {
+      testthat::expect_equal(nrow(missing_twin), 0)
+    }
+  )
+
+  write_if_bad(missing_twin, dir_out)
+
+  testthat::test_that(
+    "All match twins are siblings with applications, same birthdate, and same match choices",
+    {
+      testthat::expect_equal(nrow(invalid_twin), 0)
+    }
+  )
+
+  write_if_bad(invalid_twin, dir_out)
+
+  print("Family")
+
+  invalid_family <-
+    match %>%
+    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(!is.na(`FAMILY ID`)) %>%
+    dplyr::filter(!is_family) %>%
+    dplyr::select(`FAMILY ID`, `STUDENT ID`) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(`FAMILY ID`, `STUDENT ID`)
+
+  missing_family <-
+    match %>%
+    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(is.na(`FAMILY ID`)) %>%
+    dplyr::filter(is_family) %>%
+    dplyr::select(id_family, `STUDENT ID`) %>%
+    dplyr::distinct() %>%
+    dplyr::arrange(id_family, `STUDENT ID`)
+
+  testthat::test_that(
+    "All siblings with applications and same match choices are marked as family",
+    {
+      testthat::expect_equal(nrow(missing_family), 0)
+    }
+  )
+
+  write_if_bad(missing_family, dir_out)
+
+  testthat::test_that(
+    "All match families are siblings with applications and same match choices",
+    {
+      testthat::expect_equal(nrow(invalid_family), 0)
+    }
+  )
+
+  write_if_bad(invalid_family, dir_out)
+
+
+
 # Priorities --------------------------------------------------------------
 
   match_priorities <-
