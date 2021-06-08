@@ -513,7 +513,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   missing_guarantee <-
     match_priorities %>%
     dplyr::filter(is.na(Guaranteed)) %>%
-    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "id_account" = "guarantee"))
+    dplyr::distinct(`STUDENT ID`) %>%
+    dplyr::left_join(shouldhave, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(!is.na(guarantee))
 
   invalid_guarantee <-
     match_priorities %>%
