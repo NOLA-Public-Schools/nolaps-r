@@ -307,6 +307,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 # Family ------------------------------------------------------------------
 
 
+  optouts <-
+    readr::read_csv(
+      glue::glue("{dir_external}/family-links-opt-out.csv"),
+      col_types = "c"
+    ) %>%
+    dplyr::pull(`OneApp ID`)
 
   siblings <- getdata_sibling()
 
@@ -510,9 +516,14 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   }
 
+  has_guarantee <-
+    match_priorities %>%
+    dplyr::filter(!is.na(Guaranteed)) %>%
+    dplyr::pull(`STUDENT ID`)
+
   missing_guarantee <-
     match_priorities %>%
-    dplyr::filter(is.na(Guaranteed)) %>%
+    dplyr::filter(!(`STUDENT ID` %in% has_guarantee)) %>%
     dplyr::distinct(`STUDENT ID`) %>%
     dplyr::left_join(shouldhave, by = c("STUDENT ID" = "oneappid")) %>%
     dplyr::filter(!is.na(guarantee))
