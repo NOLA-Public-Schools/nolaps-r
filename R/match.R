@@ -97,6 +97,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   # if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
+  print("Loading data")
+
   accounts <- getdata_account()
   appschools <- getdata_appschool()
 

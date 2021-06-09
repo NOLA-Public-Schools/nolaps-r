@@ -306,7 +306,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Family ------------------------------------------------------------------
 
-
   optouts <-
     readr::read_csv(
       glue::glue("{dir_external}/family-links-opt-out.csv"),
@@ -359,7 +358,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::left_join(twins, by = "oneappid") %>%
     dplyr::select(id_family, is_twin, oneappid, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
     dplyr::arrange(id_family, is_twin, oneappid, `CHOICE RANK`) %>%
-    tidyr::nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`))
+    tidyr::nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
+    dplyr::mutate(n_choices = purrr::map_int(.$data, nrow)) %>%
+    dplyr::filter(n_choices > 1 | is_twin) %>%
+    dplyr::select(-n_choices)
 
   count_twin <-
     pref_nested %>%
@@ -435,6 +437,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
     dplyr::filter(is.na(`FAMILY ID`)) %>%
     dplyr::filter(is_family) %>%
+    dplyr::filter(!(`STUDENT ID` %in% optouts)) %>%
     dplyr::select(id_family, `STUDENT ID`) %>%
     dplyr::distinct() %>%
     dplyr::arrange(id_family, `STUDENT ID`)
