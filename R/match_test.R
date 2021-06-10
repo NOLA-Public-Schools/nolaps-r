@@ -680,8 +680,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   write_if_bad(invalid_sibling_verified, dir_out)
   write_if_bad(missing_sibling_verified, dir_out)
 
-  return(NULL)
-
   # Distance
 
   print("Distance")
