@@ -666,7 +666,9 @@ query_student <- function() {
       Future_School_Grade__c,
       Future_School__c,
       Future_School__r.Name,
-      Future_School__r.School_Code_String__c
+      Future_School__r.School_Code_String__c,
+      Promotion_Decision__c,
+      Rising_T9__c
     from Schoolforce__Student__c
     "
   )
@@ -703,11 +705,14 @@ format_student <- function(x) {
       grade_future = Future_School_Grade__c,
       id_account_future = Future_School__c,
       name_account_future = Future_School__r.Name,
-      code_site_future = Future_School__r.School_Code_String__c
+      code_site_future = Future_School__r.School_Code_String__c,
+      promotion = Promotion_Decision__c,
+      is_t9 = Rising_T9__c
     ) %>%
     dplyr::mutate(across(c(
       is_active,
-      is_recent
+      is_recent,
+      is_t9
       ),
       as.logical
       )

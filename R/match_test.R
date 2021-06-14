@@ -208,6 +208,38 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
+# Retentions --------------------------------------------------------------
+
+  cat("Missing retentions\n")
+
+  retained <-
+    students_active %>%
+    dplyr::filter(promotion == "Retained") %>%
+    dplyr::filter(!(grade_current == "8" & is_t9)) %>%
+    dplyr::select(id_student, oneappid, grade_current)
+
+  shouldbe_retained <-
+    match %>%
+    dplyr::filter(`STUDENT ID` %in% retained$oneappid) %>%
+    dplyr::select(`STUDENT ID`, GRADE)
+
+  missing_retained <-
+    retained %>%
+    dplyr::anti_join(
+      shouldbe_retained,
+      by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
+    )
+
+  testthat::test_that("All students retained in Salesforce except for 8th graders marked rising T9 are assigned to current grade", {
+
+    testthat::expect_equal(nrow(missing_retained), 0)
+
+  })
+
+  write_if_bad(missing_retained, dir_out)
+
+
+
 # Eligibility -------------------------------------------------------------
 
   # TODO
@@ -685,7 +717,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   print("Distance")
 
   validatedgeo <- readr::read_csv(
-    glue::glue("{dir_external}/validated-geo.csv")
+    glue::glue("{dir_external}/validated-geo.csv"),
+    col_types = "ccc"
   )
 
   missing_distance <-
