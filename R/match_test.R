@@ -210,7 +210,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Retentions --------------------------------------------------------------
 
-  cat("Missing retentions\n")
+
 
   retained <-
     students_active %>%
@@ -230,6 +230,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
     )
 
+  cat("Missing retentions\n")
+
   testthat::test_that("All students retained in Salesforce except for 8th graders marked rising T9 are assigned to current grade", {
 
     testthat::expect_equal(nrow(missing_retained), 0)
@@ -237,6 +239,23 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   })
 
   write_if_bad(missing_retained, dir_out)
+
+  # invalid_retained <-
+  #   match %>%
+  #   dplyr::filter(GRADE == grade_current) %>%
+  #   dplyr::select(id_student, `STUDENT ID`, GRADE) %>%
+  #   dplyr::distinct() %>%
+  #   dplyr::anti_join(retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current"))
+  #
+  # cat("Invalid retentions\n")
+  #
+  # testthat::test_that("All students applying to current grade in match are marked retained in Salesforce", {
+  #
+  #   testthat::expect_equal(nrow(invalid_retained), 0)
+  #
+  # })
+  #
+  # write_if_bad(invalid_retained, dir_out)
 
 
 
