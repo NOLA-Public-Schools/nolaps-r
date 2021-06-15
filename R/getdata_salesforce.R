@@ -554,6 +554,45 @@ getdata_guardian <- function() {
 
 
 #' @export
+getdata_placement <- function(year = "2020-2021") {
+
+  salesforcer::sf_query(
+    glue::glue_safe(
+      "
+      select
+        Placement_Active__c,
+        School_Year_Name__c,
+        Placement_Student__c,
+        Future_School_Grade__c,
+        Future_School_Name__c
+      from Placement__c
+      where
+        School_Year_Name__c = '{year}'
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      is_active = Placement_Active__c,
+      year_placement = School_Year_Name__c,
+      id_student = Placement_Student__c,
+      grade_future = Future_School_Grade__c,
+      id_account_future = Future_School_Name__c
+    ) %>%
+    dplyr::mutate(across(c(
+      is_active
+      ),
+      as.logical
+      )
+    ) %>%
+    fix_grades(grade_future)
+
+}
+
+
+
+#' @export
 getdata_registration <- function() {
 
   salesforcer::sf_query(

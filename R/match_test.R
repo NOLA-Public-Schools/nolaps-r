@@ -212,6 +212,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
+  placements_inactive <- getdata_placement() %>% filter(!is_active)
+
   retained <-
     students_active %>%
     dplyr::filter(promotion == "Retained") %>%
@@ -228,11 +230,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::anti_join(
       shouldbe_retained,
       by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
-    )
+    ) %>%
+    dplyr::anti_join(placements_inactive, by = c("id_student"))
 
   cat("Missing retentions\n")
 
-  testthat::test_that("All students retained in Salesforce except for 8th graders marked rising T9 are assigned to current grade", {
+  testthat::test_that("All retained students except for rising T9 and placement deactivations are assigned to current grade", {
 
     testthat::expect_equal(nrow(missing_retained), 0)
 
