@@ -71,7 +71,7 @@ match_augment <- function(x, appschools, accounts, students) {
     dplyr::left_join(accounts, by = c("id_account_current" = "id_account")) %>%
     dplyr::select(
       oneappid, id_student, directcert_medicaid, directcert_snap,
-      grade_current, school_current = name_account, grade_terminal, id_account_current
+      grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
     )
 
   x %>%
