@@ -192,6 +192,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
     dplyr::ungroup() %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    dplyr::filter(`ELIGIBLE?` == "YES") %>%
     dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
     dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
@@ -249,6 +250,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::select(id_student, `STUDENT ID`, GRADE) %>%
     dplyr::distinct() %>%
     dplyr::anti_join(retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")) %>%
+    dplyr::filter(GRADE != "12") %>%
+    dplyr::filter(!(GRADE %in% grades_ec())) %>%
     dplyr::arrange(GRADE)
 
   cat("Invalid retentions\n")
