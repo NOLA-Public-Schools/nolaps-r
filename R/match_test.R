@@ -211,8 +211,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Retentions --------------------------------------------------------------
 
-
-
   placements_inactive <- getdata_placement() %>% filter(!is_active)
 
   retained <-

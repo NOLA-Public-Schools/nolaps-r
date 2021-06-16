@@ -94,10 +94,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_review <- glue::glue("{dir_out}/review")
 
-  # if(!dir.exists(dir_business)){dir.create(dir_business)}
+  if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
-  print("Loading data")
+  cat("Loading data\n")
 
   accounts <- getdata_account()
   appschools <- getdata_appschool()
@@ -160,11 +160,12 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     appschools = appschools
   )
 
-  # match_placement(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business
-  # )
+  match_placement(
+    match = match,
+    overmatches = NULL,
+    dir_out = dir_business,
+    students_recent = students_recent
+  )
   #
   # match_notification(
   #   match = match,
@@ -179,7 +180,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  print("Done!")
+  cat("Done!\n")
 
 }
 

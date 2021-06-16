@@ -3,25 +3,27 @@
 
 
 #' @export
-match_placement <- function(match, overmatches, dir_out) {
+match_placement <- function(match, overmatches, dir_out, students_recent = getdata_student_recent()) {
 
-  overmatches <-
-    match %>%
-    dplyr::semi_join(overmatches) %>%
-    dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account)
+  cat("Generating placements upload\n")
+
+  # overmatches <-
+  #   match %>%
+  #   dplyr::semi_join(overmatches) %>%
+  #   dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account)
 
   placements <-
     match %>%
     dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
     dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
     dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account, `GUARANTEED?`) %>%
-    dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
-    dplyr::bind_rows(overmatches) %>%
-    dplyr::left_join(getdata_student_recent(), by = c("STUDENT ID" = "oneappid")) %>%
+    # dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
+    # dplyr::bind_rows(overmatches) %>%
+    dplyr::left_join(students_recent, by = c("STUDENT ID" = "oneappid")) %>%
     dplyr::mutate(is_scholarship = stringr::str_detect(`CHOICE SCHOOL`, "_[NR]$")) %>%
     dplyr::mutate(is_guaranteed = !is.na(`GUARANTEED?`)) %>%
     dplyr::select(
-      id_student_recent,
+      id_student_recent = id_student,
       id_account_future = id_account,
       grade_future = GRADE,
       is_guaranteed,
@@ -32,6 +34,7 @@ match_placement <- function(match, overmatches, dir_out) {
       is_active = TRUE,
       is_archived = FALSE
     ) %>%
+    dplyr::arrange(id_account_future, grade_future) %>%
     dplyr::mutate(grade_future = as.character(grade_future)) %>%
     dplyr::mutate(grade_future = dplyr::case_when(
       grade_future == "1YR" ~ "1 YR",
