@@ -33,7 +33,7 @@ match_notification_waitlists <- function(match, schools_waitlist = c("323", "324
 
 
 #' @export
-match_notification <- function(match, overmatches, dir_out) {
+match_notification <- function(match, overmatches, dir_out, apps, accounts, appschools, students_recent) {
 
   participants <-
     match %>%
@@ -47,7 +47,7 @@ match_notification <- function(match, overmatches, dir_out) {
       | (`STUDENT ID` %in% matchcalcs_accepted_belowguarantee(participants)$`STUDENT ID`)
     ) %>%
     dplyr::pull(`STUDENT ID`) %>%
-    c(dplyr::pull(overmatches, `STUDENT ID`)) %>%
+    # c(dplyr::pull(overmatches, `STUDENT ID`)) %>%
     unique()
 
   fallback <-
@@ -108,17 +108,17 @@ match_notification <- function(match, overmatches, dir_out) {
       is_ec & is_unassigned & is_waiting ~ "ec_unassigned_wl",
       is_ec & is_unassigned & (n_ineligible == n_choices) ~ "ec_unassigned_ineligible",
 
-      is_scholarship & is_acceptednew & is_waiting ~ "acceptednew_schol_wl",
-      is_scholarship & is_acceptednew ~ "acceptednew_schol",
+      is_scholarship & is_acceptednew & is_waiting ~ "k12_acceptednew_schol_wl",
+      is_scholarship & is_acceptednew ~ "k12_acceptednew_schol",
 
-      is_acceptednew & is_waiting ~ "acceptednew_wl",
-      is_acceptednew ~ "acceptednew",
+      is_acceptednew & is_waiting ~ "k12_acceptednew_wl",
+      is_acceptednew ~ "k12_acceptednew",
 
-      is_fallback & is_waiting ~ "fallback_wl",
-      is_fallback ~ "fallback",
+      is_fallback & is_waiting ~ "k12_fallback_wl",
+      is_fallback ~ "k12_fallback",
 
-      is_unassigned & is_waiting ~ "unassigned_wl",
-      is_unassigned ~ "unassigned",
+      is_unassigned & is_waiting ~ "k12_unassigned_wl",
+      is_unassigned ~ "k12_unassigned",
 
       is_guaranteed ~ "guaranteed",
 
@@ -126,25 +126,17 @@ match_notification <- function(match, overmatches, dir_out) {
       )
     )
 
-
-
-  apps <- getdata_app_1year() %>% dplyr::select(-grade_applying)
-
-  account_lookup <- match_lookup_account(match)
-
-  accounts <- getdata_account_address()
-
   notifications <-
     participants_lettertypes %>%
     dplyr::rename(
       oneappid = `STUDENT ID`,
       grade_applying = GRADE
     ) %>%
-    left_join(apps, by = "oneappid") %>%
-    left_join(account_lookup, by = c("school_accepted" = "code_appschool")) %>%
+    left_join(dplyr::select(apps, -grade_applying), by = "oneappid") %>%
+    left_join(match_lookup_account(match, appschools = appschools, accounts = accounts), by = c("school_accepted" = "code_appschool")) %>%
     left_join(accounts, by = c("id_account")) %>%
     mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
-    left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
+    # left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
     left_join(nolaps::schools_eval, by = "code_site") %>%
     fix_grades(grade_applying) %>%
     fix_grades(grade_terminal) %>%
@@ -176,7 +168,7 @@ match_notification <- function(match, overmatches, dir_out) {
       school_name,
       school_address, school_phone = phone,
       school_welcome = welcome, school_registration = registration, deadline,
-      waitlist_school_1:waitlist_rank_4,
+      # waitlist_school_1:waitlist_rank_4,
       snippet_exitgrade,
       snippet_eval,
       language_app, language_pref,
@@ -189,7 +181,11 @@ match_notification <- function(match, overmatches, dir_out) {
     mutate(is_guaranteed_scholarship = is_guaranteed & is_scholarship) %>%
     arrange(oneappid)
 
-  match_notification_salesforce(notifications = notifications, dir_out = dir_out)
+  match_notification_salesforce(
+    notifications = notifications,
+    dir_out = dir_out,
+    students_recent = students_recent
+  )
 
   notifications %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")

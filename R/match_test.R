@@ -174,13 +174,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Non-existent grades -----------------------------------------------------
 
-  print("Invalid grades")
-
-  # autoineligibilities <-
-  #   readr::read_csv(
-  #     glue::glue("{dir_external}/auto-ineligibilities.csv"),
-  #     col_types = "cc"
-  #   )
+  cat("Invalid grades\n")
 
   invalid_grades <-
     match %>%
@@ -196,10 +190,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
     dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-  # %>%
-  #   dplyr::anti_join(autoineligibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
-
-  testthat::test_that("No match record involves a grade that will not exist next year", {
+  testthat::test_that("No eligible match record involves a grade that will not exist next year", {
 
     testthat::expect_equal(nrow(invalid_grades), 0)
 
@@ -245,10 +236,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   invalid_retained <-
     match %>%
     dplyr::filter(is_active & !is.na(id_account_current) & (GRADE == grade_current)) %>%
-    dplyr::select(id_student, `STUDENT ID`, GRADE) %>%
+    dplyr::select(id_student, `STUDENT ID`, GRADE, choice_name) %>%
     dplyr::distinct() %>%
     dplyr::anti_join(retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")) %>%
-    dplyr::filter(GRADE != "12") %>%
+    # dplyr::filter(GRADE != "12") %>%
     dplyr::filter(!(GRADE %in% grades_ec())) %>%
     dplyr::arrange(GRADE)
 

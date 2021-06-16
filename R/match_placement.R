@@ -31,6 +31,7 @@ match_placement <- function(match, overmatches, dir_out, students_recent = getda
     ) %>%
     dplyr::mutate(
       id_schoolyear = "a100W000009Reex",
+      id_recordtype = "0120W000001tdvtQAA",
       is_active = TRUE,
       is_archived = FALSE
     ) %>%

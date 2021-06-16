@@ -166,13 +166,17 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     dir_out = dir_business,
     students_recent = students_recent
   )
-  #
-  # match_notification(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business
-  # )
-  #
+
+  match_notification(
+    match = match,
+    overmatches = NULL,
+    dir_out = dir_business,
+    apps = apps,
+    accounts = accounts,
+    appschools = appschools,
+    students_recent = students_recent
+  )
+
   # match_briefing(
   #   match = match,
   #   dir_out = dir_business
