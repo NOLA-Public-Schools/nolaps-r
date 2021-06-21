@@ -183,6 +183,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Parent_Guardian_Last_Name__c,
         Parent_Guardian_Email_Address__c,
         Creator_Email__c,
+        Application_Email_Update__c,
         Primary_Contact_Number__c,
         Secondary_Contact_Number__c,
         Application_Language__c,
@@ -220,6 +221,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       pg_firstname = Parent_Guardian_First_Name__c,
       pg_lastname = Parent_Guardian_Last_Name__c,
       pg_email = Parent_Guardian_Email_Address__c,
+      email_update = Application_Email_Update__c,
       email = Creator_Email__c,
       phone_1 = Primary_Contact_Number__c,
       phone_2 = Secondary_Contact_Number__c,
@@ -560,6 +562,7 @@ getdata_placement <- function(year = "2020-2021") {
     glue::glue_safe(
       "
       select
+        Id,
         Placement_Active__c,
         School_Year_Name__c,
         Placement_Student__c,
@@ -574,6 +577,7 @@ getdata_placement <- function(year = "2020-2021") {
     guess_types = FALSE
   ) %>%
     dplyr::select(
+      id_placement = Id,
       is_active = Placement_Active__c,
       year_placement = School_Year_Name__c,
       id_student = Placement_Student__c,
@@ -600,6 +604,7 @@ getdata_registration <- function() {
       "
       select
         K12_MR_Registration_Deadline__c,
+        K12_R2_Registration_Deadline__c,
         EC_MR_Registration_Deadline__c
       from application_settings__c
       "
@@ -707,7 +712,16 @@ query_student <- function() {
       Future_School__r.Name,
       Future_School__r.School_Code_String__c,
       Promotion_Decision__c,
-      Rising_T9__c
+      Rising_T9__c,
+      Placement_Letter_Year__c,
+      Placement_Letter_Template__c,
+      Future_School__r.BillingStreet,
+      Future_School__r.BillingCity,
+      Future_School__r.BillingState,
+      Future_School__r.BillingPostalCode,
+      Future_School__r.Phone,
+      Future_School__r.Registration_Details__c,
+      Future_School__r.School_Welcome_Message__c
     from Schoolforce__Student__c
     "
   )
@@ -739,18 +753,28 @@ format_student <- function(x) {
       grade_current = Current_Grade__c,
       id_account_current = SchoolForce__School__c,
       name_account_current = SchoolForce__School__r.Name,
-      code_site = SchoolForce__School__r.School_Code_String__c,
+      code_site_current = SchoolForce__School__r.School_Code_String__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
       grade_future = Future_School_Grade__c,
       id_account_future = Future_School__c,
       name_account_future = Future_School__r.Name,
       code_site_future = Future_School__r.School_Code_String__c,
       promotion = Promotion_Decision__c,
-      is_t9 = Rising_T9__c
+      is_t9 = Rising_T9__c,
+      year_matchletter = Placement_Letter_Year__c,
+      lettertype = Placement_Letter_Template__c,
+      school_street = Future_School__r.BillingStreet,
+      school_city = Future_School__r.BillingCity,
+      school_state = Future_School__r.BillingState,
+      school_zip = Future_School__r.BillingPostalCode,
+      school_phone = Future_School__r.Phone,
+      school_registration = Future_School__r.Registration_Details__c,
+      school_welcome = Future_School__r.School_Welcome_Message__c
     ) %>%
     dplyr::mutate(across(c(
       is_active,
       is_recent,
+      is_terminalgrade,
       is_t9
       ),
       as.logical
@@ -792,37 +816,6 @@ getdata_student_active <- function() {
 
 
 #' @export
-getdata_student_futureschool <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        OneApp_ID__c,
-        Id,
-        Future_School_Grade__c,
-        Future_School__c
-      from Schoolforce__Student__c
-      where
-        Recent_Record__c = 'true' and
-        Future_School__c != null
-      "
-    ),
-    api_type = "Bulk 2.0",
-    guess_types = FALSE
-  ) %>%
-    dplyr::select(
-      oneappid = OneApp_ID__c,
-      id_student = Id,
-      grade_future = Future_School_Grade__c,
-      id_account_future = Future_School__c
-    )
-
-}
-
-
-
-#' @export
 getdata_student_3years <- function() {
 
   salesforcer::sf_query(
@@ -846,62 +839,6 @@ getdata_student_3years <- function() {
       oneappid = OneApp_ID__c,
       id_account_current = SchoolForce__School__c,
       year_student = School_Year__c
-    )
-
-}
-
-
-
-#' @export
-getdata_student_matchletter <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
-      "
-      select
-        Placement_Letter_Year__c,
-        Placement_Letter_Template__c,
-        OneApp_ID__c,
-        Id,
-        Future_School__c,
-        Future_School__r.Name,
-        Future_School__r.School_Code_String__c,
-        Future_School__r.BillingStreet,
-        Future_School__r.BillingCity,
-        Future_School__r.BillingState,
-        Future_School__r.BillingPostalCode,
-        Future_School__r.Phone,
-        Future_School__r.Registration_Details__c,
-        Future_School__r.School_Welcome_Message__c,
-        Future_School__r.Uniforms_Required__c
-      from Schoolforce__Student__c
-      where
-        Placement_Letter_Template__c != null and
-        Placement_Letter_Year__c = 'SY 20-21' and
-        Recent_Record__c = 'true' and
-        Request_Details__c != 'DC4: Extended illness, incapacitation, or death of student'
-
-      "
-    ),
-    api_type = "Bulk 2.0",
-    guess_types = FALSE
-  ) %>%
-    dplyr::select(
-      year_matchletter = Placement_Letter_Year__c,
-      lettertype = Placement_Letter_Template__c,
-      id_student = Id,
-      oneappid = OneApp_ID__c,
-      name_account_future = Future_School__r.Name,
-      street = Future_School__r.BillingStreet,
-      city = Future_School__r.BillingCity,
-      state = Future_School__r.BillingState,
-      zip = Future_School__r.BillingPostalCode,
-      school_phone = Future_School__r.Phone,
-      school_registration = Future_School__r.Registration_Details__c,
-      school_welcome = Future_School__r.School_Welcome_Message__c,
-      school_uniforms = Future_School__r.Uniforms_Required__c,
-      id_account_future = Future_School__c,
-      code_site = Future_School__r.School_Code_String__c
     )
 
 }

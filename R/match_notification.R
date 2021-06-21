@@ -97,6 +97,11 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     dplyr::left_join(schools_accepted, by = "STUDENT ID") %>%
     dplyr::mutate(is_assigned = !is.na(school_accepted))
 
+  guarantees <-
+    match %>%
+    filter(!is.na(`GUARANTEED?`)) %>%
+    select(oneappid = `STUDENT ID`, id_account_guaranteed = id_account)
+
   participants_lettertypes <-
     participants_aug %>%
     dplyr::mutate(lettertype = dplyr::case_when(
@@ -138,6 +143,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
     # left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
     left_join(nolaps::schools_eval, by = "code_site") %>%
+    left_join(guarantees, by = "oneappid") %>%
     fix_grades(grade_applying) %>%
     fix_grades(grade_terminal) %>%
     mutate(gets_snippet_exitgrade = (grade_applying == grade_terminal)) %>%
@@ -176,7 +182,8 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       name_account,
       is_assigned,
       is_guaranteed,
-      is_scholarship
+      is_scholarship,
+      id_account_guaranteed
     ) %>%
     mutate(is_guaranteed_scholarship = is_guaranteed & is_scholarship) %>%
     arrange(oneappid)

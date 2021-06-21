@@ -7,10 +7,10 @@
 
 
 #' @export
-match_notification_mailing <- function(match, dir_out) {
+match_notification_mailing <- function(dir_out) {
 
   apps <-
-    getdata_app_1year() %>%
+    getdata_app(round = "Round 2") %>%
     select(
       id_student,
       grade_applying:email,
@@ -18,29 +18,25 @@ match_notification_mailing <- function(match, dir_out) {
     )
 
   notifications <-
-    getdata_student_matchletter() %>%
+    getdata_student_recent() %>%
+    filter(!is.na(lettertype)) %>%
     left_join(apps, by = "id_student") %>%
-    left_join(getdata_account_gradespan(), by = c("id_account_future" = "id_account")) %>%
-    mutate(school_address = stringr::str_c(street, ", ", city, ", ", state, " ", zip)) %>%
-    left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
-    left_join(nolaps::schools_eval, by = "code_site") %>%
+    left_join(getdata_account(), by = c("id_account_future" = "id_account")) %>%
+    mutate(school_address = stringr::str_c(school_street, ", ", school_city, ", ", school_state, " ", school_zip)) %>%
+    # left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
+    left_join(nolaps::schools_eval, by = c("code_site_future" = "code_site")) %>%
     left_join(nolaps::lettertypes_salesforce, by = c("lettertype" = "lettertype_salesforce")) %>%
-    mutate(grade_max = dplyr::case_when(
-      grade_max == "1YR" ~ "1 YR",
-      grade_max == "2YR" ~ "2 YR",
-      TRUE ~ as.character(grade_max)
-      )
-    ) %>%
     mutate(gets_snippet_exitgrade = dplyr::case_when(
-      grade_applying == "12" ~ FALSE,
-      grade_applying == grade_terminal ~ TRUE,
-      governance == "Scholarship" & grade_applying == "PK4" ~ TRUE,
+      grade_future == "12" ~ FALSE,
+      grade_future == grade_terminal ~ TRUE,
+      governance == "Scholarship" & grade_future == "PK4" ~ TRUE,
       TRUE ~ FALSE
       )
     ) %>%
+    mutate(across(name_account_future, ~ stringr::str_squish(stringr::str_remove(., "\\(DO NOT PLACE\\)")))) %>%
     mutate(snippet_exitgrade = dplyr::if_else(gets_snippet_exitgrade, glue::glue(
       "
-      Please note: {name_account_future} does not continue after grade {grade_applying}.
+      Please note: {name_account_future} does not continue after grade {grade_future}.
       To continue in public school, an application will be required next year.
       "
       ),
@@ -57,29 +53,32 @@ match_notification_mailing <- function(match, dir_out) {
       NA_character_
       )
     ) %>%
-    mutate(deadline = getdata_registration()[[1]][[1]]) %>%
-    mutate(school_name = stringr::str_squish(stringr::str_remove(name_account_future, "\\(DO NOT PLACE\\)"))) %>%
-    mutate(waitlist_school_1 = if_else(lettertype == "LT_MR_K12_Matched", NA_character_, waitlist_school_1)) %>%
-    mutate(waitlist_rank_1 = if_else(lettertype == "LT_MR_K12_Matched", NA_character_, waitlist_rank_1)) %>%
-    filter(is.na(governance) | (governance != "Scholarship")) %>%
-    filter(lettertype != "LT_MR_K12_NoAppNoDefault") %>%
-    filter(!(oneappid %in% nolaps::exclude$oneappid)) %>%
+    # mutate(deadline = getdata_registration()[[1]][[1]]) %>%
+    mutate(school_name = name_account_future) %>%
+    # mutate(waitlist_school_1 = if_else(lettertype == "LT_MR_K12_Matched", NA_character_, waitlist_school_1)) %>%
+    # mutate(waitlist_rank_1 = if_else(lettertype == "LT_MR_K12_Matched", NA_character_, waitlist_rank_1)) %>%
+    # filter(is.na(governance) | (governance != "Scholarship")) %>%
+    filter(lettertype != "LT_R2_K12_NoAppNoDefault") %>%
+    # filter(!(oneappid %in% nolaps::exclude$oneappid)) %>%
+    mutate(email = if_else(is.na(pg_email), email_update, pg_email)) %>%
     select(
-      lettertype = lettertype_mailmerge, oneappid, grade_applying,
-      applicant_firstname:email,
+      lettertype, oneappid, grade_future,
+      applicant_firstname:applicant_lastname,
+      pg_firstname:pg_lastname,
+      email,
       school_name,
       school_address, school_phone,
       school_welcome, school_registration,
-      deadline,
-      waitlist_school_1:waitlist_rank_4,
+      # deadline,
+      # waitlist_school_1:waitlist_rank_4,
       snippet_exitgrade,
       snippet_eval,
       language_app, language_pref
     ) %>%
-    # group_by(lettertype, language_pref) %>%
-    # dplyr::slice_sample(n = 1) %>%
-    # ungroup() %>%
-    # mutate(email = "enrollment_support@nolapublicschools.com") %>%
+    group_by(lettertype, language_pref) %>%
+    dplyr::slice_sample(n = 1) %>%
+    ungroup() %>%
+    mutate(email = "cgomez@nolapublicschools.com") %>%
     arrange(oneappid)
 
   notifications %>%
