@@ -7,7 +7,7 @@
 
 
 #' @export
-match_notification_mailing <- function(dir_out) {
+match_notification_mailing <- function(dir_out, test_email = "sprimeaux@nolapublicschools.com", test_sample = 1) {
 
   apps <-
     getdata_app(round = "Round 2") %>%
@@ -74,12 +74,25 @@ match_notification_mailing <- function(dir_out) {
       snippet_exitgrade,
       snippet_eval,
       language_app, language_pref
-    ) %>%
-    group_by(lettertype, language_pref) %>%
-    dplyr::slice_sample(n = 1) %>%
-    ungroup() %>%
-    mutate(email = "cgomez@nolapublicschools.com") %>%
-    arrange(oneappid)
+    )
+
+  if(!isFALSE(test_sample)) {
+
+    notifications <-
+      notifications %>%
+      group_by(lettertype, language_pref) %>%
+      dplyr::slice_sample(n = test_sample) %>%
+      ungroup()
+
+  }
+
+  if(!isFALSE(test_email)) {
+
+    notifications <-
+      notifications %>%
+      mutate(email = test_email)
+
+  }
 
   notifications %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications_summary.csv"), na = "")

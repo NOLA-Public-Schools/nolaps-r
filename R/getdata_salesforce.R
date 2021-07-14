@@ -687,6 +687,7 @@ query_student <- function() {
   glue::glue(
     "
     select
+      School_Year__c,
       Recent_Record__c,
       SchoolForce__Active__c,
       OneApp_ID__c,
@@ -735,6 +736,7 @@ format_student <- function(x) {
 
   x %>%
     dplyr::select(
+      year_student = School_Year__c,
       is_recent = Recent_Record__c,
       is_active = SchoolForce__Active__c,
       oneappid = OneApp_ID__c,
@@ -907,11 +909,11 @@ getdata_waitlist <- function() {
       select
         Id,
         Grade__c,
-        School_Name__c
+        Account_School__c,
+        Account_School__r.Name,
+        Active__c,
+        Archived__c
       from Waitlist_School_Ranking__c
-      where
-        CreatedDate >= 2019-11-01T00:00:00Z and
-        CreatedDate < 2020-11-01T00:00:00Z
       "
     ),
     api_type = "Bulk 2.0",
@@ -920,7 +922,10 @@ getdata_waitlist <- function() {
     dplyr::select(
       id_waitlist = Id,
       grade_applying = Grade__c,
-      name_school = School_Name__c
+      id_account = Account_School__c,
+      name_account = Account_School__r.Name,
+      is_active = Active__c,
+      is_archived = Archived__c
     ) %>%
     fix_grades(var = grade_applying)
 
