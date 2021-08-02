@@ -137,8 +137,8 @@ getdata_graduation <- function() {
 getdata_masterysummary <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "masterysummary")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "masterysummary")
   )
 
 }
