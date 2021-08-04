@@ -29,6 +29,15 @@ getdata_catchments <- function() {
 
 
 #' @export
+getdata_districts <- function() {
+
+  sf::st_read(path_data("Geographies/Districts/districts.shp"))
+
+}
+
+
+
+#' @export
 getdata_neighborhoods <- function() {
 
   sf::st_read(path_data("Geographies/Neighborhoods/neighborhoods.shp")) %>%

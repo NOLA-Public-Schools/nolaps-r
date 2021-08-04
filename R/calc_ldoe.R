@@ -184,6 +184,47 @@ prop_graduation <- function(x, ...) {
 
 
 #' @export
+calc_proficiency <- function(x, ...) {
+  x %>%
+    dplyr::group_by(year, ...) %>%
+    dplyr::summarize(
+      n_students = dplyr::n(),
+      n_mastery_plus = sum(
+        achievement %in% c("Advanced", "Mastery"),
+        na.rm = TRUE
+      ),
+      n_basic_plus = sum(
+        achievement %in% c("Advanced", "Mastery", "Basic"),
+        na.rm = TRUE
+      ),
+      rate_mastery_plus = n_mastery_plus / n_students,
+      rate_basic_plus = n_basic_plus / n_students
+    )
+}
+
+
+
+#' @export
+calc_proficiency_diff <- function(x, ...) {
+  x %>%
+    calc_proficiency(...) %>%
+    dplyr::group_by(...) %>%
+    dplyr::arrange(..., year) %>%
+    dplyr::mutate(
+      diff_mastery = rate_mastery_plus - dplyr::lag(rate_mastery_plus, n = 1)
+    ) %>%
+    dplyr::mutate(
+      diff_basic = rate_basic_plus - dplyr::lag(rate_basic_plus, n = 1)
+    ) %>%
+    dplyr::mutate(dplyr::across(
+      tidyselect::starts_with("rate_") | tidyselect::starts_with("diff_"),
+      ~ round(., digits = 3))
+    )
+}
+
+
+
+#' @export
 prop_mastery <- function(x, ...) {
 
   x %>%

@@ -62,6 +62,18 @@ getdata_ap_subgroup <- function() {
 
 
 #' @export
+getdata_assessment <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "assessment")
+  )
+
+}
+
+
+
+#' @export
 getdata_college <- function() {
 
   dplyr::tbl(
@@ -113,8 +125,8 @@ getdata_discipline <- function() {
 getdata_enrollmentderivation <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "enrollmentderivation")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "enrollmentderivation")
   )
 
 }
@@ -149,8 +161,8 @@ getdata_masterysummary <- function() {
 getdata_multistat <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "multistat")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "multistat")
   )
 
 }
