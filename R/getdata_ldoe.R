@@ -89,8 +89,8 @@ getdata_college <- function() {
 getdata_demographic <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "demographic")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "demographic")
   )
 
 }
@@ -173,8 +173,8 @@ getdata_multistat <- function() {
 getdata_sped <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "sped")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "sped")
   )
 
 }
