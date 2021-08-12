@@ -186,7 +186,7 @@ prop_graduation <- function(x, ...) {
 #' @export
 calc_proficiency <- function(x, ...) {
   x %>%
-    dplyr::group_by(year, ...) %>%
+    dplyr::group_by(school_year, ...) %>%
     dplyr::summarize(
       n_students = dplyr::n(),
       n_mastery_plus = sum(
@@ -209,7 +209,7 @@ calc_proficiency_diff <- function(x, ...) {
   x %>%
     calc_proficiency(...) %>%
     dplyr::group_by(...) %>%
-    dplyr::arrange(..., year) %>%
+    dplyr::arrange(..., school_year) %>%
     dplyr::mutate(
       diff_mastery = rate_mastery_plus - dplyr::lag(rate_mastery_plus, n = 1)
     ) %>%

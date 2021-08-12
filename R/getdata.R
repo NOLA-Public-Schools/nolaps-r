@@ -5,8 +5,8 @@
 getdata_governance <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'governance')
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema('public', 'governance')
   )
 
 }
