@@ -204,7 +204,11 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Student__r.SchoolForce__School__c,
         Student__r.Future_School__c,
         Current_School__c,
-        Current_School__r.School__c
+        Current_School__r.School__c,
+        Has_Completed_Verification__c,
+        Student__r.School_Year__c,
+        Student__r.Recent_Record__c,
+        Student__r.SchoolForce__Active__c
       from Application__c
       where
         RecordType.Name = '{round}' and
@@ -243,10 +247,23 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       id_account_current = Student__r.SchoolForce__School__c,
       id_account_future = Student__r.Future_School__c,
       id_appschool_claimed = Current_School__c,
-      id_account_claimed = Current_School__r.School__c
+      id_account_claimed = Current_School__r.School__c,
+      has_verified = Has_Completed_Verification__c,
+      year_student = Student__r.School_Year__c,
+      is_recent = Student__r.Recent_Record__c,
+      is_active = Student__r.SchoolForce__Active__c
     ) %>%
     fix_grades(var = grade_current) %>%
-    fix_grades(var = grade_applying)
+    fix_grades(var = grade_applying) %>%
+    dplyr::mutate(dplyr::across(c(
+      is_addressvalidated,
+      has_verified,
+      is_recent,
+      is_active
+      ),
+      as.logical
+      )
+    )
 
 }
 
@@ -916,6 +933,7 @@ getdata_waitlist <- function() {
       "
       select
         Id,
+        Student__c,
         Grade__c,
         Account_School__c,
         Account_School__r.Name,
@@ -929,6 +947,7 @@ getdata_waitlist <- function() {
   ) %>%
     dplyr::select(
       id_waitlist = Id,
+      id_student = Student__c,
       grade_applying = Grade__c,
       id_account = Account_School__c,
       name_account = Account_School__r.Name,
