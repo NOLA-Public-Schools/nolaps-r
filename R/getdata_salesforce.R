@@ -507,6 +507,40 @@ getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate
 
 
 #' @export
+getdata_facility <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Name,
+        Address__c,
+        Ownership__c,
+        Status__c,
+        Longitude__c,
+        Latitude__c
+      from Facility__c
+      "
+    ),
+    api_type = "REST",
+    guess_types = FALSE
+  ) %>%
+    dplyr::select(
+      id_facility = Id,
+      name_facility = Name,
+      address = Address__c,
+      ownership = Ownership__c,
+      status = Status__c,
+      lon = Longitude__c,
+      lat = Latitude__c
+    )
+
+}
+
+
+
+#' @export
 getdata_gradecapacity <- function() {
 
   salesforcer::sf_query(
