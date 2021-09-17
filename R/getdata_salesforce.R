@@ -449,8 +449,12 @@ getdata_contact <- function() {
       "
       select
         Id,
+        FirstName,
+        LastName,
+        SchoolForce__Date_of_Birth__c,
         Email,
-        LastModifiedDate
+        LastModifiedDate,
+        RecordType.Name
       from Contact
       "
     ),
@@ -459,8 +463,12 @@ getdata_contact <- function() {
   ) %>%
     dplyr::select(
       id_contact = Id,
+      firstname = FirstName,
+      lastname = LastName,
+      dob = SchoolForce__Date_of_Birth__c,
       email = Email,
-      date_modified = LastModifiedDate
+      date_modified = LastModifiedDate,
+      contact_type = RecordType.Name
     )
 
 }
@@ -557,7 +565,8 @@ getdata_gradecapacity <- function() {
         Match_Target__c,
         Future_Match_Target__c,
         Future_10_1_Target__c,
-        Requested_Round_2_Target__c
+        Requested_Round_2_Target__c,
+        Facility__c
       from Grade_Capacity__c
       "
     ),
@@ -575,7 +584,8 @@ getdata_gradecapacity <- function() {
       target_match = Match_Target__c,
       target_match_future = Future_Match_Target__c,
       target_101_future = Future_10_1_Target__c,
-      target_requested_round_2 = Requested_Round_2_Target__c
+      target_requested_round_2 = Requested_Round_2_Target__c,
+      id_facility = Facility__c
     ) %>%
     fix_grades(var = grade)
 
@@ -749,6 +759,8 @@ query_student <- function() {
       School_Year__c,
       Recent_Record__c,
       SchoolForce__Active__c,
+      eScholar_LASID__c,
+      Local_ID__c,
       OneApp_ID__c,
       SchoolForce__Contact_Id__c,
       Id,
@@ -798,6 +810,8 @@ format_student <- function(x) {
       year_student = School_Year__c,
       is_recent = Recent_Record__c,
       is_active = SchoolForce__Active__c,
+      lasid_escholar = eScholar_LASID__c,
+      lasid = Local_ID__c,
       oneappid = OneApp_ID__c,
       id_contact = SchoolForce__Contact_Id__c,
       id_student = Id,
