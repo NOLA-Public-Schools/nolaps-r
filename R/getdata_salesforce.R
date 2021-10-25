@@ -62,6 +62,7 @@ getdata_account <- function() {
         Name,
         School_Code_String__c,
         Governance__c,
+        EC_Funding_Source__c,
         School_Status__c,
         High_Demand_School__c,
         Grade_Span_Current_SY__c,
@@ -75,9 +76,13 @@ getdata_account <- function() {
         BillingCity,
         BillingState,
         BillingPostalCode,
+        BillingLongitude,
+        BillingLatitude,
         Current_Year_Address__c,
         Neighborhood__c,
         Phone,
+        Public_Email__c,
+        Website,
         Registration_Details__c,
         School_Welcome_Message__c,
         Uniforms_Required__c
@@ -91,6 +96,7 @@ getdata_account <- function() {
       name_account = Name,
       code_site = School_Code_String__c,
       governance = Governance__c,
+      fundingsource = EC_Funding_Source__c,
       status = School_Status__c,
       is_highdemand = High_Demand_School__c,
       gradespan_currentyear = Grade_Span_Current_SY__c,
@@ -104,9 +110,13 @@ getdata_account <- function() {
       city = BillingCity,
       state = BillingState,
       zip = BillingPostalCode,
+      lon = BillingLongitude,
+      lat = BillingLatitude,
       address_currentyear = Current_Year_Address__c,
       neighborhood = Neighborhood__c,
       phone = Phone,
+      email_public = Public_Email__c,
+      website = Website,
       registration = Registration_Details__c,
       welcome = School_Welcome_Message__c,
       uniforms = Uniforms_Required__c
@@ -115,6 +125,12 @@ getdata_account <- function() {
       is_highdemand
       ),
       as.logical
+      )
+    ) %>%
+    dplyr::mutate(dplyr::across(c(
+      lon, lat
+      ),
+      as.numeric
       )
     )
 
@@ -292,11 +308,18 @@ getdata_appschool <- function() {
         School__r.Name,
         School__r.School_Code_String__c,
         School__r.Governance__c,
+        School__r.School_Status__c,
         School__r.Grade_Span__c,
+        Grade_Span__c,
         Early_Childhood_School__c,
-        EC_Program_Type__c,
+        EC_Program_Type__r.Name,
         Is_Valid__c,
         Is_District_School__c,
+        Current_School_Option__c,
+        Street__c,
+        City__c,
+        State__c,
+        Zip__c,
         AddressLatitudeandLongitude__c,
         Grade_PK4_Zip_Preference__c,
         Grade_K_Zip_Preference__c,
@@ -325,11 +348,18 @@ getdata_appschool <- function() {
       name_account = School__r.Name,
       code_site = School__r.School_Code_String__c,
       governance = School__r.Governance__c,
+      status = School__r.School_Status__c,
       gradespan_account_nextyear = School__r.Grade_Span__c,
+      gradespan_appschool = Grade_Span__c,
       is_ec = Early_Childhood_School__c,
-      ec_type = EC_Program_Type__c,
+      ec_type = EC_Program_Type__r.Name,
       is_valid = Is_Valid__c,
       is_districtschool = Is_District_School__c,
+      is_currentschool = Current_School_Option__c,
+      street = Street__c,
+      city = City__c,
+      state = State__c,
+      zip = Zip__c,
       latlon = AddressLatitudeandLongitude__c,
       zonepref_PK4 = Grade_PK4_Zip_Preference__c,
       zonepref_K = Grade_K_Zip_Preference__c,
@@ -349,7 +379,8 @@ getdata_appschool <- function() {
     dplyr::mutate(dplyr::across(c(
       is_ec,
       is_valid,
-      is_districtschool
+      is_districtschool,
+      is_currentschool
       ),
       as.logical
       )
@@ -557,7 +588,10 @@ getdata_gradecapacity <- function() {
       select
         Id,
         School_Name__c,
+        School_Name__r.Name,
         Grade__c,
+        School_Name__r.Governance__c,
+        School_Name__r.School_Status__c,
         Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c,
@@ -576,7 +610,10 @@ getdata_gradecapacity <- function() {
     dplyr::select(
       id_gradecapacity = Id,
       id_account = School_Name__c,
+      name_account = School_Name__r.Name,
       grade = Grade__c,
+      governance = School_Name__r.Governance__c,
+      status = School_Name__r.School_Status__c,
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c,
@@ -587,7 +624,16 @@ getdata_gradecapacity <- function() {
       target_requested_round_2 = Requested_Round_2_Target__c,
       id_facility = Facility__c
     ) %>%
-    fix_grades(var = grade)
+    fix_grades(var = grade) %>%
+    dplyr::mutate(across(c(
+      seats_available,
+      currentregister_active,
+      target_101
+      ),
+      as.numeric
+      )
+    )
+
 
 }
 
@@ -952,6 +998,7 @@ getdata_student_year <- function(years = c("2020-2021")) {
     glue::glue_safe(
       "
       select
+        School_Year__c,
         OneApp_ID__c,
         SchoolForce__Contact_Id__c,
         Id
@@ -964,6 +1011,7 @@ getdata_student_year <- function(years = c("2020-2021")) {
     guess_types = FALSE
   ) %>%
     dplyr::select(
+      year = School_Year__c,
       oneappid = OneApp_ID__c,
       id_contact = SchoolForce__Contact_Id__c,
       id_student = Id

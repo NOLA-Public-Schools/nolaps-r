@@ -137,8 +137,8 @@ getdata_enrollmentderivation <- function() {
 getdata_graduation <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'graduation')
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema('public', 'graduation')
   )
 
 }
