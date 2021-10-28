@@ -303,6 +303,7 @@ getdata_appschool <- function() {
       select
         Id,
         Name,
+        Site_Code__c,
         School_Code__c,
         School__c,
         School__r.Name,
@@ -316,11 +317,20 @@ getdata_appschool <- function() {
         Is_Valid__c,
         Is_District_School__c,
         Current_School_Option__c,
+        Selective_School__c,
+        Selective_School_Questions__c,
+        Scholarship_School__c,
+        Residents_Served__c,
         Street__c,
         City__c,
         State__c,
         Zip__c,
         AddressLatitudeandLongitude__c,
+        Proximity_Preference_Grades_Offered__c,
+        Grade_INF_Zip_Preference__c,
+        Grade_1YR_Zip_Preference__c,
+        Grade_2YR_Zip_Preference__c,
+        Grade_PK3_Zip_Preference__c,
         Grade_PK4_Zip_Preference__c,
         Grade_K_Zip_Preference__c,
         Grade_1_Zip_Preference__c,
@@ -334,7 +344,8 @@ getdata_appschool <- function() {
         Grade_9_Zip_Preference__c,
         Grade_10_Zip_Preference__c,
         Grade_11_Zip_Preference__c,
-        Grade_12_Zip_Preference__c
+        Grade_12_Zip_Preference__c,
+        School_Type__c
       from Application_School__c
       "
     ),
@@ -343,6 +354,7 @@ getdata_appschool <- function() {
     dplyr::select(
       id_appschool = Id,
       name_appschool = Name,
+      code_site_appschool = Site_Code__c,
       code_appschool = School_Code__c,
       id_account = School__c,
       name_account = School__r.Name,
@@ -356,11 +368,20 @@ getdata_appschool <- function() {
       is_valid = Is_Valid__c,
       is_districtschool = Is_District_School__c,
       is_currentschool = Current_School_Option__c,
+      is_selective = Selective_School__c,
+      questions_selective = Selective_School_Questions__c,
+      is_scholarship = Scholarship_School__c,
+      served = Residents_Served__c,
       street = Street__c,
       city = City__c,
       state = State__c,
       zip = Zip__c,
       latlon = AddressLatitudeandLongitude__c,
+      grades_distance = Proximity_Preference_Grades_Offered__c,
+      zonepref_INF = Grade_INF_Zip_Preference__c,
+      zonepref_1YR = Grade_1YR_Zip_Preference__c,
+      zonepref_2YR = Grade_2YR_Zip_Preference__c,
+      zonepref_PK3 = Grade_PK3_Zip_Preference__c,
       zonepref_PK4 = Grade_PK4_Zip_Preference__c,
       zonepref_K = Grade_K_Zip_Preference__c,
       zonepref_1 = Grade_1_Zip_Preference__c,
@@ -374,13 +395,16 @@ getdata_appschool <- function() {
       zonepref_9 = Grade_9_Zip_Preference__c,
       zonepref_10 = Grade_10_Zip_Preference__c,
       zonepref_11 = Grade_11_Zip_Preference__c,
-      zonepref_12 = Grade_12_Zip_Preference__c
+      zonepref_12 = Grade_12_Zip_Preference__c,
+      schooltype = School_Type__c
     ) %>%
     dplyr::mutate(dplyr::across(c(
       is_ec,
       is_valid,
       is_districtschool,
-      is_currentschool
+      is_currentschool,
+      is_selective,
+      is_scholarship
       ),
       as.logical
       )
