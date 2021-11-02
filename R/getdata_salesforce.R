@@ -613,6 +613,7 @@ getdata_gradecapacity <- function() {
         Id,
         School_Name__c,
         School_Name__r.Name,
+        School_Name__r.School_Code_String__c,
         Grade__c,
         School_Name__r.Governance__c,
         School_Name__r.School_Status__c,
@@ -635,6 +636,7 @@ getdata_gradecapacity <- function() {
       id_gradecapacity = Id,
       id_account = School_Name__c,
       name_account = School_Name__r.Name,
+      code_site = School_Name__r.School_Code_String__c,
       grade = Grade__c,
       governance = School_Name__r.Governance__c,
       status = School_Name__r.School_Status__c,
@@ -849,6 +851,7 @@ query_student <- function() {
       SchoolForce__School__r.Name,
       SchoolForce__School__r.School_Code_String__c,
       Is_Student_In_Terminal_Grade__c,
+      Application_Needed__c,
       Future_School_Grade__c,
       Future_School__c,
       Future_School__r.Name,
@@ -900,6 +903,7 @@ format_student <- function(x) {
       name_account_current = SchoolForce__School__r.Name,
       code_site_current = SchoolForce__School__r.School_Code_String__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
+      appneeded_r1 = Application_Needed__c,
       grade_future = Future_School_Grade__c,
       id_account_future = Future_School__c,
       name_account_future = Future_School__r.Name,
@@ -920,7 +924,8 @@ format_student <- function(x) {
       is_active,
       is_recent,
       is_terminalgrade,
-      is_t9
+      is_t9,
+      appneeded_r1
       ),
       as.logical
       )
@@ -1012,7 +1017,7 @@ getdata_student_recent <- function() {
 
 
 #' @export
-getdata_student_year <- function(years = c("2020-2021")) {
+getdata_student_year <- function(years = c("2021-2022")) {
 
   years <-
     stringr::str_flatten(years, "', '") %>%
@@ -1025,7 +1030,9 @@ getdata_student_year <- function(years = c("2020-2021")) {
         School_Year__c,
         OneApp_ID__c,
         SchoolForce__Contact_Id__c,
-        Id
+        Id,
+        MR_Application_Submitted__c,
+        R2_Application_Submitted__c
       from Schoolforce__Student__c
       where
         School_Year__c in {years}
@@ -1038,7 +1045,16 @@ getdata_student_year <- function(years = c("2020-2021")) {
       year = School_Year__c,
       oneappid = OneApp_ID__c,
       id_contact = SchoolForce__Contact_Id__c,
-      id_student = Id
+      id_student = Id,
+      appsubmitted_r1 = MR_Application_Submitted__c,
+      appsubmitted_r2 = R2_Application_Submitted__c
+    ) |>
+    dplyr::mutate(across(c(
+      appsubmitted_r1,
+      appsubmitted_r2
+      ),
+      as.logical
+      )
     )
 
 }
