@@ -33,19 +33,14 @@ getdata_demand_app <-
           2022, "-", month(date_created), "-", day(date_created)
         ))
       )) %>%
-      mutate(week_created_current = floor_date(
-        date_created_current,
-        unit = "weeks",
-        week_start = 1
-      )) %>%
-      mutate(
-        week_created_current = case_when(
-          year_applyingto == 2020 ~ week_created_current - days(21),
-          year_applyingto == 2021 ~ week_created_current - days(14),
-          TRUE ~ week_created_current
-        )
+      mutate(date_created_current = case_when(
+        year_applyingto == 2020 ~ date_created_current - days(21),
+        year_applyingto == 2021 ~ date_created_current - days(14),
+        TRUE ~ date_created_current
+      )
       ) %>%
       filter(date_created_current <= date_appclose) %>%
+      mutate(week_created_current = floor_date(date_created_current, unit = "weeks", week_start = 1)) %>%
       select(
         year_applyingto,
         week_created_current,
@@ -86,19 +81,14 @@ getdata_demand_appschoolranking <-
           2022, "-", month(date_created), "-", day(date_created)
         ))
       )) %>%
-      mutate(week_created_current = floor_date(
-        date_created_current,
-        unit = "weeks",
-        week_start = 1
-      )) %>%
-      mutate(
-        week_created_current = case_when(
-          year_applyingto == 2020 ~ week_created_current - days(21),
-          year_applyingto == 2021 ~ week_created_current - days(14),
-          TRUE ~ week_created_current
-        )
+      mutate(date_created_current = case_when(
+        year_applyingto == 2020 ~ date_created_current - days(21),
+        year_applyingto == 2021 ~ date_created_current - days(14),
+        TRUE ~ date_created_current
+      )
       ) %>%
       filter(date_created_current <= date_appclose) %>%
+      mutate(week_created_current = floor_date(date_created_current, unit = "weeks", week_start = 1)) %>%
       mutate(across(rank, ~ as.integer(str_remove(., "Rank ")))) %>%
       select(
         year_applyingto,
