@@ -85,7 +85,8 @@ getdata_account <- function() {
         Website,
         Registration_Details__c,
         School_Welcome_Message__c,
-        Uniforms_Required__c
+        Uniforms_Required__c,
+        Letter_Grade__c
       from Account
       "
     ),
@@ -119,7 +120,8 @@ getdata_account <- function() {
       website = Website,
       registration = Registration_Details__c,
       welcome = School_Welcome_Message__c,
-      uniforms = Uniforms_Required__c
+      uniforms = Uniforms_Required__c,
+      lettergrade = Letter_Grade__c
     ) %>%
     dplyr::mutate(dplyr::across(c(
       is_highdemand
@@ -617,13 +619,17 @@ getdata_gradecapacity <- function() {
         Grade__c,
         School_Name__r.Governance__c,
         School_Name__r.School_Status__c,
+        School_Name__r.Letter_Grade__c,
         Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c,
+        Sections__c,
+        Student_Sections__c,
         Projection_Seat_Target__c,
         Match_Target__c,
         Future_Match_Target__c,
         Future_10_1_Target__c,
+        Requested_10_1_Target__c,
         Requested_Round_2_Target__c,
         Facility__c
       from Grade_Capacity__c
@@ -640,13 +646,17 @@ getdata_gradecapacity <- function() {
       grade = Grade__c,
       governance = School_Name__r.Governance__c,
       status = School_Name__r.School_Status__c,
+      lettergrade = School_Name__r.Letter_Grade__c,
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c,
+      n_sections = Sections__c,
+      students_per_section = Student_Sections__c,
       target_101 = Projection_Seat_Target__c,
       target_match = Match_Target__c,
       target_match_future = Future_Match_Target__c,
       target_101_future = Future_10_1_Target__c,
+      target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
       id_facility = Facility__c
     ) %>%
@@ -654,12 +664,14 @@ getdata_gradecapacity <- function() {
     dplyr::mutate(across(c(
       seats_available,
       currentregister_active,
-      target_101
+      target_101,
+      target_101_requested,
+      n_sections,
+      students_per_section
       ),
       as.numeric
       )
     )
-
 
 }
 

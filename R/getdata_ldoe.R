@@ -38,6 +38,18 @@ getdata_act_subgroup <- function() {
 
 
 #' @export
+getdata_actuals_10_1 <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "actuals_10_1")
+  )
+
+}
+
+
+
+#' @export
 getdata_ap <- function() {
 
   dplyr::tbl(
