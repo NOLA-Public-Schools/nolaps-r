@@ -48,6 +48,15 @@ getdata_neighborhoods <- function() {
 
 
 #' @export
+getdata_planning <- function() {
+
+  sf::st_read(path_data("Geographies/Planning Districts/planning_districts.shp"))
+
+}
+
+
+
+#' @export
 getdata_zips_orleans <- function() {
 
   sf::st_read(path_data("Geographies/Zip Codes/zips_orleans.shp"))
@@ -73,8 +82,8 @@ getdata_zips_split <- function() {
 getdata_student_coordinates <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "student_coordinates")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "student_coordinates")
   )
 
 }

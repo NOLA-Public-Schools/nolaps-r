@@ -203,6 +203,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Grade_Applying_For__c,
         Student_First_Name__c,
         Student_Last_Name__c,
+        Date_of_Birth__c,
         Parent_Guardian_First_Name__c,
         Parent_Guardian_Last_Name__c,
         Parent_Guardian_Email_Address__c,
@@ -246,6 +247,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       grade_applying = Grade_Applying_For__c,
       applicant_firstname = Student_First_Name__c,
       applicant_lastname = Student_Last_Name__c,
+      dob_app = Date_of_Birth__c,
       pg_firstname = Parent_Guardian_First_Name__c,
       pg_lastname = Parent_Guardian_Last_Name__c,
       pg_email = Parent_Guardian_Email_Address__c,
@@ -280,6 +282,12 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       is_active
       ),
       as.logical
+      )
+    ) %>%
+    dplyr::mutate(across(c(
+      dob_app
+      ),
+      lubridate::as_date
       )
     )
 
@@ -631,6 +639,8 @@ getdata_gradecapacity <- function() {
         Future_10_1_Target__c,
         Requested_10_1_Target__c,
         Requested_Round_2_Target__c,
+        School_Name__r.Designated_Content_Approver__c,
+        School_Name__r.Enrollment_POC_Email__c,
         Facility__c
       from Grade_Capacity__c
       "
@@ -658,6 +668,8 @@ getdata_gradecapacity <- function() {
       target_101_future = Future_10_1_Target__c,
       target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
+      email_approver = School_Name__r.Designated_Content_Approver__c,
+      email_enrollment = School_Name__r.Enrollment_POC_Email__c,
       id_facility = Facility__c
     ) %>%
     fix_grades(var = grade) %>%
@@ -862,6 +874,7 @@ query_student <- function() {
       SchoolForce__School__c,
       SchoolForce__School__r.Name,
       SchoolForce__School__r.School_Code_String__c,
+      SchoolForce__School__r.Governance__c,
       Is_Student_In_Terminal_Grade__c,
       Application_Needed__c,
       Future_School_Grade__c,
@@ -914,6 +927,7 @@ format_student <- function(x) {
       id_account_current = SchoolForce__School__c,
       name_account_current = SchoolForce__School__r.Name,
       code_site_current = SchoolForce__School__r.School_Code_String__c,
+      governance = SchoolForce__School__r.Governance__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
       appneeded_r1 = Application_Needed__c,
       grade_future = Future_School_Grade__c,
