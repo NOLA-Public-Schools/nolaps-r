@@ -29,8 +29,8 @@ getdata_derivation_discipline <- function() {
 getdata_match <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'matches')
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema('public', 'matches')
   )
 
 }
