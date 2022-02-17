@@ -43,11 +43,7 @@ filter_priority <- function(x, priority, prioritytable) {
 #' @export
 match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools) {
 
-
-
   apps_with_choices <- apps %>% dplyr::filter(id_app %in% choices$id_app)
-
-  # accounts <- getdata_account()
 
   # oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
 
@@ -58,44 +54,46 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   #   dplyr::filter(grade_current != 12 | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))) %>%
   #   dplyr::left_join(accounts, by = c("id_account_current" = "id_account"))
 
-  students_futureschool <-
-    students %>%
-    filter(!is.na(id_account_future))
+  # students_futureschool <-
+  #   students %>%
+  #   filter(!is.na(id_account_future))
 
   students_active <-
     students %>%
     filter(is_active)
 
-  oaretentions <-
-    readr::read_csv(
-      glue::glue("{dir_external}/oa-retentions.csv"),
-      col_types = "c"
-    ) %>%
-    dplyr::select(oneappid = `OneApp ID`)
+  # oaretentions <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_external}/oa-retentions.csv"),
+  #     col_types = "c"
+  #   ) %>%
+  #   dplyr::select(oneappid = `OneApp ID`)
 
 
 
 # Invalid match records ---------------------------------------------------
 
-  print("Invalid match records")
+  cat("Invalid match records\n")
 
   if (round == "Round 1") {
 
-    see <-
-      readr::read_csv(
-        glue::glue("{dir_external}/additional-student-information-rows.csv")
-      ) %>%
-      dplyr::pull(`Student ID`)
+    # see <-
+    #   readr::read_csv(
+    #     glue::glue("{dir_external}/additional-student-information-rows.csv")
+    #   ) %>%
+    #   dplyr::pull(`Student ID`)
 
     invalid_participants <-
       match %>%
       dplyr::filter(
         !(`STUDENT ID` %in% apps_with_choices$oneappid)
-        & !(`STUDENT ID` %in% students$oneappid)
-        & !(`STUDENT ID` %in% see)
+        & !(`STUDENT ID` %in% students_active$oneappid)
+        # & !(`STUDENT ID` %in% see)
       ) %>%
-      dplyr::select(`STUDENT ID`, `CHOICE SCHOOL`, GRADE) %>%
+      dplyr::select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
       dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+
+    test_text <- "All match participants trace back to application with choices or active student."
 
   } else if (round == "Round 2") {
 
@@ -108,17 +106,21 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
       dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-    test_text <- "All match participants trace back to application with choices or recent student with future school"
+    test_text <- "All match participants trace back to application with choices or recent student with future school."
 
   }
 
-  testthat::test_that(test_text, {
-
-    testthat::expect_equal(nrow(invalid_participants), 0)
-
-  })
+  testthat::with_reporter(
+    "stop", {
+      testthat::test_that(test_text, {
+        testthat::expect_equal(nrow(invalid_participants), 0)
+      })
+    }
+  )
 
   write_if_bad(invalid_participants, dir_out)
+
+  return(NULL)
 
 
 

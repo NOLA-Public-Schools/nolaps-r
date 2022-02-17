@@ -149,16 +149,16 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  # match_test(
-  #   match = match,
-  #   dir_external = dir_external,
-  #   dir_out = dir_review,
-  #   round = "Round 2",
-  #   students = students_recent,
-  #   apps = apps,
-  #   choices = choices,
-  #   appschools = appschools
-  # )
+  match_test(
+    match = match,
+    dir_external = dir_external,
+    dir_out = dir_review,
+    round = "Round 1",
+    students = students_recent,
+    apps = apps,
+    choices = choices,
+    appschools = appschools
+  )
 
   # match_placement(
   #   match = match,
