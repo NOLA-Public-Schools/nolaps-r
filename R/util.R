@@ -19,7 +19,7 @@ fix_grades <- function(x, var = GRADE) {
     dplyr::mutate("{{ var }}" := stringr::str_remove_all({{ var }}, "[:space:]")) %>%
     dplyr::mutate("{{ var }}" := factor(
       {{ var }}, levels = c(
-        "INFSPED", "INF", "1YR", "2YR", "PK3", "PK4", "PKSPED", "PK",
+        "UB", "INFSPED", "INF", "1YR", "2YR", "PK3", "PK4", "PKSPED", "PK",
         "K", "1", "2", "3", "4", "5", "6", "7", "8",
         "T9",
         "9", "10", "11", "12",

@@ -762,6 +762,132 @@ getdata_placement <- function(year = "2020-2021") {
 
 
 #' @export
+getdata_priority <- function() {
+
+  salesforcer::sf_query(
+    glue::glue(
+      "
+      select
+        Id,
+        Application_School__c,
+        Application_School__r.School__c,
+        Application_School__r.School__r.Name,
+        Application_School__r.School__r.School_Code_String__c,
+        Grade__c,
+        New_Returning__c,
+        Application_School__r.School__r.Governance__c,
+        Application_School__r.EC_Program_Type__r.Name,
+
+        Order_100_Federal_Poverty__c,
+        Order_Attending_C__c,
+        Order_Attending_DF__c,
+        Order_Closing_Non_Public__c,
+        Order_Closing_Public__c,
+        Order_Disadvantage__c,
+        Order_Distance__c,
+        Order_Feeder__c,
+        Order_French__c,
+        Order_IEP__c,
+        Order_Military__c,
+        Order_Montessori__c,
+        Order_Non_Transition__c,
+        Order_NSECD__c,
+        Order_Sibling__c,
+        Order_Sibling_OR_Staff_Child__c,
+        Order_Staff_Child__c,
+        Order_Transition__c,
+        Order_UNO_Staff__c,
+        Order_Zone__c,
+
+        Percentage_100_Federal_Poverty__c,
+        Percentage_Attending_C__c,
+        Percentage_Attending_DF__c,
+        Percentage_Closing_Non_Public__c,
+        Percentage_Closing_Public__c,
+        Percentage_Disadvantage__c,
+        Percentage_Distance__c,
+        Percentage_Feeder__c,
+        Percentage_French__c,
+        Percentage_IEP__c,
+        Percentage_Military__c,
+        Percentage_Montessori__c,
+        Percentage_Non_Transition__c,
+        Percentage_NSECD__c,
+        Percentage_Sibling__c,
+        Percentage_Sibling_OR_Staff_Child__c,
+        Percentage_Staff_Child__c,
+        Percentage_Transition__c,
+        Percentage_UNO_Staff__c,
+        Percentage_Zone__c
+
+      from Priority__c
+      where
+        Application_School__r.School__r.School_Status__c = 'Open' or
+        Application_School__r.School__r.School_Status__c = 'Closing at End of School Year'
+      "
+    )
+  ) %>%
+    dplyr::select(
+      id_priority = Id,
+      id_appschool = Application_School__c,
+      id_account = Application_School__r.School__c,
+      name_account = Application_School__r.School__r.Name,
+      code_site = Application_School__r.School__r.School_Code_String__c,
+      grade = Grade__c,
+      new_returning = New_Returning__c,
+      governance = Application_School__r.School__r.Governance__c,
+      ec_type = Application_School__r.EC_Program_Type__r.Name,
+
+      Order_100_Federal_Poverty__c,
+      Order_Attending_C__c,
+      Order_Attending_DF__c,
+      Order_Closing_Non_Public__c,
+      Order_Closing_Public__c,
+      Order_Disadvantage__c,
+      Order_Distance__c,
+      Order_Feeder__c,
+      Order_French__c,
+      Order_IEP__c,
+      Order_Military__c,
+      Order_Montessori__c,
+      Order_Non_Transition__c,
+      Order_NSECD__c,
+      Order_Sibling__c,
+      Order_Sibling_OR_Staff_Child__c,
+      Order_Staff_Child__c,
+      Order_Transition__c,
+      Order_UNO_Staff__c,
+      Order_Zone__c,
+
+      Percentage_100_Federal_Poverty__c,
+      Percentage_Attending_C__c,
+      Percentage_Attending_DF__c,
+      Percentage_Closing_Non_Public__c,
+      Percentage_Closing_Public__c,
+      Percentage_Disadvantage__c,
+      Percentage_Distance__c,
+      Percentage_Feeder__c,
+      Percentage_French__c,
+      Percentage_IEP__c,
+      Percentage_Military__c,
+      Percentage_Montessori__c,
+      Percentage_Non_Transition__c,
+      Percentage_NSECD__c,
+      Percentage_Sibling__c,
+      Percentage_Sibling_OR_Staff_Child__c,
+      Percentage_Staff_Child__c,
+      Percentage_Transition__c,
+      Percentage_UNO_Staff__c,
+      Percentage_Zone__c
+    ) %>%
+    fix_grades(grade) %>%
+    dplyr::arrange(name_account, grade)
+
+}
+
+
+
+#' @export
 getdata_registration <- function() {
 
   salesforcer::sf_query(
