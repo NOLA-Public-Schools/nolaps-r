@@ -73,7 +73,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Invalid match records ---------------------------------------------------
 
-  cat("Invalid match records\n")
+  cat("\nInvalid match records\n")
 
   if (round == "Round 1") {
 
@@ -120,13 +120,11 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_participants, dir_out)
 
-  return(NULL)
-
 
 
 # Missing match records ---------------------------------------------------
 
-  print("Missing applications")
+  cat("\nMissing applications\n")
 
   missing_apps <-
     apps_with_choices %>%
@@ -134,23 +132,37 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::select(id_student, oneappid, id_app) %>%
     dplyr::arrange(oneappid)
 
-  testthat::test_that("All applications with a choice are in match", {
+  test_text <- "All applications with a choice are in the match."
 
-    testthat::expect_equal(nrow(missing_apps), 0)
-
-  })
+  testthat::with_reporter(
+    "stop", {
+      testthat::test_that(test_text, {
+        testthat::expect_equal(nrow(missing_apps), 0)
+      })
+    }
+  )
 
   write_if_bad(missing_apps, dir_out)
 
-  print("Missing roll-forwards")
+
+
+  cat("\nMissing roll-forwards\n")
 
   if (round == "Round 1") {
 
     missing_rollforwards <-
-      students %>%
+      students_active %>%
+      dplyr::filter(!is.na(id_account_current)) %>%
+      dplyr::filter(is_terminalgrade == FALSE) %>%
+      dplyr::filter(
+        grade_current != 12
+        # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
+      ) %>%
       dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      dplyr::select(oneappid, id_student, school_current = name_account, grade_current) %>%
-      dplyr::arrange(school_current, grade_current, oneappid)
+      dplyr::select(name_account_current, grade_current, oneappid, id_student) %>%
+      dplyr::arrange(name_account_current, grade_current)
+
+    test_text <- "All active students in non-terminal grade are in the match."
 
   } else if (round == "Round 2") {
 
@@ -164,22 +176,26 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   }
 
-  testthat::test_that(test_text, {
-
-    testthat::expect_equal(nrow(missing_rollforwards), 0)
-
-  })
+  testthat::with_reporter(
+    "stop", {
+      testthat::test_that(test_text, {
+        testthat::expect_equal(nrow(missing_rollforwards), 0)
+      })
+    }
+  )
 
   write_if_bad(missing_rollforwards, dir_out)
 
 
 
-# Non-existent grades -----------------------------------------------------
+# Invalid grades -----------------------------------------------------
 
-  cat("Invalid grades\n")
+  cat("\nInvalid grades\n")
 
   invalid_grades <-
     match %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    # dplyr::filter(`ELIGIBLE?` == "YES") %>%
     dplyr::left_join(
       getdata_account_gradespan(),
       by = c("id_account")
@@ -187,18 +203,22 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dplyr::rowwise() %>%
     dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
     dplyr::ungroup() %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::filter(`ELIGIBLE?` == "YES") %>%
-    dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
-    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+    dplyr::select(choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+    dplyr::arrange(choice_name, GRADE)
 
-  testthat::test_that("No eligible match record involves a grade that will not exist next year", {
+  test_text <- "No match record involves a grade that will not exist next year."
 
-    testthat::expect_equal(nrow(invalid_grades), 0)
-
-  })
+  testthat::with_reporter(
+    "stop", {
+      testthat::test_that(test_text, {
+        testthat::expect_equal(nrow(invalid_grades), 0)
+      })
+    }
+  )
 
   write_if_bad(invalid_grades, dir_out)
+
+  return(NULL)
 
 
 
