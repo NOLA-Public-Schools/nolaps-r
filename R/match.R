@@ -92,18 +92,22 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_business <- glue::glue("{dir_out}/business")
 
-  dir_review <- glue::glue("{dir_out}/review")
+  dir_review <- glue::glue("{dir_out}/validation")
 
   if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
-  cat("Loading data\n")
+  cat("\nLoading students\n")
+
+  students_recent <- getdata_student_recent()
+  students_active <- students_recent %>% dplyr::filter(is_active)
+
+  cat("\nLoading schools\n")
 
   accounts <- getdata_account()
   appschools <- getdata_appschool()
 
-  students_recent <- getdata_student_recent()
-  students_active <- students_recent %>% dplyr::filter(is_active)
+  cat("\nLoading choices\n")
 
   apps <- getdata_app(round = "Round 1")
   choices <- getdata_appschoolranking(round = "Round 1")
@@ -184,7 +188,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  cat("Done!\n")
+  cat(glue::glue("\nFinished at {Sys.time()}\n"))
 
 }
 
