@@ -69,6 +69,19 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   #   ) %>%
   #   dplyr::select(oneappid = `OneApp ID`)
 
+  match_priorities <-
+    match %>%
+    matchcalcs_priorityoutcomes() %>%
+    dplyr::left_join(
+      choices,
+      by = c("STUDENT ID" = "oneappid", "id_account")
+    )
+
+  prioritykey <- readxl::read_excel(
+    glue::glue("{dir_external}/priority-key.xlsx"),
+    col_types = "text"
+  )
+
 
 
 # Invalid match records ---------------------------------------------------
@@ -217,6 +230,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   )
 
   write_if_bad(invalid_grades, dir_out)
+
+  # Guarantee
+
+  test_guarantee(
+    round = round,
+    prioritykey = prioritykey,
+    match_priorities = match_priorities,
+    students = students_active,
+    dir_out = dir_out
+  )
 
   return(NULL)
 
@@ -533,22 +556,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Priorities --------------------------------------------------------------
 
-  match_priorities <-
-    match %>%
-    matchcalcs_priorityoutcomes() %>%
-    dplyr::left_join(
-      choices,
-      by = c("STUDENT ID" = "oneappid", "id_account")
-    )
-
   prioritytable <- readr::read_csv(
     glue::glue("{dir_external}/PriorityTable.csv"),
     col_types = "ccdddddddddddddddddddddddddddddddddd"
-  )
-
-  prioritykey <- readr::read_csv(
-    glue::glue("{dir_external}/priority-key.csv"),
-    col_types = "cccccccccccccccccccc"
   )
 
 
@@ -814,6 +824,106 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   write_if_bad(invalid_zone, dir_out)
 
 
+
+}
+
+
+
+# Guarantee ---------------------------------------------------------------
+
+#' @export
+test_guarantee <- function(round, prioritykey, match_priorities, students, dir_out) {
+
+  cat("\nGuarantee\n")
+
+  key_guarantee <-
+    prioritykey %>%
+    dplyr::select(
+      code_site = `Site Code`,
+      grade_current = `You are in grade`,
+      guarantee = `Guaranteed (Active Students have guarantee to x)`,
+    ) %>%
+    dplyr::mutate(code_site = stringr::str_pad(
+      code_site, width = 6, side = "left", pad = "0")
+    ) %>%
+    dplyr::mutate(code_site = stringr::str_replace(
+      code_site,
+      "^(36[:digit:]{3})_(.+)",
+      "0\\1_\\2"
+    )) %>%
+    dplyr::filter(guarantee != "-") %>%
+    dplyr::distinct()
+
+  if (round == "Round 1") {
+
+    shouldhave <-
+      students %>%
+      dplyr::select(oneappid, code_site_current, grade_current) %>%
+      fix_grades(grade_current) %>%
+      dplyr::left_join(
+        key_guarantee,
+        by = c("code_site_current" = "code_site", "grade_current")
+      ) %>%
+      dplyr::filter(!is.na(guarantee))
+
+  } else if (round == "Round 2") {
+
+    shouldhave <-
+      students_futureschool %>%
+      dplyr::select(oneappid, guarantee = id_account_future)
+
+  }
+
+  has_guarantee <-
+    match_priorities %>%
+    dplyr::filter(!is.na(Guaranteed)) %>%
+    dplyr::pull(`STUDENT ID`)
+
+  missing_guarantee <-
+    match_priorities %>%
+    dplyr::filter(!(`STUDENT ID` %in% has_guarantee)) %>%
+    dplyr::distinct(`STUDENT ID`) %>%
+    dplyr::left_join(shouldhave, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::filter(!is.na(guarantee))
+
+  invalid_guarantee <-
+    match_priorities %>%
+    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    dplyr::filter(!is.na(Guaranteed)) %>%
+    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee"))
+  # %>%
+  #   dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
+  #   dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
+  #   dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+  #   dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
+
+  test_helper(
+    invalid_guarantee,
+    "No student has an invalid guarantee."
+  )
+
+  test_helper(
+    missing_guarantee,
+    "No student has a missing guarantee."
+  )
+
+  write_if_bad(missing_guarantee, dir_out)
+  write_if_bad(invalid_guarantee, dir_out)
+
+}
+
+
+
+#' @export
+test_helper <- function(bad_table, test_text) {
+
+  testthat::with_reporter(
+    "stop", {
+      testthat::test_that(test_text, {
+        testthat::expect_equal(nrow(bad_table), 0)
+      })
+    }
+  )
 
 }
 

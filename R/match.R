@@ -88,7 +88,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   dir_in <- args[1]
   dir_out <- args[2]
 
-  dir_external <- glue::glue("{dir_in}/Final Inputs")
+  dir_external <- glue::glue("{dir_in}/external")
 
   dir_business <- glue::glue("{dir_out}/business")
 
@@ -107,7 +107,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   accounts <- getdata_account()
   appschools <- getdata_appschool()
 
-  cat("\nLoading choices\n")
+  cat("\nLoading choices\n\n")
 
   apps <- getdata_app(round = "Round 1")
   choices <- getdata_appschoolranking(round = "Round 1")
