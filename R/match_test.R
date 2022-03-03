@@ -1,5 +1,6 @@
 #' @importFrom magrittr %>%
-#' @importFrom dplyr distinct filter select
+#' @importFrom dplyr anti_join distinct filter left_join mutate relocate select semi_join
+#' @importFrom stringr str_detect
 
 
 
@@ -255,6 +256,17 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     prioritykey = prioritykey,
     match_priorities = match_priorities,
     students = students_active,
+    dir_out = dir_out
+  )
+
+  # Feeder
+
+  test_feeder(
+    round = round,
+    prioritykey = prioritykey,
+    match_priorities = match_priorities,
+    students = students_active,
+    choices = choices,
     dir_out = dir_out
   )
 
@@ -582,70 +594,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Priorities --------------------------------------------------------------
 
-  # Feeder
-
-  print("Feeder")
-
-  key_feeder <-
-    prioritykey %>%
-    dplyr::select(
-      code_site = `Site Code`,
-      grade_current = `You are in grade`,
-      grade_applying = `And you are applying to`,
-      feeder = `Feeder School (Active Students feed into x)`
-    ) %>%
-    dplyr::filter(feeder != "-") %>%
-    dplyr::distinct()
-
-  students_feeder <-
-    students %>%
-    dplyr::filter(!is.na(id_account_future) | is_active) %>%
-    dplyr::mutate(code_site = dplyr::case_when(
-      !is.na(code_site_future) ~ code_site_future,
-      TRUE ~ code_site
-      )
-    ) %>%
-    dplyr::filter(code_site %in% key_feeder$code_site) %>%
-    dplyr::select(oneappid, code_site, grade_current) %>%
-    fix_grades(grade_current)
-
-  asr_feeder <-
-    choices %>%
-    dplyr::filter(oneappid %in% students_feeder$oneappid) %>%
-    dplyr::select(oneappid, grade_applying, code_appschool) %>%
-    fix_grades(grade_applying)
-
-  shouldhave <-
-    asr_feeder %>%
-    dplyr::left_join(students_feeder, by = "oneappid") %>%
-    dplyr::left_join(key_feeder, by = c("code_site", "grade_current", "grade_applying")) %>%
-    dplyr::relocate(c(code_site, grade_current), .before = grade_applying) %>%
-    dplyr::mutate(gets_feeder = stringr::str_detect(feeder, code_appschool)) %>%
-    dplyr::filter(gets_feeder == TRUE)
-
-  missing_feeder <-
-    match_priorities %>%
-    filter_priority(Feeder, prioritytable) %>%
-    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
-
-  invalid_feeder <-
-    match_priorities %>%
-    dplyr::filter(!is.na(Feeder)) %>%
-    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
-
-  testthat::test_that(
-    "Feeder - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_feeder), 0)
-      testthat::expect_equal(nrow(invalid_feeder), 0)
-
-    })
-
-  write_if_bad(missing_feeder, dir_out)
-  write_if_bad(invalid_feeder, dir_out)
-
-
-
   # IEP
 
   print("IEP")
@@ -846,21 +794,20 @@ test_guarantee <- function(round, prioritykey, match_priorities, students, dir_o
 
 
 #' @export
-test_feeder <- function(round, prioritykey, match_priorities, students, dir_out) {
+test_feeder <- function(dir_out, round, prioritykey, match_priorities, students, choices) {
 
   cat("\nFeeder\n")
 
   key_feeder <-
     prioritykey %>%
-    filter(feeder != "-") %>%
+    filter(!is.na(feeder)) %>%
     distinct()
 
   if (round == "Round 1") {
 
-    students_feeder <-
+    students <-
       students %>%
-      filter(code_site_current %in% key_feeder$code_site) %>%
-      select(oneappid, code_site_current, grade_current)
+      select(code_site_current, grade_current, oneappid)
 
   } else if (round == "Round 2") {
 
@@ -878,42 +825,44 @@ test_feeder <- function(round, prioritykey, match_priorities, students, dir_out)
 
   }
 
-  asr_feeder <-
+  choices <-
     choices %>%
-    dplyr::filter(oneappid %in% students_feeder$oneappid) %>%
-    dplyr::select(oneappid, grade_applying, code_appschool) %>%
-    fix_grades(grade_applying)
+    select(code_appschool, grade_applying, oneappid)
 
   shouldhave <-
-    asr_feeder %>%
-    dplyr::left_join(students_feeder, by = "oneappid") %>%
-    dplyr::left_join(key_feeder, by = c("code_site", "grade_current", "grade_applying")) %>%
-    dplyr::relocate(c(code_site, grade_current), .before = grade_applying) %>%
-    dplyr::mutate(gets_feeder = stringr::str_detect(feeder, code_appschool)) %>%
-    dplyr::filter(gets_feeder == TRUE)
-
-  missing_feeder <-
-    match_priorities %>%
-    filter_priority(Feeder, prioritytable) %>%
-    dplyr::semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+    choices %>%
+    left_join(students, by = "oneappid") %>%
+    left_join(
+      key_feeder,
+      by = c("code_site_current" = "code_site", "grade_current", "grade_applying")
+    ) %>%
+    mutate(gets_feeder = str_detect(feeder, code_appschool)) %>%
+    filter(gets_feeder == TRUE)
 
   invalid_feeder <-
     match_priorities %>%
-    dplyr::filter(!is.na(Feeder)) %>%
-    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+    filter(!is.na(Feeder)) %>%
+    anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
 
-  testthat::test_that(
-    "Feeder - everyone has it that should; no one has it that shouldn't", {
+  missing_feeder <-
+    match_priorities %>%
+    # filter_priority(Feeder, prioritytable) %>%
+    filter(is.na(Feeder)) %>%
+    filter(is.na(Ineligible)) %>%
+    semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
 
-      testthat::expect_equal(nrow(missing_feeder), 0)
-      testthat::expect_equal(nrow(invalid_feeder), 0)
+  test_helper(
+    invalid_feeder,
+    "No student has an invalid feeder."
+  )
 
-    })
+  test_helper(
+    missing_feeder,
+    "No student has a missing feeder."
+  )
 
-  write_if_bad(missing_feeder, dir_out)
   write_if_bad(invalid_feeder, dir_out)
-
-
+  write_if_bad(missing_feeder, dir_out)
 
 }
 
