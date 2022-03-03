@@ -131,6 +131,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   appinputs <- getdata_appinput()
   priorities <- getdata_priority()
 
+  cat("\n\n")
+
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
@@ -209,7 +211,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  cat(glue::glue("\nFinished at {Sys.time()}\n"))
+  cat(glue::glue("\nFinished at {Sys.time()}\n\n"))
 
 }
 

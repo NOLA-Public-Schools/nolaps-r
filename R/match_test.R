@@ -1,10 +1,11 @@
 #' @import dplyr
 #' @import lubridate
+#' @import readxl
 #' @import salesforcer
 #' @import stringr
 
-#' @importFrom magrittr %>%
 #' @importFrom glue glue glue_safe
+#' @importFrom magrittr %>%
 
 
 
@@ -49,9 +50,14 @@ filter_priority <- function(x, priority, prioritytable) {
 #' @export
 match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs) {
 
-  apps_with_choices <- apps %>% dplyr::filter(id_app %in% choices$id_app)
-
   # oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
+
+  # oaretentions <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_external}/oa-retentions.csv"),
+  #     col_types = "c"
+  #   ) %>%
+  #   dplyr::select(oneappid = `OneApp ID`)
 
   # students <-
   #   getdata_student_active() %>%
@@ -64,41 +70,36 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   #   students %>%
   #   filter(!is.na(id_account_future))
 
+  apps_with_choices <- apps %>% filter(id_app %in% choices$id_app)
+
   students_active <-
     students %>%
     filter(is_active)
 
-  # oaretentions <-
-  #   readr::read_csv(
-  #     glue::glue("{dir_external}/oa-retentions.csv"),
-  #     col_types = "c"
-  #   ) %>%
-  #   dplyr::select(oneappid = `OneApp ID`)
-
   match_priorities <-
     match %>%
     matchcalcs_priorityoutcomes() %>%
-    dplyr::left_join(
+    left_join(
       choices,
-      by = c("STUDENT ID" = "oneappid", "id_account")
+      by = c("id_account", "STUDENT ID" = "oneappid")
     )
 
   prioritykey <-
-    readxl::read_excel(
-      glue::glue("{dir_external}/priority-key.xlsx"),
+    read_excel(
+      glue("{dir_external}/priority-key.xlsx"),
       col_types = "text"
     ) %>%
-    dplyr::select(
+    select(
       code_site = `Site Code`,
       grade_current = `You are in grade`,
       grade_applying = `And you are applying to`,
       guarantee = `Guaranteed (Active Students have guarantee to x)`,
       feeder = `Feeder School (Active Students feed into x)`
     ) %>%
-    dplyr::mutate(code_site = stringr::str_pad(
+    mutate(code_site = stringr::str_pad(
       code_site, width = 6, side = "left", pad = "0")
     ) %>%
-    dplyr::mutate(code_site = stringr::str_replace(
+    mutate(code_site = stringr::str_replace(
       code_site,
       "^(36[:digit:]{3})_(.+)",
       "0\\1_\\2"
@@ -128,7 +129,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       dplyr::select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
       dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-    test_text <- "All match participants trace back to application with choices or active student."
+    test_text <- "All match records trace back to application with choices or active student."
 
   } else if (round == "Round 2") {
 
@@ -141,7 +142,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
       dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
-    test_text <- "All match participants trace back to application with choices or recent student with future school."
+    test_text <- "All match records trace back to application with choices or recent student with future school."
 
   }
 
@@ -253,25 +254,27 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_grades, dir_out)
 
+  # Priorities
+
   # Guarantee
 
   test_guarantee(
+    dir_out = dir_out,
     round = round,
     prioritykey = prioritykey,
     match_priorities = match_priorities,
-    students = students_active,
-    dir_out = dir_out
+    students = students_active
   )
 
   # Feeder
 
   test_feeder(
+    dir_out = dir_out,
     round = round,
     prioritykey = prioritykey,
     match_priorities = match_priorities,
     students = students_active,
-    choices = choices,
-    dir_out = dir_out
+    choices = choices
   )
 
   # IEP
@@ -283,6 +286,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     appinputs = appinputs,
     match_priorities = match_priorities
   )
+
+  # Military
+
+  # test_military(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   return(NULL)
 
@@ -599,48 +612,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Priorities --------------------------------------------------------------
 
-  prioritytable <- readr::read_csv(
-    glue::glue("{dir_external}/PriorityTable.csv"),
-    col_types = "ccdddddddddddddddddddddddddddddddddd"
-  )
-
-
-
-# Priorities --------------------------------------------------------------
-
-  # IEP
-
-  print("IEP")
-
-  iep <- readr::read_csv(glue::glue("{dir_external}/iep.csv"), col_types = "c")
-
-  missing_iep <-
-    match_priorities %>%
-    filter_priority(IEP, prioritytable) %>%
-    dplyr::filter(
-      (`STUDENT ID` %in% iep$`OneApp ID`)
-    )
-
-  invalid_iep <-
-    match_priorities %>%
-    dplyr::filter(!is.na(IEP)) %>%
-    dplyr::filter(
-      !(`STUDENT ID` %in% iep$`OneApp ID`)
-    )
-
-  testthat::test_that(
-    "IEP - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_iep), 0)
-      testthat::expect_equal(nrow(invalid_iep), 0)
-
-    })
-
-  write_if_bad(missing_iep, dir_out)
-  write_if_bad(invalid_iep, dir_out)
-
-
-
   # Verified sibling
 
   print("Verified sibling")
@@ -737,71 +708,74 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
+# Priority tests ----------------------------------------------------------
+
 #' @export
-test_guarantee <- function(round, prioritykey, match_priorities, students, dir_out) {
+test_guarantee <- function(dir_out, round, prioritykey, match_priorities, students) {
 
   cat("\nGuarantee\n")
 
   key_guarantee <-
     prioritykey %>%
-    dplyr::filter(!is.na(guarantee)) %>%
-    dplyr::distinct()
+    filter(!is.na(guarantee))
 
   if (round == "Round 1") {
 
     shouldhave <-
       students %>%
-      dplyr::select(oneappid, code_site_current, grade_current) %>%
-      fix_grades(grade_current) %>%
-      dplyr::left_join(
+      select(code_site_current, grade_current, oneappid) %>%
+      left_join(
         key_guarantee,
         by = c("code_site_current" = "code_site", "grade_current")
       ) %>%
-      dplyr::filter(!is.na(guarantee))
+      filter(!is.na(guarantee))
 
   } else if (round == "Round 2") {
 
     shouldhave <-
-      students_futureschool %>%
-      dplyr::select(oneappid, guarantee = id_account_future)
+      students %>%
+      select(oneappid, guarantee = id_account_future)
 
   }
 
-  has_guarantee <-
+  invalid <-
     match_priorities %>%
-    dplyr::filter(!is.na(Guaranteed)) %>%
-    dplyr::pull(`STUDENT ID`)
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    anti_join(
+      shouldhave,
+      by = c(
+        "CHOICE SCHOOL" = "guarantee",
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
+    filter(!is.na(Guaranteed))
 
-  missing_guarantee <-
+  missing <-
     match_priorities %>%
-    dplyr::filter(!(`STUDENT ID` %in% has_guarantee)) %>%
-    dplyr::distinct(`STUDENT ID`) %>%
-    dplyr::left_join(shouldhave, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(!is.na(guarantee))
-
-  invalid_guarantee <-
-    match_priorities %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::filter(!is.na(Guaranteed)) %>%
-    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "guarantee"))
-  # %>%
-  #   dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
-  #   dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
-  #   dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-  #   dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    semi_join(
+      shouldhave,
+      by = c(
+        "CHOICE SCHOOL" = "guarantee",
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
+    filter(is.na(Guaranteed))
 
   test_helper(
-    invalid_guarantee,
+    invalid,
     "No student has an invalid guarantee."
   )
 
   test_helper(
-    missing_guarantee,
+    missing,
     "No student has a missing guarantee."
   )
 
-  write_if_bad(missing_guarantee, dir_out)
-  write_if_bad(invalid_guarantee, dir_out)
+  write_if_bad(invalid, dir_out)
+  write_if_bad(missing, dir_out)
 
 }
 
@@ -814,8 +788,7 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
   key_feeder <-
     prioritykey %>%
-    filter(!is.na(feeder)) %>%
-    distinct()
+    filter(!is.na(feeder))
 
   if (round == "Round 1") {
 
@@ -839,12 +812,9 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
   }
 
-  choices <-
-    choices %>%
-    select(code_appschool, grade_applying, oneappid)
-
   shouldhave <-
     choices %>%
+    select(code_appschool, grade_applying, oneappid) %>%
     left_join(students, by = "oneappid") %>%
     left_join(
       key_feeder,
@@ -853,30 +823,43 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     mutate(gets_feeder = str_detect(feeder, code_appschool)) %>%
     filter(gets_feeder == TRUE)
 
-  invalid_feeder <-
+  invalid <-
     match_priorities %>%
-    filter(!is.na(Feeder)) %>%
-    anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+    anti_join(
+      shouldhave,
+      by = c(
+        "CHOICE SCHOOL" = "code_appschool",
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
+    filter(!is.na(Feeder))
 
-  missing_feeder <-
+  missing <-
     match_priorities %>%
-    # filter_priority(Feeder, prioritytable) %>%
+    semi_join(
+      shouldhave,
+      by = c(
+        "CHOICE SCHOOL" = "code_appschool",
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
     filter(is.na(Feeder)) %>%
-    filter(is.na(Ineligible)) %>%
-    semi_join(shouldhave, by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool"))
+    filter(is.na(Ineligible))
 
   test_helper(
-    invalid_feeder,
+    invalid,
     "No student has an invalid feeder."
   )
 
   test_helper(
-    missing_feeder,
+    missing,
     "No student has a missing feeder."
   )
 
-  write_if_bad(invalid_feeder, dir_out)
-  write_if_bad(missing_feeder, dir_out)
+  write_if_bad(invalid, dir_out)
+  write_if_bad(missing, dir_out)
 
 }
 
@@ -919,6 +902,49 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_iep, dir_out)
   write_if_bad(missing_iep, dir_out)
+
+}
+
+
+
+#' @export
+test_military <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nMilitary\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Military__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_military)
+
+  invalid <-
+    match_priorities %>%
+    filter(!is.na(Military)) %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid))
+
+  missing <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(is.na(Military)) %>%
+    filter(is.na(Ineligible)) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid))
+
+  test_helper(
+    invalid,
+    "No student has an invalid military priority."
+  )
+
+  test_helper(
+    missing,
+    "No student has a missing military priority."
+  )
+
+  write_if_bad(invalid, dir_out)
+  write_if_bad(missing, dir_out)
 
 }
 
