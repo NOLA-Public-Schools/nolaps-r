@@ -121,10 +121,15 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   accounts <- getdata_account()
   appschools <- getdata_appschool()
 
-  cat("\nLoading choices\n\n")
+  cat("\nLoading choices\n")
 
   apps <- getdata_app(round = "Round 1")
   choices <- getdata_appschoolranking(round = "Round 1")
+
+  cat("\nLoading priorities\n")
+
+  appinputs <- getdata_appinput()
+  priorities <- getdata_priority()
 
   match <-
     readr::read_csv(
@@ -175,7 +180,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     students = students_recent,
     apps = apps,
     choices = choices,
-    appschools = appschools
+    appschools = appschools,
+    priorities = priorities,
+    appinputs = appinputs
   )
 
   # match_placement(

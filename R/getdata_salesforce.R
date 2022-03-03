@@ -1,4 +1,10 @@
+#' @import dplyr
+#' @import lubridate
+#' @import salesforcer
+#' @import stringr
+
 #' @importFrom magrittr %>%
+#' @importFrom glue glue glue_safe
 
 
 
@@ -299,6 +305,39 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
 getdata_app_3year <- function(round = "Round 1", start = date_appstart_3year()) {
 
   getdata_app(round = round, start = start)
+
+}
+
+
+
+#' @export
+getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
+
+  sf_query(
+    glue_safe(
+      "
+      select
+        OneApp_ID__c,
+        Input_Table_IEP__c
+      from Match_Input_Tables__c
+      where
+        Application__r.RecordType.Name = '{round}' and
+        Application__r.CreatedDate >= {start}
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) %>%
+    select(
+      oneappid = OneApp_ID__c,
+      has_iep = Input_Table_IEP__c
+    ) %>%
+    mutate(across(c(
+      has_iep
+      ),
+      ~ as.logical(as.numeric(.))
+      )
+    )
 
 }
 

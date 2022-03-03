@@ -13,7 +13,13 @@ Suggests:
     testthat
 Depends: 
     R (>= 2.10)
-Imports: 
+Imports:
+    dplyr,
+    glue,
     keyring,
+    lubridate,
+    readr,
+    readxl,
     salesforcer,
+    stringr,
     testthat

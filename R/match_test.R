@@ -1,6 +1,10 @@
+#' @import dplyr
+#' @import lubridate
+#' @import salesforcer
+#' @import stringr
+
 #' @importFrom magrittr %>%
-#' @importFrom dplyr anti_join distinct filter left_join mutate relocate select semi_join
-#' @importFrom stringr str_detect
+#' @importFrom glue glue glue_safe
 
 
 
@@ -43,7 +47,7 @@ filter_priority <- function(x, priority, prioritytable) {
 
 
 #' @export
-match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools) {
+match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs) {
 
   apps_with_choices <- apps %>% dplyr::filter(id_app %in% choices$id_app)
 
@@ -268,6 +272,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     students = students_active,
     choices = choices,
     dir_out = dir_out
+  )
+
+  # IEP
+
+  test_iep(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
   )
 
   return(NULL)
@@ -863,6 +877,48 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
   write_if_bad(invalid_feeder, dir_out)
   write_if_bad(missing_feeder, dir_out)
+
+}
+
+
+
+test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nIEP\n")
+
+  offers_iep <-
+    priorities %>%
+    filter(!is.na(Order_IEP__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs_iep <-
+    appinputs %>%
+    filter(has_iep)
+
+  invalid_iep <-
+    match_priorities %>%
+    filter(!is.na(IEP)) %>%
+    filter(!(`STUDENT ID` %in% appinputs_iep$oneappid))
+
+  missing_iep <-
+    match_priorities %>%
+    semi_join(offers_iep, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(is.na(IEP)) %>%
+    filter(is.na(Ineligible)) %>%
+    filter((`STUDENT ID` %in% appinputs_iep$oneappid))
+
+  test_helper(
+    invalid_iep,
+    "No student has an invalid IEP priority."
+  )
+
+  test_helper(
+    missing_iep,
+    "No student has a missing IEP priority."
+  )
+
+  write_if_bad(invalid_iep, dir_out)
+  write_if_bad(missing_iep, dir_out)
 
 }
 
