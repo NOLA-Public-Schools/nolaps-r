@@ -77,10 +77,24 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("STUDENT ID" = "oneappid", "id_account")
     )
 
-  prioritykey <- readxl::read_excel(
-    glue::glue("{dir_external}/priority-key.xlsx"),
-    col_types = "text"
-  )
+  prioritykey <-
+    readxl::read_excel(
+      glue::glue("{dir_external}/priority-key.xlsx"),
+      col_types = "text"
+    ) %>%
+    dplyr::select(
+      code_site = `Site Code`,
+      grade_current = `You are in grade`,
+      guarantee = `Guaranteed (Active Students have guarantee to x)`,
+    ) %>%
+    dplyr::mutate(code_site = stringr::str_pad(
+      code_site, width = 6, side = "left", pad = "0")
+    ) %>%
+    dplyr::mutate(code_site = stringr::str_replace(
+      code_site,
+      "^(36[:digit:]{3})_(.+)",
+      "0\\1_\\2"
+    ))
 
 
 
@@ -563,77 +577,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
-# Guarantees --------------------------------------------------------------
-
-  print("Guarantee")
-
-  key_guarantee <-
-    prioritykey %>%
-    dplyr::select(
-      code_site = `Site Code`,
-      grade_current = `You are in grade`,
-      guarantee = `Guaranteed (Active Students have guarantee to x)`,
-    ) %>%
-    dplyr::filter(guarantee != "-") %>%
-    dplyr::distinct()
-
-  if (round == "Round 1") {
-
-    students_guarantee <-
-      getdata_student_active() %>%
-      dplyr::filter(code_site %in% key_guarantee$code_site) %>%
-      dplyr::select(oneappid, code_site, grade_current) %>%
-      fix_grades(grade_current)
-
-    shouldhave <-
-      students_guarantee %>%
-      dplyr::left_join(key_guarantee, by = c("code_site", "grade_current")) %>%
-      dplyr::filter(!is.na(guarantee))
-
-  } else if (round == "Round 2") {
-
-    shouldhave <-
-      students_futureschool %>%
-      dplyr::select(oneappid, guarantee = id_account_future)
-
-  }
-
-  has_guarantee <-
-    match_priorities %>%
-    dplyr::filter(!is.na(Guaranteed)) %>%
-    dplyr::pull(`STUDENT ID`)
-
-  missing_guarantee <-
-    match_priorities %>%
-    dplyr::filter(!(`STUDENT ID` %in% has_guarantee)) %>%
-    dplyr::distinct(`STUDENT ID`) %>%
-    dplyr::left_join(shouldhave, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(!is.na(guarantee))
-
-  invalid_guarantee <-
-    match_priorities %>%
-    dplyr::filter(!is.na(Guaranteed)) %>%
-    dplyr::anti_join(shouldhave, by = c("STUDENT ID" = "oneappid", "id_account" = "guarantee")) %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9)
-  # %>%
-  #   dplyr::filter(!(`STUDENT ID` %in% oaretentions$`OneApp ID`)) %>%
-  #   dplyr::left_join(students_guarantee, by = c("STUDENT ID" = "oneappid")) %>%
-  #   dplyr::left_join(codes, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-  #   dplyr::filter(grade_current != 12 | (code_site.x != code_site.y))
-
-  testthat::test_that(
-    "Guarantee - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_guarantee), 0)
-      testthat::expect_equal(nrow(invalid_guarantee), 0)
-
-    })
-
-  write_if_bad(missing_guarantee, dir_out)
-  write_if_bad(invalid_guarantee, dir_out)
-
-
-
 # Priorities --------------------------------------------------------------
 
   # Feeder
@@ -838,19 +781,6 @@ test_guarantee <- function(round, prioritykey, match_priorities, students, dir_o
 
   key_guarantee <-
     prioritykey %>%
-    dplyr::select(
-      code_site = `Site Code`,
-      grade_current = `You are in grade`,
-      guarantee = `Guaranteed (Active Students have guarantee to x)`,
-    ) %>%
-    dplyr::mutate(code_site = stringr::str_pad(
-      code_site, width = 6, side = "left", pad = "0")
-    ) %>%
-    dplyr::mutate(code_site = stringr::str_replace(
-      code_site,
-      "^(36[:digit:]{3})_(.+)",
-      "0\\1_\\2"
-    )) %>%
     dplyr::filter(guarantee != "-") %>%
     dplyr::distinct()
 

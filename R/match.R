@@ -1,4 +1,7 @@
 #' @importFrom magrittr %>%
+#' @importFrom glue glue
+#' @importFrom readr read_rds write_rds
+#' @importFrom rlang is_na
 
 
 
@@ -87,6 +90,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   dir_in <- args[1]
   dir_out <- args[2]
+  use_cache <- args[3]
 
   dir_external <- glue::glue("{dir_in}/external")
 
@@ -99,7 +103,17 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   cat("\nLoading students\n")
 
-  students_recent <- getdata_student_recent()
+  if (is_na(use_cache)) {
+
+    students_recent <- getdata_student_recent()
+    students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
+
+  } else {
+
+    students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
+
+  }
+
   students_active <- students_recent %>% dplyr::filter(is_active)
 
   cat("\nLoading schools\n")
