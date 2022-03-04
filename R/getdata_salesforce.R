@@ -488,7 +488,8 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
         Distance_From_Home__c,
         In_Proximity_Preference__c,
         In_School_Zip_Preference__c,
-        Verified_Sibling__c
+        Verified_Sibling__c,
+        Child_Staff__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
@@ -516,13 +517,15 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       distance = Distance_From_Home__c,
       is_priority_distance = In_Proximity_Preference__c,
       is_priority_zone = In_School_Zip_Preference__c,
-      is_verifiedsibling = Verified_Sibling__c
+      is_verifiedsibling = Verified_Sibling__c,
+      is_staffchild = Child_Staff__c
     ) %>%
     dplyr::mutate(across(c(
       is_ec,
       is_priority_distance,
       is_priority_zone,
-      is_verifiedsibling
+      is_verifiedsibling,
+      is_staffchild
       ),
       as.logical
       )

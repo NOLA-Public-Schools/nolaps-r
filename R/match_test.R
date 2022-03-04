@@ -311,6 +311,20 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
+  # Verified sibling
+
+  test_sibling_verified(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
+
+  # Sibling or staff child
+
+  test_sibling_staffchild(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
+
   return(NULL)
 
 
@@ -652,72 +666,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   write_if_bad(invalid_sibling_verified, dir_out)
   write_if_bad(missing_sibling_verified, dir_out)
 
-  # Distance
-
-  print("Distance")
-
-  validatedgeo <- readr::read_csv(
-    glue::glue("{dir_external}/validated-geo.csv"),
-    col_types = "ccc"
-  )
-
-  missing_distance <-
-    match_priorities %>%
-    filter_priority(`Child of Student`, prioritytable) %>%
-    dplyr::filter(
-      (is_priority_distance & !(`CHOICE SCHOOL` %in% c("323", "324")))
-      | (is_priority_distance & (`CHOICE SCHOOL` %in% c("323", "324")) & `STUDENT ID` %in% validatedgeo$`OneApp ID`)
-    )
-
-  invalid_distance <-
-    match_priorities %>%
-    dplyr::filter(!is.na(`Child of Student`)) %>%
-    dplyr::filter(!is_priority_distance)
-
-  testthat::test_that(
-    "Distance - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_distance), 0)
-      testthat::expect_equal(nrow(invalid_distance), 0)
-
-  })
-
-  write_if_bad(missing_distance, dir_out)
-  write_if_bad(invalid_distance, dir_out)
-
-  # Zone
-
-  print("Zone")
-
-  missing_zone <-
-    match_priorities %>%
-    filter_priority(`Geography`, prioritytable) %>%
-    dplyr::filter(
-      (is_priority_zone & !(`CHOICE SCHOOL` %in% c("323", "324")))
-      | (is_priority_zone & (`CHOICE SCHOOL` %in% c("323", "324")) & `STUDENT ID` %in% validatedgeo$`OneApp ID`)
-    )
-
-  invalid_zone <-
-    match_priorities %>%
-    dplyr::filter(!is.na(`Geography`)) %>%
-    dplyr::filter(
-      (!is_priority_zone)
-      | (is_priority_zone & (`CHOICE SCHOOL` %in% c("323", "324")) & !(`STUDENT ID` %in% validatedgeo$`OneApp ID`))
-    )
-
-  testthat::test_that(
-    "Zone - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(missing_zone), 0)
-      testthat::expect_equal(nrow(invalid_zone), 0)
-
-    })
-
-  write_if_bad(missing_zone, dir_out)
-  write_if_bad(invalid_zone, dir_out)
-
-
-
 }
 
 
@@ -1025,6 +973,77 @@ test_zone <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_zone, dir_out)
   write_if_bad(missing_zone, dir_out)
+
+}
+
+
+
+#' @export
+test_sibling_verified <- function(dir_out, match_priorities) {
+
+  cat("\nVerified sibling\n")
+
+  invalid_sibling_verified <-
+    match_priorities %>%
+    filter(is_highdemand) %>%
+    filter(!is_verifiedsibling) %>%
+    filter(!is.na(Sibling))
+
+  missing_sibling_verified <-
+    match_priorities %>%
+    filter(is_highdemand) %>%
+    filter(is_verifiedsibling) %>%
+    filter(is.na(Sibling)) %>%
+    filter(is.na(Ineligible)) %>%
+    filter(is.na(`School Specific 1`))
+
+  test_helper(
+    invalid_sibling_verified,
+    "No student has an invalid sibling priority (high-demand only)."
+  )
+
+  test_helper(
+    missing_sibling_verified,
+    "No student has a missing sibling priority (high-demand only)."
+  )
+
+  write_if_bad(invalid_sibling_verified, dir_out)
+  write_if_bad(missing_sibling_verified, dir_out)
+
+}
+
+
+
+#' @export
+test_sibling_staffchild <- function(dir_out, match_priorities) {
+
+  cat("\nSibling or staff child\n")
+
+  invalid_sibling_staffchild <-
+    match_priorities %>%
+    filter(!is_verifiedsibling & !is_staffchild) %>%
+    filter(!is.na(`School Specific 1`))
+
+  missing_sibling_staffchild <-
+    match_priorities %>%
+    filter(is_verifiedsibling | is_staffchild) %>%
+    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
+    filter(GRADE %in% grades_ec()) %>%
+    filter(is.na(`School Specific 1`)) %>%
+    filter(is.na(Ineligible))
+
+  test_helper(
+    invalid_sibling_staffchild,
+    "No student has an invalid sibling or staff child priority."
+  )
+
+  test_helper(
+    missing_sibling_staffchild,
+    "No student has a missing sibling or staff child priority."
+  )
+
+  write_if_bad(invalid_sibling_staffchild, dir_out)
+  write_if_bad(missing_sibling_staffchild, dir_out)
 
 }
 
