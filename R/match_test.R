@@ -297,6 +297,26 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
+  # French
+
+  test_french(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
+  # Montessori
+
+  test_montessori(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
   # Distance
 
   test_distance(
@@ -636,36 +656,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_family, dir_out)
 
-
-
-# Priorities --------------------------------------------------------------
-
-  # Verified sibling
-
-  print("Verified sibling")
-
-  invalid_sibling_verified <-
-    match_priorities %>%
-    dplyr::filter(is_highdemand) %>%
-    dplyr::filter(!is.na(Sibling)) %>%
-    dplyr::filter(!is_verifiedsibling)
-
-  missing_sibling_verified <-
-    match_priorities %>%
-    filter_priority(Sibling, prioritytable) %>%
-    dplyr::filter(is_verifiedsibling)
-
-  testthat::test_that(
-    "Verified sibling - everyone has it that should; no one has it that shouldn't", {
-
-      testthat::expect_equal(nrow(invalid_sibling_verified), 0)
-      testthat::expect_equal(nrow(missing_sibling_verified), 0)
-
-    })
-
-  write_if_bad(invalid_sibling_verified, dir_out)
-  write_if_bad(missing_sibling_verified, dir_out)
-
 }
 
 
@@ -827,6 +817,58 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
 
 
+#' @export
+test_french <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nFrench\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_French__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_french)
+
+  invalid_french <-
+    match_priorities %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`School Specific 2`))
+
+  missing_french <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(is.na(`School Specific 2`)) %>%
+    filter(is.na(Ineligible))
+
+  n_have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`School Specific 2`)) %>%
+    nrow()
+
+  cat(glue("\n{n_have} records have French priority.\n\n"))
+
+  test_helper(
+    invalid_french,
+    "No student has an invalid French priority."
+  )
+
+  test_helper(
+    missing_french,
+    "No student has a missing French priority."
+  )
+
+  write_if_bad(invalid_french, dir_out)
+  write_if_bad(missing_french, dir_out)
+
+}
+
+
+
+#' @export
 test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
 
   cat("\nIEP\n")
@@ -864,6 +906,57 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_iep, dir_out)
   write_if_bad(missing_iep, dir_out)
+
+}
+
+
+
+#' @export
+test_montessori <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nMontessori\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Montessori__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_montessori)
+
+  invalid_montessori <-
+    match_priorities %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`School Specific 2`))
+
+  missing_montessori <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(is.na(`School Specific 2`)) %>%
+    filter(is.na(Ineligible))
+
+  n_have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`School Specific 2`)) %>%
+    nrow()
+
+  cat(glue("\n{n_have} records have Montessori priority.\n\n"))
+
+  test_helper(
+    invalid_montessori,
+    "No student has an invalid Montessori priority."
+  )
+
+  test_helper(
+    missing_montessori,
+    "No student has a missing Montessori priority."
+  )
+
+  write_if_bad(invalid_montessori, dir_out)
+  write_if_bad(missing_montessori, dir_out)
 
 }
 
