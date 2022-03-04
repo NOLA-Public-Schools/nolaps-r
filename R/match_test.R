@@ -289,13 +289,27 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Military
 
-  # test_military(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_military(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
+  # Distance
+
+  test_distance(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
+
+  # Zone
+
+  test_zone(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
 
   return(NULL)
 
@@ -738,7 +752,7 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
 
   }
 
-  invalid <-
+  invalid_guarantee <-
     match_priorities %>%
     filter(str_length(`STUDENT ID`) == 9) %>%
     anti_join(
@@ -751,7 +765,7 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
     ) %>%
     filter(!is.na(Guaranteed))
 
-  missing <-
+  missing_guarantee <-
     match_priorities %>%
     filter(str_length(`STUDENT ID`) == 9) %>%
     semi_join(
@@ -765,17 +779,17 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
     filter(is.na(Guaranteed))
 
   test_helper(
-    invalid,
+    invalid_guarantee,
     "No student has an invalid guarantee."
   )
 
   test_helper(
-    missing,
+    missing_guarantee,
     "No student has a missing guarantee."
   )
 
-  write_if_bad(invalid, dir_out)
-  write_if_bad(missing, dir_out)
+  write_if_bad(invalid_guarantee, dir_out)
+  write_if_bad(missing_guarantee, dir_out)
 
 }
 
@@ -823,7 +837,7 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     mutate(gets_feeder = str_detect(feeder, code_appschool)) %>%
     filter(gets_feeder == TRUE)
 
-  invalid <-
+  invalid_feeder <-
     match_priorities %>%
     anti_join(
       shouldhave,
@@ -835,7 +849,7 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     ) %>%
     filter(!is.na(Feeder))
 
-  missing <-
+  missing_feeder <-
     match_priorities %>%
     semi_join(
       shouldhave,
@@ -849,17 +863,17 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     filter(is.na(Ineligible))
 
   test_helper(
-    invalid,
+    invalid_feeder,
     "No student has an invalid feeder."
   )
 
   test_helper(
-    missing,
+    missing_feeder,
     "No student has a missing feeder."
   )
 
-  write_if_bad(invalid, dir_out)
-  write_if_bad(missing, dir_out)
+  write_if_bad(invalid_feeder, dir_out)
+  write_if_bad(missing_feeder, dir_out)
 
 }
 
@@ -921,30 +935,96 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
     appinputs %>%
     filter(has_military)
 
-  invalid <-
+  invalid_military <-
     match_priorities %>%
-    filter(!is.na(Military)) %>%
+    filter(!is.na(`Military child`)) %>%
     filter(!(`STUDENT ID` %in% appinputs$oneappid))
 
-  missing <-
+  missing_military <-
     match_priorities %>%
     semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
-    filter(is.na(Military)) %>%
+    filter(is.na(`Military child`)) %>%
     filter(is.na(Ineligible)) %>%
     filter((`STUDENT ID` %in% appinputs$oneappid))
 
   test_helper(
-    invalid,
+    invalid_military,
     "No student has an invalid military priority."
   )
 
   test_helper(
-    missing,
+    missing_military,
     "No student has a missing military priority."
   )
 
-  write_if_bad(invalid, dir_out)
-  write_if_bad(missing, dir_out)
+  write_if_bad(invalid_military, dir_out)
+  write_if_bad(missing_military, dir_out)
+
+}
+
+
+
+#' @export
+test_distance <- function(dir_out, match_priorities) {
+
+  cat("\nDistance\n")
+
+  invalid_distance <-
+    match_priorities %>%
+    filter(!is_priority_distance) %>%
+    filter(!is.na(`Child of Student`))
+
+  missing_distance <-
+    match_priorities %>%
+    filter(is_priority_distance) %>%
+    filter(is.na(`Child of Student`)) %>%
+    filter(is.na(Ineligible))
+
+  test_helper(
+    invalid_distance,
+    "No student has an invalid distance priority."
+  )
+
+  test_helper(
+    missing_distance,
+    "No student has a missing distance priority."
+  )
+
+  write_if_bad(invalid_distance, dir_out)
+  write_if_bad(missing_distance, dir_out)
+
+}
+
+
+
+#' @export
+test_zone <- function(dir_out, match_priorities) {
+
+  cat("\nZone\n")
+
+  invalid_zone <-
+    match_priorities %>%
+    filter(!is_priority_zone) %>%
+    filter(!is.na(Geography))
+
+  missing_zone <-
+    match_priorities %>%
+    filter(is_priority_zone) %>%
+    filter(is.na(Geography)) %>%
+    filter(is.na(Ineligible))
+
+  test_helper(
+    invalid_zone,
+    "No student has an invalid zone priority."
+  )
+
+  test_helper(
+    missing_zone,
+    "No student has a missing zone priority."
+  )
+
+  write_if_bad(invalid_zone, dir_out)
+  write_if_bad(missing_zone, dir_out)
 
 }
 
