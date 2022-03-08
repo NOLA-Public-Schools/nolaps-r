@@ -94,6 +94,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       grade_current = `You are in grade`,
       grade_applying = `And you are applying to`,
       guarantee = `Guaranteed (Active Students have guarantee to x)`,
+      closing = `Closing School`,
       feeder = `Feeder School (Active Students feed into x)`
     ) %>%
     mutate(code_site = stringr::str_pad(
@@ -121,13 +122,13 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
     invalid_participants <-
       match %>%
-      dplyr::filter(
+      filter(
         !(`STUDENT ID` %in% apps_with_choices$oneappid)
         & !(`STUDENT ID` %in% students_active$oneappid)
         # & !(`STUDENT ID` %in% see)
       ) %>%
-      dplyr::select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
-      dplyr::arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+      select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
+      arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
 
     test_text <- "All match records trace back to application with choices or active student."
 
@@ -164,9 +165,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   missing_apps <-
     apps_with_choices %>%
-    dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    dplyr::select(id_student, oneappid, id_app) %>%
-    dplyr::arrange(oneappid)
+    filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    select(id_student, oneappid, id_app)
 
   test_text <- "All applications with a choice are in the match."
 
@@ -188,15 +188,15 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
     missing_rollforwards <-
       students_active %>%
-      dplyr::filter(!is.na(id_account_current)) %>%
-      dplyr::filter(is_terminalgrade == FALSE) %>%
-      dplyr::filter(
+      filter(!is.na(id_account_current)) %>%
+      filter(is_terminalgrade == FALSE) %>%
+      filter(
         grade_current != 12
         # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
       ) %>%
-      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      dplyr::select(name_account_current, grade_current, oneappid, id_student) %>%
-      dplyr::arrange(name_account_current, grade_current)
+      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      select(name_account_current, grade_current, oneappid, id_student) %>%
+      arrange(name_account_current, grade_current)
 
     test_text <- "All active students in non-terminal grade are in the match."
 
@@ -230,17 +230,17 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   invalid_grades <-
     match %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
     # dplyr::filter(`ELIGIBLE?` == "YES") %>%
-    dplyr::left_join(
+    left_join(
       getdata_account_gradespan(),
       by = c("id_account")
     ) %>%
-    dplyr::rowwise() %>%
-    dplyr::filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
-    dplyr::arrange(choice_name, GRADE)
+    rowwise() %>%
+    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
+    ungroup() %>%
+    select(choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+    arrange(choice_name, GRADE)
 
   test_text <- "No match record involves a grade that will not exist next year."
 
@@ -256,6 +256,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Priorities
 
+  # Current-school priorities
+
   # Guarantee
 
   test_guarantee(
@@ -266,6 +268,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     students = students_active
   )
 
+  # Closing school
+
+  # test_closing(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   prioritykey = prioritykey,
+  #   match_priorities = match_priorities,
+  #   students = students_active
+  # )
+
   # Feeder
 
   test_feeder(
@@ -275,6 +287,28 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities,
     students = students_active,
     choices = choices
+  )
+
+  # Application priorities
+
+  # Economic disadvantage
+
+  test_disadvantage(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
+  # French
+
+  test_french(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
   )
 
   # IEP
@@ -297,16 +331,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
-  # French
-
-  test_french(
-    dir_out = dir_out,
-    round = round,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
-
   # Montessori
 
   test_montessori(
@@ -316,6 +340,18 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     appinputs = appinputs,
     match_priorities = match_priorities
   )
+
+  # UNO
+
+  test_uno(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
+  # Choice-specific priorities
 
   # Distance
 
@@ -334,6 +370,13 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   # Verified sibling
 
   test_sibling_verified(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
+
+  # Staff child
+
+  test_staffchild(
     dir_out = dir_out,
     match_priorities = match_priorities
   )
@@ -481,8 +524,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::filter(
-      (student_dob > "2016-09-30" & !(GRADE %in% grades_ec()))
-      | (student_dob > "2006-09-30" & (`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8")
+      (student_dob > "2017-09-30" & !(GRADE %in% grades_ec()))
+      | (student_dob > "2007-09-30" & (`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8")
       | (ineligible_badgrades & is.na(`GUARANTEED?`))
       | ineligible_expelled
       | ineligible_noreturn
@@ -662,6 +705,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 # Priority tests ----------------------------------------------------------
 
+# Current-school priorities -----------------------------------------------
+
+
+
 #' @export
 test_guarantee <- function(dir_out, round, prioritykey, match_priorities, students) {
 
@@ -716,6 +763,22 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
     ) %>%
     filter(is.na(Guaranteed))
 
+  have <-
+    match_priorities %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    filter(!is.na(Guaranteed))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
+
   test_helper(
     invalid_guarantee,
     "No student has an invalid guarantee."
@@ -728,6 +791,87 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
 
   write_if_bad(invalid_guarantee, dir_out)
   write_if_bad(missing_guarantee, dir_out)
+
+}
+
+
+
+#' @export
+test_closing <- function(dir_out, round, prioritykey, match_priorities, students) {
+
+  cat("\nClosing school\n")
+
+  key_closing <-
+    prioritykey %>%
+    filter(closing == TRUE)
+
+  if (round == "Round 1") {
+
+    shouldhave <-
+      students %>%
+      select(code_site_current, grade_current, oneappid) %>%
+      left_join(
+        key_closing,
+        by = c("code_site_current" = "code_site", "grade_current")
+      ) %>%
+      filter(closing == TRUE)
+
+  } else if (round == "Round 2") {
+
+    NULL
+
+  }
+
+  invalid_closing <-
+    match_priorities %>%
+    anti_join(
+      shouldhave,
+      by = c(
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
+    filter(!is.na(`Closing Public School`))
+
+  missing_closing <-
+    match_priorities %>%
+    semi_join(
+      shouldhave,
+      by = c(
+        "GRADE" = "grade_applying",
+        "STUDENT ID" = "oneappid"
+      )
+    ) %>%
+    filter(is.na(`Closing Public School`))
+
+  have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`Closing Public School`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_closing,
+    "No student has an invalid closing school priority."
+  )
+
+  test_helper(
+    missing_guarantee,
+    "No student has a missing closing school priority."
+  )
+
+  write_if_bad(invalid_closing, dir_out)
+  write_if_bad(missing_closing, dir_out)
 
 }
 
@@ -800,6 +944,21 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     filter(is.na(Feeder)) %>%
     filter(is.na(Ineligible))
 
+  have <-
+    match_priorities %>%
+    filter(!is.na(Feeder))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
+
   test_helper(
     invalid_feeder,
     "No student has an invalid feeder."
@@ -812,6 +971,68 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
   write_if_bad(invalid_feeder, dir_out)
   write_if_bad(missing_feeder, dir_out)
+
+}
+
+
+
+# Application priorities --------------------------------------------------
+
+
+
+#' @export
+test_disadvantage <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nEconomic disadvantage\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Disadvantage__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_disadvantage)
+
+  invalid_disadvantage <-
+    match_priorities %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`At Risk`))
+
+  missing_disadvantage <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(is.na(`At Risk`)) %>%
+    filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    filter(!is.na(`At Risk`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_disadvantage,
+    "No student has an invalid economic disadvantage priority."
+  )
+
+  test_helper(
+    missing_disadvantage,
+    "No student has a missing economic disadvantage priority."
+  )
+
+  write_if_bad(invalid_disadvantage, dir_out)
+  write_if_bad(missing_disadvantage, dir_out)
 
 }
 
@@ -833,6 +1054,7 @@ test_french <- function(dir_out, round, priorities, appinputs, match_priorities)
 
   invalid_french <-
     match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
     filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
     filter(!is.na(`School Specific 2`))
 
@@ -843,13 +1065,21 @@ test_french <- function(dir_out, round, priorities, appinputs, match_priorities)
     filter(is.na(`School Specific 2`)) %>%
     filter(is.na(Ineligible))
 
-  n_have <-
+  have <-
     match_priorities %>%
     semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
-    filter(!is.na(`School Specific 2`)) %>%
-    nrow()
+    filter(!is.na(`School Specific 2`))
 
-  cat(glue("\n{n_have} records have French priority.\n\n"))
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
 
   test_helper(
     invalid_french,
@@ -873,26 +1103,41 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
 
   cat("\nIEP\n")
 
-  offers_iep <-
+  offers <-
     priorities %>%
     filter(!is.na(Order_IEP__c)) %>%
     select(code_appschool, grade)
 
-  appinputs_iep <-
+  appinputs <-
     appinputs %>%
     filter(has_iep)
 
   invalid_iep <-
     match_priorities %>%
-    filter(!is.na(IEP)) %>%
-    filter(!(`STUDENT ID` %in% appinputs_iep$oneappid))
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(IEP))
 
   missing_iep <-
     match_priorities %>%
-    semi_join(offers_iep, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
     filter(is.na(IEP)) %>%
-    filter(is.na(Ineligible)) %>%
-    filter((`STUDENT ID` %in% appinputs_iep$oneappid))
+    filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    filter(!is.na(IEP))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
 
   test_helper(
     invalid_iep,
@@ -927,6 +1172,7 @@ test_montessori <- function(dir_out, round, priorities, appinputs, match_priorit
 
   invalid_montessori <-
     match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
     filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
     filter(!is.na(`School Specific 2`))
 
@@ -937,13 +1183,21 @@ test_montessori <- function(dir_out, round, priorities, appinputs, match_priorit
     filter(is.na(`School Specific 2`)) %>%
     filter(is.na(Ineligible))
 
-  n_have <-
+  have <-
     match_priorities %>%
     semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
-    filter(!is.na(`School Specific 2`)) %>%
-    nrow()
+    filter(!is.na(`School Specific 2`))
 
-  cat(glue("\n{n_have} records have Montessori priority.\n\n"))
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
 
   test_helper(
     invalid_montessori,
@@ -978,15 +1232,31 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
 
   invalid_military <-
     match_priorities %>%
-    filter(!is.na(`Military child`)) %>%
-    filter(!(`STUDENT ID` %in% appinputs$oneappid))
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`Military child`))
 
   missing_military <-
     match_priorities %>%
     semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
     filter(is.na(`Military child`)) %>%
-    filter(is.na(Ineligible)) %>%
-    filter((`STUDENT ID` %in% appinputs$oneappid))
+    filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`Military child`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
 
   test_helper(
     invalid_military,
@@ -1000,6 +1270,66 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
 
   write_if_bad(invalid_military, dir_out)
   write_if_bad(missing_military, dir_out)
+
+}
+
+
+
+#' @export
+test_uno <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\nUNO\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_UNO_Staff__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_uno)
+
+  invalid_uno <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`School Specific 1`))
+
+  missing_uno <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(is.na(`School Specific 1`)) %>%
+    filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`School Specific 1`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
+      {nrow(have)} records
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_uno,
+    "No student has an invalid UNO priority."
+  )
+
+  test_helper(
+    missing_uno,
+    "No student has a missing UNO priority."
+  )
+
+  write_if_bad(invalid_uno, dir_out)
+  write_if_bad(missing_uno, dir_out)
 
 }
 
@@ -1102,6 +1432,48 @@ test_sibling_verified <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_sibling_verified, dir_out)
   write_if_bad(missing_sibling_verified, dir_out)
+
+}
+
+
+
+#' @export
+test_staffchild <- function(dir_out, match_priorities) {
+
+  cat("\nStaff child\n")
+
+  invalid_staffchild <-
+    match_priorities %>%
+    filter(!is_staffchild) %>%
+    filter(!is.na(`Staff Child`))
+
+  missing_staffchild <-
+    match_priorities %>%
+    filter(is_staffchild) %>%
+    filter(!(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847"))) %>%
+    filter(GRADE %in% grades_ec()) %>%
+    filter(is.na(`Staff Child`)) %>%
+    filter(is.na(Ineligible))
+
+  n_have <-
+    match_priorities %>%
+    filter(!is.na(`Staff Child`)) %>%
+    nrow()
+
+  cat(glue("\n{n_have} records have staff child priority.\n\n"))
+
+  test_helper(
+    invalid_staffchild,
+    "No student has an invalid staff child priority."
+  )
+
+  test_helper(
+    missing_staffchild,
+    "No student has a missing staff child priority."
+  )
+
+  write_if_bad(invalid_staffchild, dir_out)
+  write_if_bad(missing_staffchild, dir_out)
 
 }
 

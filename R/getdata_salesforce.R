@@ -318,10 +318,12 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       "
       select
         OneApp_ID__c,
+        Input_Table_At_Risk__c,
         Input_Table_French__c,
         Input_Table_IEP__c,
         Input_Table_Military_Child__c,
-        Input_Table_Montessori__c
+        Input_Table_Montessori__c,
+        Input_Table_UNO__c
       from Match_Input_Tables__c
       where
         Application__r.RecordType.Name = '{round}' and
@@ -333,16 +335,20 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
   ) %>%
     select(
       oneappid = OneApp_ID__c,
+      has_disadvantage = Input_Table_At_Risk__c,
       has_french = Input_Table_French__c,
       has_iep = Input_Table_IEP__c,
       has_military = Input_Table_Military_Child__c,
-      has_montessori = Input_Table_Montessori__c
+      has_montessori = Input_Table_Montessori__c,
+      has_uno = Input_Table_UNO__c
     ) %>%
     mutate(across(c(
+      has_disadvantage,
       has_french,
       has_iep,
       has_military,
-      has_montessori
+      has_montessori,
+      has_uno
       ),
       ~ as.logical(as.numeric(.))
       )
