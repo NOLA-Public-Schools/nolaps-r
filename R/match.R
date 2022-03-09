@@ -101,35 +101,44 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   if(!dir.exists(dir_business)){dir.create(dir_business)}
   if(!dir.exists(dir_review)){dir.create(dir_review)}
 
-  cat("\nLoading students\n")
+  cat("\nLoading data. Please wait.\n")
 
   if (is_na(use_cache)) {
+
+    accounts <- getdata_account()
+    accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
+
+    apps <- getdata_app(round = "Round 1")
+    apps %>% write_rds(glue("{dir_in}/apps.rds"))
+
+    appinputs <- getdata_appinput()
+    appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
+
+    appschools <- getdata_appschool()
+    appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
+
+    choices <- getdata_appschoolranking(round = "Round 1")
+    choices %>% write_rds(glue("{dir_in}/choices.rds"))
+
+    priorities <- getdata_priority()
+    priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
     students_recent <- getdata_student_recent()
     students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
 
   } else {
 
+    accounts <- read_rds(glue("{dir_in}/accounts.rds"))
+    apps <- read_rds(glue("{dir_in}/apps.rds"))
+    appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
+    appschools <- read_rds(glue("{dir_in}/appschools.rds"))
+    choices <- read_rds(glue("{dir_in}/choices.rds"))
+    priorities <- read_rds(glue("{dir_in}/priorities.rds"))
     students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
 
   }
 
   students_active <- students_recent %>% dplyr::filter(is_active)
-
-  cat("\nLoading schools\n")
-
-  accounts <- getdata_account()
-  appschools <- getdata_appschool()
-
-  cat("\nLoading choices\n")
-
-  apps <- getdata_app(round = "Round 1")
-  choices <- getdata_appschoolranking(round = "Round 1")
-
-  cat("\nLoading priorities\n")
-
-  appinputs <- getdata_appinput()
-  priorities <- getdata_priority()
 
   cat("\n\n")
 

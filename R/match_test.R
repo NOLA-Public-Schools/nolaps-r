@@ -224,35 +224,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
-# Invalid grades -----------------------------------------------------
+  # Basic data quality tests
 
-  cat("\nInvalid grades\n")
-
-  invalid_grades <-
-    match %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
-    # dplyr::filter(`ELIGIBLE?` == "YES") %>%
-    left_join(
-      getdata_account_gradespan(),
-      by = c("id_account")
-    ) %>%
-    rowwise() %>%
-    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
-    ungroup() %>%
-    select(choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
-    arrange(choice_name, GRADE)
-
-  test_text <- "No match record involves a grade that will not exist next year."
-
-  testthat::with_reporter(
-    "stop", {
-      testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(invalid_grades), 0)
-      })
-    }
+  test_grades(
+    dir_out = dir_out,
+    match = match
   )
-
-  write_if_bad(invalid_grades, dir_out)
 
   # Priorities
 
@@ -270,13 +247,14 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Closing school
 
-  # test_closing(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   prioritykey = prioritykey,
-  #   match_priorities = match_priorities,
-  #   students = students_active
-  # )
+  test_closing(
+    dir_out = dir_out,
+    round = round,
+    prioritykey = prioritykey,
+    priorities = priorities,
+    match_priorities = match_priorities,
+    students = students_active
+  )
 
   # Feeder
 
@@ -703,6 +681,61 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 
+# Basic data quality tests ------------------------------------------------
+
+#' @export
+test_grades <- function(dir_out, match) {
+
+  cat("\nInvalid grades\n")
+
+  invalid_grades <-
+    match %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    left_join(
+      getdata_account_gradespan(),
+      by = c("id_account")
+    ) %>%
+    rowwise() %>%
+    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
+    ungroup() %>%
+    filter(
+      !(`CHOICE SCHOOL` %in% c(
+        "4013_tulane_1",
+        "4013_tulane_2",
+        "4013_community_1",
+        "4013_community_2",
+        "4013_ed_1"
+      ))
+    ) %>%
+    select(`ELIGIBLE?`, choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+    arrange(`ELIGIBLE?`, choice_name, GRADE)
+
+  invalid_grades_eligible <-
+    invalid_grades %>%
+    filter(`ELIGIBLE?` == "YES")
+
+  cat(
+    glue(
+      "
+      {nrow(invalid_grades)} records with invalid grades
+      {nrow(invalid_grades_eligible)} eligible records with invalid grades
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_grades_eligible,
+    "No eligible match record involves a grade that will not exist next year."
+  )
+
+  write_if_bad(invalid_grades, dir_out)
+  write_if_bad(invalid_grades_eligible, dir_out)
+
+}
+
+
+
 # Priority tests ----------------------------------------------------------
 
 # Current-school priorities -----------------------------------------------
@@ -797,12 +830,18 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
 
 
 #' @export
-test_closing <- function(dir_out, round, prioritykey, match_priorities, students) {
+test_closing <- function(dir_out, round, prioritykey, priorities, match_priorities, students) {
 
   cat("\nClosing school\n")
 
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Closing_Public__c)) %>%
+    select(code_appschool, grade)
+
   key_closing <-
     prioritykey %>%
+    mutate(across(closing, as.logical)) %>%
     filter(closing == TRUE)
 
   if (round == "Round 1") {
@@ -842,11 +881,12 @@ test_closing <- function(dir_out, round, prioritykey, match_priorities, students
         "STUDENT ID" = "oneappid"
       )
     ) %>%
-    filter(is.na(`Closing Public School`))
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(is.na(`Closing Public School`)) %>%
+    filter(is.na(Ineligible))
 
   have <-
     match_priorities %>%
-    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
     filter(!is.na(`Closing Public School`))
 
   cat(
@@ -866,7 +906,7 @@ test_closing <- function(dir_out, round, prioritykey, match_priorities, students
   )
 
   test_helper(
-    missing_guarantee,
+    missing_closing,
     "No student has a missing closing school priority."
   )
 
