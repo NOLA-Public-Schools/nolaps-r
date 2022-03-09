@@ -123,6 +123,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     priorities <- getdata_priority()
     priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
+    siblings <- getdata_sibling()
+    siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
+
     students_recent <- getdata_student_recent()
     students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
 
@@ -134,13 +137,14 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     appschools <- read_rds(glue("{dir_in}/appschools.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
     priorities <- read_rds(glue("{dir_in}/priorities.rds"))
+    siblings <- read_rds(glue("{dir_in}/siblings.rds"))
     students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
 
   }
 
   students_active <- students_recent %>% dplyr::filter(is_active)
 
-  cat("\n\n")
+  cat("\n")
 
   match <-
     readr::read_csv(
@@ -193,7 +197,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     choices = choices,
     appschools = appschools,
     priorities = priorities,
-    appinputs = appinputs
+    appinputs = appinputs,
+    siblings = siblings
   )
 
   # match_placement(
@@ -220,7 +225,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 
 
-  cat(glue::glue("\nFinished at {Sys.time()}\n\n"))
+  cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 
 }
 

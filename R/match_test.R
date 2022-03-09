@@ -1,25 +1,15 @@
 #' @import dplyr
 #' @import lubridate
+#' @import purrr
 #' @import readxl
 #' @import salesforcer
 #' @import stringr
+#' @import tidyr
 
 #' @importFrom glue glue glue_safe
 #' @importFrom magrittr %>%
-
-
-
-#' @export
-write_if_bad <- function(x, dir_out) {
-
-  if (nrow(x) > 0) {
-
-    filename <- deparse(substitute(x))
-    readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
-
-  }
-
-}
+#' @importFrom tibble as_tibble
+#' @importFrom tidygraph tbl_graph to_components
 
 
 
@@ -48,7 +38,7 @@ filter_priority <- function(x, priority, prioritytable) {
 
 
 #' @export
-match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs) {
+match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs, siblings) {
 
   # oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
 
@@ -69,6 +59,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   # students_futureschool <-
   #   students %>%
   #   filter(!is.na(id_account_future))
+
+  # Data preparation
 
   apps_with_choices <- apps %>% filter(id_app %in% choices$id_app)
 
@@ -105,6 +97,89 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       "^(36[:digit:]{3})_(.+)",
       "0\\1_\\2"
     ))
+
+  # Family link and twin data
+
+  # optouts <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_external}/family-links-opt-out.csv"),
+  #     col_types = "c"
+  #   ) %>%
+  #   dplyr::pull(`OneApp ID`)
+
+  dob <-
+    students %>%
+    select(oneappid, student_dob)
+
+  sibling_edges <-
+    siblings %>%
+    filter(
+      student_oneappid %in% choices$oneappid,
+      sibling_oneappid %in% choices$oneappid
+    ) %>%
+    select(from = student_oneappid, to = sibling_oneappid) %>%
+    arrange(from, to)
+
+  families_comp <-
+    tbl_graph(edges = sibling_edges, directed = FALSE) %>%
+    to_components()
+
+  familify <- function(i) {
+
+    as_tibble(families_comp[[i]]) %>% mutate(id_family = i)
+
+  }
+
+  families <-
+    map_dfr(1:length(families_comp), familify) %>%
+    rename(oneappid = name)
+
+  students_dob <-
+    families %>%
+    left_join(dob, by = "oneappid")
+
+  twins <-
+    students_dob %>%
+    select(id_family, student_dob) %>%
+    count(id_family, student_dob, sort = T) %>%
+    filter(n > 1) %>%
+    mutate(is_twin = TRUE) %>%
+    select(-n) %>%
+    left_join(students_dob, by = c("id_family", "student_dob")) %>%
+    select(oneappid, is_twin)
+
+  pref_nested <-
+    families %>%
+    left_join(match, by = c("oneappid" = "STUDENT ID")) %>%
+    left_join(twins, by = "oneappid") %>%
+    select(id_family, is_twin, oneappid, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
+    arrange(id_family, is_twin, oneappid, `CHOICE RANK`) %>%
+    nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
+    mutate(n_choices = map_int(.$data, nrow)) %>%
+    filter(n_choices > 1 | is_twin) %>%
+    select(-n_choices)
+
+  count_twin <-
+    pref_nested %>%
+    filter(is_twin) %>%
+    count(id_family, data, name = "n_twin") %>%
+    filter(n_twin > 1)
+
+  students_with_family <-
+    pref_nested %>%
+    count(id_family, data) %>%
+    filter(n > 1) %>%
+    group_by(id_family) %>%
+    mutate(subid_family = 1:n()) %>%
+    left_join(pref_nested, by = c("id_family", "data")) %>%
+    left_join(count_twin, by = c("id_family", "data")) %>%
+    mutate(id_family = stringr::str_c(id_family, subid_family, sep = ".")) %>%
+    mutate(is_twin = dplyr::if_else(is_twin & !is.na(n_twin), TRUE, FALSE)) %>%
+    replace_na(list(is_twin = FALSE)) %>%
+    mutate(is_family = TRUE) %>%
+    select(oneappid, id_family, is_twin, is_family)
+
+  # Begin tests
 
 
 
@@ -222,13 +297,33 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(missing_rollforwards, dir_out)
 
-
+  ###
 
   # Basic data quality tests
 
   test_grades(
     dir_out = dir_out,
     match = match
+  )
+
+  # Family tests
+
+  # Family link
+
+  test_family(
+    dir_out = dir_out,
+    match = match,
+    siblings = siblings,
+    students_with_family = students_with_family
+  )
+
+  # Twin
+
+  test_twin(
+    dir_out = dir_out,
+    match = match,
+    siblings = siblings,
+    students_with_family = students_with_family
   )
 
   # Priorities
@@ -269,6 +364,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Application priorities
 
+  # IEP
+
+  test_iep(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
+
   # Economic disadvantage
 
   test_disadvantage(
@@ -289,9 +394,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
-  # IEP
+  # Montessori
 
-  test_iep(
+  test_montessori(
     dir_out = dir_out,
     round = round,
     priorities = priorities,
@@ -302,16 +407,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   # Military
 
   test_military(
-    dir_out = dir_out,
-    round = round,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
-
-  # Montessori
-
-  test_montessori(
     dir_out = dir_out,
     round = round,
     priorities = priorities,
@@ -519,169 +614,13 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   write_if_bad(invalid_eligibility, dir_out)
 
-
-
-# Family ------------------------------------------------------------------
-
-  optouts <-
-    readr::read_csv(
-      glue::glue("{dir_external}/family-links-opt-out.csv"),
-      col_types = "c"
-    ) %>%
-    dplyr::pull(`OneApp ID`)
-
-  siblings <- getdata_sibling()
-
-  sibling_edges <-
-    siblings %>%
-    dplyr::filter(
-      student_oneappid %in% choices$oneappid,
-      sibling_oneappid %in% choices$oneappid
-    ) %>%
-    dplyr::select(from = student_oneappid, to = sibling_oneappid) %>%
-    dplyr::arrange(from, to)
-
-  families_comp <-
-    tidygraph::tbl_graph(edges = sibling_edges, directed = FALSE) %>%
-    tidygraph::to_components()
-
-  familify <- function(i) {
-
-    tibble::as_tibble(families_comp[[i]]) %>% dplyr::mutate(id_family = i)
-
-  }
-
-  families <-
-    purrr::map_dfr(1:length(families_comp), familify) %>%
-    dplyr::rename(oneappid = name)
-
-  students_dob <-
-    families %>%
-    dplyr::left_join(dob, by = "oneappid")
-
-  twins <-
-    students_dob %>%
-    dplyr::select(id_family, student_dob) %>%
-    dplyr::count(id_family, student_dob, sort = T) %>%
-    dplyr::filter(n > 1) %>%
-    dplyr::mutate(is_twin = TRUE) %>%
-    dplyr::select(-n) %>%
-    dplyr::left_join(students_dob, by = c("id_family", "student_dob")) %>%
-    dplyr::select(oneappid, is_twin)
-
-  pref_nested <-
-    families %>%
-    dplyr::left_join(match, by = c("oneappid" = "STUDENT ID")) %>%
-    dplyr::left_join(twins, by = "oneappid") %>%
-    dplyr::select(id_family, is_twin, oneappid, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
-    dplyr::arrange(id_family, is_twin, oneappid, `CHOICE RANK`) %>%
-    tidyr::nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
-    dplyr::mutate(n_choices = purrr::map_int(.$data, nrow)) %>%
-    dplyr::filter(n_choices > 1 | is_twin) %>%
-    dplyr::select(-n_choices)
-
-  count_twin <-
-    pref_nested %>%
-    dplyr::filter(is_twin) %>%
-    dplyr::count(id_family, data, name = "n_twin") %>%
-    dplyr::filter(n_twin > 1)
-
-  students_with_family <-
-    pref_nested %>%
-    dplyr::count(id_family, data) %>%
-    dplyr::filter(n > 1) %>%
-    dplyr::group_by(id_family) %>%
-    dplyr::mutate(subid_family = 1:n()) %>%
-    dplyr::left_join(pref_nested, by = c("id_family", "data")) %>%
-    dplyr::left_join(count_twin, by = c("id_family", "data")) %>%
-    dplyr::mutate(id_family = stringr::str_c(id_family, subid_family, sep = ".")) %>%
-    dplyr::mutate(is_twin = dplyr::if_else(is_twin & !is.na(n_twin), TRUE, FALSE)) %>%
-    tidyr::replace_na(list(is_twin = FALSE)) %>%
-    dplyr::mutate(is_family = TRUE) %>%
-    dplyr::select(oneappid, id_family, is_twin, is_family)
-
-  print("Twin")
-
-  invalid_twin <-
-    match %>%
-    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(!is.na(`TWIN?`)) %>%
-    dplyr::filter(!is_twin) %>%
-    dplyr::select(`FAMILY ID`, `STUDENT ID`) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange(`FAMILY ID`, `STUDENT ID`)
-
-  missing_twin <-
-    match %>%
-    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(is.na(`TWIN?`)) %>%
-    dplyr::filter(is_twin) %>%
-    dplyr::arrange(id_family) %>%
-    dplyr::select(id_family, `STUDENT ID`) %>%
-    dplyr::distinct()
-
-  testthat::test_that(
-    "All siblings with applications, same birthdate, and same match choices are marked as twins",
-    {
-      testthat::expect_equal(nrow(missing_twin), 0)
-    }
-  )
-
-  write_if_bad(missing_twin, dir_out)
-
-  testthat::test_that(
-    "All match twins are siblings with applications, same birthdate, and same match choices",
-    {
-      testthat::expect_equal(nrow(invalid_twin), 0)
-    }
-  )
-
-  write_if_bad(invalid_twin, dir_out)
-
-  print("Family")
-
-  invalid_family <-
-    match %>%
-    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(!is.na(`FAMILY ID`)) %>%
-    dplyr::filter(!is_family) %>%
-    dplyr::select(`FAMILY ID`, `STUDENT ID`) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange(`FAMILY ID`, `STUDENT ID`)
-
-  missing_family <-
-    match %>%
-    dplyr::left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::filter(is.na(`FAMILY ID`)) %>%
-    dplyr::filter(is_family) %>%
-    dplyr::filter(!(`STUDENT ID` %in% optouts)) %>%
-    dplyr::select(id_family, `STUDENT ID`) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange(id_family, `STUDENT ID`)
-
-  testthat::test_that(
-    "All siblings with applications and same match choices are marked as family",
-    {
-      testthat::expect_equal(nrow(missing_family), 0)
-    }
-  )
-
-  write_if_bad(missing_family, dir_out)
-
-  testthat::test_that(
-    "All match families are siblings with applications and same match choices",
-    {
-      testthat::expect_equal(nrow(invalid_family), 0)
-    }
-  )
-
-  write_if_bad(invalid_family, dir_out)
-
 }
 
 
 
 # Basic data quality tests ------------------------------------------------
+
+
 
 #' @export
 test_grades <- function(dir_out, match) {
@@ -731,6 +670,91 @@ test_grades <- function(dir_out, match) {
 
   write_if_bad(invalid_grades, dir_out)
   write_if_bad(invalid_grades_eligible, dir_out)
+
+}
+
+
+
+# Family tests ------------------------------------------------------------
+
+
+
+#' @export
+test_family <- function(dir_out, siblings, match, students_with_family) {
+
+  cat("\nFamily link\n")
+
+  invalid_family <-
+    match %>%
+    left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    filter(!is_family) %>%
+    filter(!is.na(`FAMILY ID`)) %>%
+    select(`FAMILY ID`, `STUDENT ID`) %>%
+    distinct() %>%
+    arrange(`FAMILY ID`, `STUDENT ID`)
+
+  missing_family <-
+    match %>%
+    left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    filter(is_family) %>%
+    filter(is.na(`FAMILY ID`)) %>%
+    # filter(!(`STUDENT ID` %in% optouts)) %>%
+    select(id_family, `STUDENT ID`) %>%
+    distinct() %>%
+    arrange(id_family, `STUDENT ID`)
+
+  test_helper(
+    invalid_family,
+    "All match families are siblings with applications and same match choices."
+  )
+
+  test_helper(
+    missing_family,
+    "All siblings with applications and same match choices are marked as family."
+  )
+
+  write_if_bad(invalid_family, dir_out)
+  write_if_bad(missing_family, dir_out)
+
+}
+
+
+
+#' @export
+test_twin <- function(dir_out, siblings, match, students_with_family) {
+
+  cat("\nTwin\n")
+
+  invalid_twin <-
+    match %>%
+    left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    filter(!is_twin) %>%
+    filter(!is.na(`TWIN?`)) %>%
+    select(`FAMILY ID`, `STUDENT ID`) %>%
+    distinct() %>%
+    arrange(`FAMILY ID`, `STUDENT ID`)
+
+  missing_twin <-
+    match %>%
+    left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
+    filter(is_twin) %>%
+    filter(is.na(`TWIN?`)) %>%
+    select(id_family, `STUDENT ID`) %>%
+    distinct() %>%
+    arrange(id_family, `STUDENT ID`)
+
+  test_helper(
+    invalid_twin,
+    "All match twins are siblings with applications, same birthdate, and same match choices."
+  )
+
+  test_helper(
+    missing_twin,
+    "All siblings with applications, same birthdate, and same match choices are marked as twins."
+  )
+
+  write_if_bad(invalid_twin, dir_out)
+  write_if_bad(missing_twin, dir_out)
 
 }
 
@@ -804,13 +828,17 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_guarantee,
@@ -892,13 +920,17 @@ test_closing <- function(dir_out, round, prioritykey, priorities, match_prioriti
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_closing,
@@ -991,13 +1023,17 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_feeder,
@@ -1053,13 +1089,17 @@ test_disadvantage <- function(dir_out, round, priorities, appinputs, match_prior
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_disadvantage,
@@ -1113,13 +1153,17 @@ test_french <- function(dir_out, round, priorities, appinputs, match_priorities)
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_french,
@@ -1172,12 +1216,17 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
     glue(
       "
       {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_iep,
@@ -1231,13 +1280,17 @@ test_montessori <- function(dir_out, round, priorities, appinputs, match_priorit
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_montessori,
@@ -1290,13 +1343,17 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_military,
@@ -1350,13 +1407,17 @@ test_uno <- function(dir_out, round, priorities, appinputs, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      {nrow(distinct(have, `CHOICE SCHOOL`, GRADE))} grades
-      {nrow(have)} records
+      {nrow(distinct(have, `STUDENT ID`))} students
       \n
       "
     )
   )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_uno,
@@ -1391,6 +1452,26 @@ test_distance <- function(dir_out, match_priorities) {
     filter(is.na(`Child of Student`)) %>%
     filter(is.na(Ineligible))
 
+  have <-
+    match_priorities %>%
+    filter(!is.na(`Child of Student`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
+
   test_helper(
     invalid_distance,
     "No student has an invalid distance priority."
@@ -1423,6 +1504,26 @@ test_zone <- function(dir_out, match_priorities) {
     filter(is_priority_zone) %>%
     filter(is.na(Geography)) %>%
     filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    filter(!is.na(Geography))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_zone,
@@ -1460,6 +1561,27 @@ test_sibling_verified <- function(dir_out, match_priorities) {
     filter(is.na(Ineligible)) %>%
     filter(is.na(`School Specific 1`))
 
+  have <-
+    match_priorities %>%
+    filter(is_verifiedsibling) %>%
+    filter(!is.na(Sibling))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
+
   test_helper(
     invalid_sibling_verified,
     "No student has an invalid sibling priority (high-demand only)."
@@ -1495,12 +1617,25 @@ test_staffchild <- function(dir_out, match_priorities) {
     filter(is.na(`Staff Child`)) %>%
     filter(is.na(Ineligible))
 
-  n_have <-
+  have <-
     match_priorities %>%
-    filter(!is.na(`Staff Child`)) %>%
-    nrow()
+    filter(!is.na(`Staff Child`))
 
-  cat(glue("\n{n_have} records have staff child priority.\n\n"))
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
+  )
+
+  cat("\n")
 
   test_helper(
     invalid_staffchild,
@@ -1537,6 +1672,27 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
     filter(is.na(`School Specific 1`)) %>%
     filter(is.na(Ineligible))
 
+  have <-
+    match_priorities %>%
+    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
+    filter(GRADE %in% grades_ec()) %>%
+    filter(!is.na(`School Specific 1`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
+
   test_helper(
     invalid_sibling_staffchild,
     "No student has an invalid sibling or staff child priority."
@@ -1554,6 +1710,10 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
 
 
 
+# Utility functions -------------------------------------------------------
+
+
+
 #' @export
 test_helper <- function(bad_table, test_text) {
 
@@ -1564,6 +1724,20 @@ test_helper <- function(bad_table, test_text) {
       })
     }
   )
+
+}
+
+
+
+#' @export
+write_if_bad <- function(x, dir_out) {
+
+  if (nrow(x) > 0) {
+
+    filename <- deparse(substitute(x))
+    readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
+
+  }
 
 }
 

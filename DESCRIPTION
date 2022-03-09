@@ -18,8 +18,12 @@ Imports:
     glue,
     keyring,
     lubridate,
+    purrr,
     readr,
     readxl,
     salesforcer,
     stringr,
-    testthat
+    testthat,
+    tibble,
+    tidygraph,
+    tidyr
