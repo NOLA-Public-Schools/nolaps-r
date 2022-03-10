@@ -197,6 +197,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
     invalid_participants <-
       match %>%
+      filter(str_length(`STUDENT ID`) == 9) %>%
       filter(
         !(`STUDENT ID` %in% apps_with_choices$oneappid)
         & !(`STUDENT ID` %in% students_active$oneappid)
@@ -304,6 +305,24 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   test_grades(
     dir_out = dir_out,
     match = match
+  )
+
+  # Eligibility tests
+
+  # Age
+
+  test_age(
+    dir_out = dir_out,
+    match = match,
+    dob = dob
+  )
+
+  # Eligibility
+
+  test_eligibility(
+    dir_out = dir_out,
+    match = match,
+    choices = choices
   )
 
   # Family tests
@@ -573,10 +592,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match %>%
     dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible") %>%
     dplyr::left_join(
-      dob,
-      by = c("STUDENT ID" = "oneappid")
-    ) %>%
-    dplyr::left_join(
       badgrades,
       by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
     ) %>%
@@ -597,9 +612,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
     ) %>%
     dplyr::filter(
-      (student_dob > "2017-09-30" & !(GRADE %in% grades_ec()))
-      | (student_dob > "2007-09-30" & (`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8")
-      | (ineligible_badgrades & is.na(`GUARANTEED?`))
+      (ineligible_badgrades & is.na(`GUARANTEED?`))
       | ineligible_expelled
       | ineligible_noreturn
       | (ineligible_asr & is.na(`GUARANTEED?`))
@@ -670,6 +683,107 @@ test_grades <- function(dir_out, match) {
 
   write_if_bad(invalid_grades, dir_out)
   write_if_bad(invalid_grades_eligible, dir_out)
+
+}
+
+
+
+
+# Eligibility tests -------------------------------------------------------
+
+
+
+#' @export
+test_age <- function(dir_out, match, dob) {
+
+  cat("\nAge\n")
+
+  match <-
+    match %>%
+    left_join(dob, by = c("STUDENT ID" = "oneappid"))
+
+  invalid_ages <-
+    match %>%
+    filter(
+      (GRADE == "INF" & student_dob <= "2021-09-30")
+      | (GRADE == "1YR" & student_dob > "2021-09-30")
+      | (GRADE == "2YR" & student_dob > "2020-09-30")
+      | (GRADE == "PK3" & student_dob > "2019-09-30")
+      | (GRADE == "PK4" & student_dob > "2018-09-30")
+      | (!(GRADE %in% grades_ec()) & student_dob > "2017-09-30")
+      | (((`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8") & student_dob > "2007-09-30")
+    ) %>%
+    select(`ELIGIBLE?`, GRADE, `STUDENT ID`, id_student, student_dob) %>%
+    distinct() %>%
+    arrange(`ELIGIBLE?`, GRADE, student_dob)
+
+  invalid_ages_eligible <-
+    invalid_ages %>%
+    filter(`ELIGIBLE?` == "YES")
+
+  cat(
+    glue(
+      "
+      {nrow(invalid_ages)} students with invalid ages
+      {nrow(invalid_ages_eligible)} eligible students with invalid ages
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_ages_eligible,
+    "No student missing an age cutoff is marked eligible."
+  )
+
+  write_if_bad(invalid_ages, dir_out)
+  write_if_bad(invalid_ages_eligible, dir_out)
+
+}
+
+
+
+#' @export
+test_eligibility <- function(dir_out, match, choices) {
+
+  cat("\nEligibility\n")
+
+  match <-
+    match %>%
+    left_join(
+      choices,
+      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
+    ) %>%
+    select(
+      `ELIGIBLE?`, `GUARANTEED?`,
+      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student,
+      eligibility_decision, eligibility,
+    ) %>%
+    distinct() %>%
+    arrange(`ELIGIBLE?`, choice_name, GRADE)
+
+  invalid_eligibility_ec <-
+    match %>%
+    filter(GRADE %in% grades_ec()) %>%
+    filter(eligibility != "Eligible") %>%
+    filter(`ELIGIBLE?` == "YES") %>%
+    filter(is.na(`GUARANTEED?`))
+
+  cat(
+    glue(
+      "
+      {nrow(invalid_eligibility_ec)} records with invalid EC eligibility
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_eligibility_ec,
+    "No ineligible EC applicants are marked eligible in the match."
+  )
+
+  write_if_bad(invalid_eligibility_ec, dir_out)
 
 }
 
