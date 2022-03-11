@@ -494,6 +494,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
         Application_School__r.School__c,
         Application_School__c,
         Application_School__r.School_Code__c,
+        Application_School__r.Selective_School__c,
         Eligibility_Decision__c,
         EC_Ranking__c,
         EC_Program_Type__c,
@@ -524,6 +525,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       id_account = Application_School__r.School__c,
       id_appschool = Application_School__c,
       code_appschool = Application_School__r.School_Code__c,
+      is_selective = Application_School__r.Selective_School__c,
       eligibility_decision = Eligibility_Decision__c,
       is_ec = EC_Ranking__c,
       programtype = EC_Program_Type__c,
@@ -535,6 +537,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       is_staffchild = Child_Staff__c
     ) %>%
     dplyr::mutate(across(c(
+      is_selective,
       is_ec,
       is_priority_distance,
       is_priority_zone,

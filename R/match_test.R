@@ -756,7 +756,7 @@ test_eligibility <- function(dir_out, match, choices) {
     select(
       `ELIGIBLE?`, `GUARANTEED?`,
       choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student,
-      eligibility_decision, eligibility,
+      eligibility, eligibility_decision, programtype, is_selective
     ) %>%
     distinct() %>%
     arrange(`ELIGIBLE?`, choice_name, GRADE)
@@ -768,10 +768,30 @@ test_eligibility <- function(dir_out, match, choices) {
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
 
+  invalid_eligibility_k12 <-
+    match %>%
+    filter(!(GRADE %in% grades_ec())) %>%
+    filter(eligibility_decision != "Eligible") %>%
+    filter(is_selective) %>%
+    filter(`ELIGIBLE?` == "YES") %>%
+    filter(is.na(`GUARANTEED?`))
+
+  missing_eligibility_ec <-
+    match %>%
+    filter(GRADE %in% grades_ec()) %>%
+    filter(
+      eligibility == "Eligible"
+      | str_detect(programtype, "Tuition")
+    ) %>%
+    filter(`ELIGIBLE?` == "NO")
+
   cat(
     glue(
       "
       {nrow(invalid_eligibility_ec)} records with invalid EC eligibility
+      {nrow(invalid_eligibility_k12)} records with invalid K-12 eligibility
+
+      {nrow(missing_eligibility_ec)} records with missing EC eligibility
       \n
       "
     )
@@ -782,7 +802,20 @@ test_eligibility <- function(dir_out, match, choices) {
     "No ineligible EC applicants are marked eligible in the match."
   )
 
+  test_helper(
+    invalid_eligibility_k12,
+    "No ineligible K-12 applicants are marked eligible in the match."
+  )
+
+  test_helper(
+    missing_eligibility_ec,
+    "No eligible EC applicants are marked ineligible in the match."
+  )
+
   write_if_bad(invalid_eligibility_ec, dir_out)
+  write_if_bad(invalid_eligibility_k12, dir_out)
+
+  write_if_bad(missing_eligibility_ec, dir_out)
 
 }
 
