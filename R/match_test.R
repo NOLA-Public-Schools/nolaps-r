@@ -713,9 +713,8 @@ test_age <- function(dir_out, match, dob) {
       | (!(GRADE %in% grades_ec()) & student_dob > "2017-09-30")
       | (((`CHOICE SCHOOL` %in% c("315", "702")) & GRADE == "8") & student_dob > "2007-09-30")
     ) %>%
-    select(`ELIGIBLE?`, GRADE, `STUDENT ID`, id_student, student_dob) %>%
-    distinct() %>%
-    arrange(`ELIGIBLE?`, GRADE, student_dob)
+    select(`ELIGIBLE?`, choice_name, GRADE, school_current, `STUDENT ID`, student_dob, id_student) %>%
+    arrange(`ELIGIBLE?`, choice_name, GRADE, school_current)
 
   invalid_ages_eligible <-
     invalid_ages %>%
