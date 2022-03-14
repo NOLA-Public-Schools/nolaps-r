@@ -1807,14 +1807,15 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
 
   invalid_sibling_staffchild <-
     match_priorities %>%
+    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
     filter(!is_verifiedsibling & !is_staffchild) %>%
     filter(!is.na(`School Specific 1`))
 
   missing_sibling_staffchild <-
     match_priorities %>%
-    filter(is_verifiedsibling | is_staffchild) %>%
     filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
     filter(GRADE %in% grades_ec()) %>%
+    filter(is_verifiedsibling | is_staffchild) %>%
     filter(is.na(`School Specific 1`)) %>%
     filter(is.na(Ineligible))
 
