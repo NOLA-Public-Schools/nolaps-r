@@ -769,7 +769,13 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
   invalid_eligibility_ec <-
     match %>%
     filter(GRADE %in% grades_ec()) %>%
-    filter(eligibility != "Eligible") %>%
+    filter(
+      eligibility != "Eligible"
+      & !(str_detect(programtype, "Tuition"))
+      & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs$oneappid)
+      & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs$oneappid)
+      & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs$oneappid)
+    ) %>%
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
 
@@ -788,6 +794,8 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
       eligibility == "Eligible"
       | str_detect(programtype, "Tuition")
       | (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs$oneappid)
+      | (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs$oneappid)
+      | (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs$oneappid)
     ) %>%
     filter(`ELIGIBLE?` == "NO")
 
