@@ -322,7 +322,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   test_eligibility(
     dir_out = dir_out,
     match = match,
-    choices = choices
+    choices = choices,
+    appinputs = appinputs
   )
 
   # Family tests
@@ -743,9 +744,13 @@ test_age <- function(dir_out, match, dob) {
 
 
 #' @export
-test_eligibility <- function(dir_out, match, choices) {
+test_eligibility <- function(dir_out, match, choices, appinputs) {
 
   cat("\nEligibility\n")
+
+  appinputs <-
+    appinputs %>%
+    filter(has_iep)
 
   match <-
     match %>%
@@ -782,6 +787,7 @@ test_eligibility <- function(dir_out, match, choices) {
     filter(
       eligibility == "Eligible"
       | str_detect(programtype, "Tuition")
+      | (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs$oneappid)
     ) %>%
     filter(`ELIGIBLE?` == "NO")
 
