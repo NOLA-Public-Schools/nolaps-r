@@ -657,7 +657,9 @@ test_grades <- function(dir_out, match) {
         "4013_tulane_2",
         "4013_community_1",
         "4013_community_2",
-        "4013_ed_1"
+        "4013_ed_1",
+        "4012_tier_1",
+        "4012_tier_2"
       ))
     ) %>%
     select(`ELIGIBLE?`, choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
@@ -724,8 +726,8 @@ test_age <- function(dir_out, match, dob) {
   cat(
     glue(
       "
-      {nrow(invalid_ages)} students with invalid ages
-      {nrow(invalid_ages_eligible)} eligible students with invalid ages
+      {nrow(invalid_ages)} records with invalid ages
+      {nrow(invalid_ages_eligible)} eligible records with invalid ages
       \n
       "
     )
@@ -748,9 +750,13 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
 
   cat("\nEligibility\n")
 
-  appinputs <-
+  appinputs_iep <-
     appinputs %>%
     filter(has_iep)
+
+  appinputs_gt <-
+    appinputs %>%
+    filter(has_gt)
 
   match <-
     match %>%
@@ -760,8 +766,8 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     ) %>%
     select(
       `ELIGIBLE?`, `GUARANTEED?`,
-      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student,
-      eligibility, eligibility_decision, programtype, is_selective
+      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student, id_appschoolranking,
+      eligibility, eligibility_decision, programtype, is_selective, questions_selective
     ) %>%
     distinct() %>%
     arrange(`ELIGIBLE?`, choice_name, GRADE)
@@ -771,10 +777,11 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     filter(GRADE %in% grades_ec()) %>%
     filter(
       eligibility != "Eligible"
-      & !(str_detect(programtype, "Tuition"))
-      & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs$oneappid)
-      & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs$oneappid)
-      & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs$oneappid)
+      & !(str_detect(programtype, "Tuition") & eligibility != "Ineligible")
+      & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      & !(programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid & eligibility != "Ineligible")
     ) %>%
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
@@ -783,7 +790,10 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     match %>%
     filter(!(GRADE %in% grades_ec())) %>%
     filter(eligibility_decision != "Eligible") %>%
-    filter(is_selective) %>%
+    filter(is_selective & !(questions_selective %in% c(
+      "Verified Sibling",
+      "Financial Eligibility;Verified Sibling"
+    ))) %>%
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
 
@@ -792,10 +802,13 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     filter(GRADE %in% grades_ec()) %>%
     filter(
       eligibility == "Eligible"
-      | str_detect(programtype, "Tuition")
-      | (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs$oneappid)
-      | (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs$oneappid)
-      | (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs$oneappid)
+      | ((eligibility != "Ineligible") & (
+        str_detect(programtype, "Tuition")
+        | (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid)
+        | (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid)
+        | (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid)
+        | (programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid)
+      ))
     ) %>%
     filter(`ELIGIBLE?` == "NO")
 
