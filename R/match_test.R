@@ -357,7 +357,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     round = round,
     prioritykey = prioritykey,
     match_priorities = match_priorities,
-    students = students_active
+    students = students_active,
+    dob = dob
   )
 
   # Closing school
@@ -940,7 +941,7 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
 
 #' @export
-test_guarantee <- function(dir_out, round, prioritykey, match_priorities, students) {
+test_guarantee <- function(dir_out, round, prioritykey, match_priorities, students, dob) {
 
   cat("\nGuarantee\n")
 
@@ -978,7 +979,14 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
         "STUDENT ID" = "oneappid"
       )
     ) %>%
-    filter(!is.na(Guaranteed))
+    filter(!is.na(Guaranteed)) %>%
+    left_join(dob, by = c("STUDENT ID" = "oneappid")) %>%
+    filter(
+      !(GRADE == "INF" & student_dob > "2021-09-30"),
+      !(GRADE == "1YR" & student_dob > "2020-09-30"),
+      !(GRADE == "2YR" & student_dob > "2019-09-30"),
+      !(GRADE == "PK3" & student_dob > "2018-09-30")
+    )
 
   missing_guarantee <-
     match_priorities %>%
