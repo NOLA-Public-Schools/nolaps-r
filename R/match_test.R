@@ -1396,8 +1396,8 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
@@ -1640,8 +1640,8 @@ test_distance <- function(dir_out, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
@@ -1693,8 +1693,8 @@ test_zone <- function(dir_out, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
@@ -1750,8 +1750,8 @@ test_sibling_verified <- function(dir_out, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
@@ -1805,8 +1805,8 @@ test_staffchild <- function(dir_out, match_priorities) {
   cat(
     glue(
       "
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
