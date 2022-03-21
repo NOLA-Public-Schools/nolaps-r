@@ -327,6 +327,14 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     appinputs = appinputs
   )
 
+  # Expulsions
+
+  test_expulsion(
+    dir_out = dir_out,
+    match = match,
+    students = students_active
+  )
+
   # Family tests
 
   # Family link
@@ -555,7 +563,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 # Eligibility -------------------------------------------------------------
 
   # TODO
-  # gt
   # scholarship
 
   print("Invalid eligibility")
@@ -856,6 +863,37 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
   write_if_bad(invalid_eligibility_k12, dir_out)
 
   write_if_bad(missing_eligibility_ec, dir_out)
+
+}
+
+
+
+#' @export
+test_expulsion <- function(dir_out, match, students) {
+
+  cat("\nExpulsions\n")
+
+  prohibited <-
+    students %>%
+    filter(
+      (expelled_status == "Re-entry Prohibited")
+      | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
+    ) %>%
+    mutate(is_expelled = TRUE) %>%
+    select(oneappid, id_account_expelled, is_expelled)
+
+  invalid_return_prohibited <-
+    match %>%
+    left_join(prohibited, by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")) %>%
+    filter(is_expelled) %>%
+    filter(`ELIGIBLE?` == "YES")
+
+  test_helper(
+    invalid_return_prohibited,
+    "No prohibited student is marked eligible in the match."
+  )
+
+  write_if_bad(invalid_return_prohibited, dir_out)
 
 }
 

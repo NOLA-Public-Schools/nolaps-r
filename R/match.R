@@ -173,19 +173,17 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     matchcalcs_summarystats_full(schools_waitlist = c("846", "847")) %>%
     readr::write_excel_csv(glue::glue("{dir_review}/summarystats.csv"), na = "")
 
-  # match %>%
-  #   matchcalcs_priorityoutcomes() %>%
-  #   readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities.csv"), na = "")
-  #
-  # match %>%
-  #   matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`) %>%
-  #   readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school.csv"), na = "")
-  #
-  # match %>%
-  #   matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
-  #   readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school_grade.csv"), na = "")
+  match %>%
+    matchcalcs_priorityoutcomes() %>%
+    readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities.csv"), na = "")
 
+  match %>%
+    matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`) %>%
+    readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school.csv"), na = "")
 
+  match %>%
+    matchcalcs_priorityoutcomes_summary(choice_name, `CHOICE SCHOOL`, GRADE) %>%
+    readr::write_excel_csv(glue::glue("{dir_review}/qualpriorities_school_grade.csv"), na = "")
 
   match_test(
     match = match,
