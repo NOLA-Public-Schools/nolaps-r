@@ -396,9 +396,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
-  # IEP
+  # Economic disadvantage
 
-  test_iep(
+  test_disadvantage(
     dir_out = dir_out,
     round = round,
     priorities = priorities,
@@ -406,9 +406,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
-  # Economic disadvantage
+  # IEP
 
-  test_disadvantage(
+  test_iep(
     dir_out = dir_out,
     round = round,
     priorities = priorities,
@@ -1254,14 +1254,16 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1322,14 +1324,16 @@ test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities)
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1384,14 +1388,16 @@ test_disadvantage <- function(dir_out, round, priorities, appinputs, match_prior
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1448,14 +1454,16 @@ test_french <- function(dir_out, round, priorities, appinputs, match_priorities)
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1516,9 +1524,10 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
     )
   )
 
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1575,14 +1584,16 @@ test_montessori <- function(dir_out, round, priorities, appinputs, match_priorit
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1639,14 +1650,16 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1703,14 +1716,16 @@ test_uno <- function(dir_out, round, priorities, appinputs, match_priorities) {
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1749,6 +1764,7 @@ test_distance <- function(dir_out, match_priorities) {
 
   have <-
     match_priorities %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
     filter(!is.na(`Child of Student`))
 
   cat(
@@ -1761,9 +1777,10 @@ test_distance <- function(dir_out, match_priorities) {
     )
   )
 
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1802,6 +1819,7 @@ test_zone <- function(dir_out, match_priorities) {
 
   have <-
     match_priorities %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
     filter(!is.na(Geography))
 
   cat(
@@ -1814,9 +1832,10 @@ test_zone <- function(dir_out, match_priorities) {
     )
   )
 
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1871,9 +1890,10 @@ test_sibling_verified <- function(dir_out, match_priorities) {
     )
   )
 
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1926,9 +1946,10 @@ test_staffchild <- function(dir_out, match_priorities) {
     )
   )
 
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
@@ -1978,14 +1999,16 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
     glue(
       "
       {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
       \n
       "
     )
   )
 
-  print(
-    count(have, choice_name, GRADE)
-  )
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
 
   cat("\n")
 
