@@ -318,6 +318,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       "
       select
         OneApp_ID__c,
+        Input_Table_100_FPL__c,
         Input_Table_At_Risk__c,
         Input_Table_French__c,
         Input_Table_Gifted_and_Talented__c,
@@ -336,6 +337,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
   ) %>%
     select(
       oneappid = OneApp_ID__c,
+      has_100fpl = Input_Table_100_FPL__c,
       has_disadvantage = Input_Table_At_Risk__c,
       has_french = Input_Table_French__c,
       has_gt = Input_Table_Gifted_and_Talented__c,
@@ -345,6 +347,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       has_uno = Input_Table_UNO__c
     ) %>%
     mutate(across(c(
+      has_100fpl,
       has_disadvantage,
       has_french,
       has_gt,

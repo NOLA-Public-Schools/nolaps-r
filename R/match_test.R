@@ -82,6 +82,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       col_types = "text"
     ) %>%
     select(
+      code_appschool = `Application School Code`,
       code_site = `Site Code`,
       grade_current = `You are in grade`,
       grade_applying = `And you are applying to`,
@@ -384,6 +385,16 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   )
 
   # Application priorities
+
+  # 100% FPL
+
+  test_100fpl(
+    dir_out = dir_out,
+    round = round,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # IEP
 
@@ -949,16 +960,39 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
     prioritykey %>%
     filter(!is.na(guarantee))
 
+  codes_appschool <-
+    prioritykey %>%
+    select(code_site, code_appschool)
+
+  underage <-
+    students %>%
+    filter(
+      (grade_current == "INF" & student_dob > "2021-09-30")
+      | (grade_current == "1YR" & student_dob > "2020-09-30")
+      | (grade_current == "2YR" & student_dob > "2019-09-30")
+      | (grade_current == "PK3" & student_dob > "2018-09-30")
+      | (grade_current == "PK4" & student_dob > "2017-09-30")
+    ) %>%
+    transmute(oneappid, code_site_current, grade_current, grade_applying = grade_current) %>%
+    left_join(codes_appschool, by = c("code_site_current" = "code_site")) %>%
+    mutate(guarantee = code_appschool)
+
+  # write_if_bad(underage, dir_out)
+
   if (round == "Round 1") {
 
     shouldhave <-
       students %>%
-      select(code_site_current, grade_current, oneappid) %>%
+      select(oneappid, code_site_current, grade_current) %>%
       left_join(
         key_guarantee,
         by = c("code_site_current" = "code_site", "grade_current")
       ) %>%
+      filter(!(oneappid %in% underage$oneappid)) %>%
+      bind_rows(underage) %>%
       filter(!is.na(guarantee))
+
+    # write_if_bad(shouldhave, dir_out)
 
   } else if (round == "Round 2") {
 
@@ -979,32 +1013,45 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
         "STUDENT ID" = "oneappid"
       )
     ) %>%
-    filter(!is.na(Guaranteed)) %>%
-    left_join(dob, by = c("STUDENT ID" = "oneappid")) %>%
-    filter(
-      !(GRADE == "INF" & student_dob > "2021-09-30"),
-      !(GRADE == "1YR" & student_dob > "2020-09-30"),
-      !(GRADE == "2YR" & student_dob > "2019-09-30"),
-      !(GRADE == "PK3" & student_dob > "2018-09-30")
-    )
+    filter(!is.na(Guaranteed))
+  # %>%
+  #   left_join(dob, by = c("STUDENT ID" = "oneappid")) %>%
+  #   filter(
+  #     !(GRADE == "INF" & student_dob > "2021-09-30"),
+  #     !(GRADE == "1YR" & student_dob > "2020-09-30"),
+  #     !(GRADE == "2YR" & student_dob > "2019-09-30"),
+  #     !(GRADE == "PK3" & student_dob > "2018-09-30")
+  #   )
 
-  missing_guarantee <-
-    match_priorities %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
-    semi_join(
-      shouldhave,
-      by = c(
-        "CHOICE SCHOOL" = "guarantee",
-        "GRADE" = "grade_applying",
-        "STUDENT ID" = "oneappid"
-      )
-    ) %>%
-    filter(is.na(Guaranteed))
+  # missing_guarantee <-
+  #   match_priorities %>%
+  #   filter(str_length(`STUDENT ID`) == 9) %>%
+  #   semi_join(
+  #     shouldhave,
+  #     by = c(
+  #       "CHOICE SCHOOL" = "guarantee",
+  #       "GRADE" = "grade_applying",
+  #       "STUDENT ID" = "oneappid"
+  #     )
+  #   ) %>%
+  #   filter(is.na(Guaranteed))
 
   have <-
     match_priorities %>%
     filter(str_length(`STUDENT ID`) == 9) %>%
     filter(!is.na(Guaranteed))
+
+  missing_guarantee <-
+    shouldhave %>%
+    anti_join(
+      have,
+      by = c(
+        "guarantee" = "CHOICE SCHOOL",
+        "grade_applying" = "GRADE",
+        "oneappid" = "STUDENT ID"
+      )
+    ) %>%
+    arrange(code_site_current, grade_current, grade_applying)
 
   cat(
     glue(
@@ -1137,7 +1184,8 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
   key_feeder <-
     prioritykey %>%
-    filter(!is.na(feeder))
+    filter(!is.na(feeder)) %>%
+    select(-code_appschool)
 
   if (round == "Round 1") {
 
@@ -1234,6 +1282,70 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
 
 # Application priorities --------------------------------------------------
+
+
+
+#' @export
+test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities) {
+
+  cat("\n100% FPL\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_100_Federal_Poverty__c)) %>%
+    select(code_appschool, grade)
+
+  appinputs <-
+    appinputs %>%
+    filter(has_100fpl)
+
+  invalid_100fpl <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(!is.na(`Military child`))
+
+  missing_100fpl <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter((`STUDENT ID` %in% appinputs$oneappid)) %>%
+    filter(is.na(`Military child`)) %>%
+    filter(is.na(Ineligible))
+
+  have <-
+    match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    filter(!is.na(`Military child`))
+
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `STUDENT ID`))} students
+      \n
+      "
+    )
+  )
+
+  print(
+    count(have, choice_name, GRADE)
+  )
+
+  cat("\n")
+
+  test_helper(
+    invalid_100fpl,
+    "No student has an invalid 100% FPL priority."
+  )
+
+  test_helper(
+    missing_100fpl,
+    "No student has a missing 100% FPL priority."
+  )
+
+  write_if_bad(invalid_100fpl, dir_out)
+  write_if_bad(missing_100fpl, dir_out)
+
+}
 
 
 
@@ -1506,6 +1618,7 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
 
   invalid_military <-
     match_priorities %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
     filter(!(`STUDENT ID` %in% appinputs$oneappid)) %>%
     filter(!is.na(`Military child`))
 
