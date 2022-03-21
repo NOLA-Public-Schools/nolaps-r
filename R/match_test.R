@@ -963,7 +963,8 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
 
   codes_appschool <-
     prioritykey %>%
-    select(code_site, code_appschool)
+    select(code_site, code_appschool) %>%
+    distinct()
 
   underage <-
     students %>%
