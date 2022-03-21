@@ -822,7 +822,8 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
         | (programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid)
       ))
     ) %>%
-    filter(`ELIGIBLE?` == "NO")
+    filter(`ELIGIBLE?` == "NO") %>%
+    filter(`CHOICE SCHOOL` != "835")
 
   cat(
     glue(
