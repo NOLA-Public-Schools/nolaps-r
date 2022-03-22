@@ -1017,7 +1017,20 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
     left_join(codes_appschool, by = c("code_site_current" = "code_site")) %>%
     mutate(guarantee = code_appschool)
 
-  # write_if_bad(underage, dir_out)
+  prohibited <-
+    students %>%
+    filter(
+      (expelled_status == "Re-entry Prohibited")
+      | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
+    ) %>%
+    mutate(is_expelled = TRUE) %>%
+    select(oneappid, id_account_expelled, is_expelled)
+
+  return_prohibited <-
+    match_priorities %>%
+    select(`STUDENT ID`, `CHOICE SCHOOL`, id_account) %>%
+    left_join(prohibited, by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")) %>%
+    filter(is_expelled)
 
   if (round == "Round 1") {
 
@@ -1054,27 +1067,6 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
       )
     ) %>%
     filter(!is.na(Guaranteed))
-  # %>%
-  #   left_join(dob, by = c("STUDENT ID" = "oneappid")) %>%
-  #   filter(
-  #     !(GRADE == "INF" & student_dob > "2021-09-30"),
-  #     !(GRADE == "1YR" & student_dob > "2020-09-30"),
-  #     !(GRADE == "2YR" & student_dob > "2019-09-30"),
-  #     !(GRADE == "PK3" & student_dob > "2018-09-30")
-  #   )
-
-  # missing_guarantee <-
-  #   match_priorities %>%
-  #   filter(str_length(`STUDENT ID`) == 9) %>%
-  #   semi_join(
-  #     shouldhave,
-  #     by = c(
-  #       "CHOICE SCHOOL" = "guarantee",
-  #       "GRADE" = "grade_applying",
-  #       "STUDENT ID" = "oneappid"
-  #     )
-  #   ) %>%
-  #   filter(is.na(Guaranteed))
 
   have <-
     match_priorities %>%
@@ -1088,6 +1080,13 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
       by = c(
         "guarantee" = "CHOICE SCHOOL",
         "grade_applying" = "GRADE",
+        "oneappid" = "STUDENT ID"
+      )
+    ) %>%
+    anti_join(
+      return_prohibited,
+      by = c(
+        "guarantee" = "CHOICE SCHOOL",
         "oneappid" = "STUDENT ID"
       )
     ) %>%
