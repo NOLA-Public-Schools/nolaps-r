@@ -501,6 +501,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
+  # Assignment tests
+
+  # Assignment status
+
+  test_assignment(dir_out = dir_out, match = match)
+
   return(NULL)
 
 
@@ -2062,6 +2068,78 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_sibling_staffchild, dir_out)
   write_if_bad(missing_sibling_staffchild, dir_out)
+
+}
+
+
+
+# Assignment tests --------------------------------------------------------
+
+
+
+#' @export
+test_assignment <- function(dir_out, match) {
+
+  cat("\nAssignment status\n")
+
+  assignments_all <-
+    match %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    count(choice_name, `CHOICE SCHOOL`, GRADE, `ASSIGNMENT STATUS`) %>%
+    pivot_wider(names_from = "ASSIGNMENT STATUS", values_from = "n") %>%
+    select(
+      school = choice_name,
+      code_appschool = `CHOICE SCHOOL`,
+      grade = GRADE,
+      accepted = Accepted,
+      ineligible = Ineligible,
+      waiting = `Waiting List`,
+      waiting_family = `Waiting List - Family Link Rejection`,
+      notprocessed = `Not Processed`
+    )
+
+  noassignments <-
+    assignments_all %>%
+    filter(is.na(accepted))
+
+  allineligible <-
+    assignments_all %>%
+    filter(
+      !is.na(ineligible),
+      is.na(accepted),
+      is.na(waiting),
+      is.na(waiting_family)
+    )
+
+  # cat(
+  #   glue(
+  #     "
+  #     {nrow(distinct(have, `STUDENT ID`))} students
+  #     {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+  #     \n
+  #     "
+  #   )
+  # )
+
+  cat("\nGrades with no assignments\n")
+
+  noassignments %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
+
+  cat("\n")
+
+  cat("\nGrades with no eligible students processed\n")
+
+  allineligible %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
+
+  cat("\n")
+
+  write_if_bad(assignments_all, dir_out)
+  write_if_bad(noassignments, dir_out)
+  write_if_bad(allineligible, dir_out)
 
 }
 
