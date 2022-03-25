@@ -318,6 +318,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       "
       select
         OneApp_ID__c,
+        Input_Table_Family_Link_Opt_Out__c,
         Input_Table_100_FPL__c,
         Input_Table_At_Risk__c,
         Input_Table_French__c,
@@ -337,6 +338,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
   ) %>%
     select(
       oneappid = OneApp_ID__c,
+      optout_family = Input_Table_Family_Link_Opt_Out__c,
       has_100fpl = Input_Table_100_FPL__c,
       has_disadvantage = Input_Table_At_Risk__c,
       has_french = Input_Table_French__c,
@@ -347,6 +349,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       has_uno = Input_Table_UNO__c
     ) %>%
     mutate(across(c(
+      optout_family,
       has_100fpl,
       has_disadvantage,
       has_french,

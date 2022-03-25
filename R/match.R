@@ -54,20 +54,24 @@ match_lookup_account <- function(x, appschools, accounts) {
 #' @export
 match_augment <- function(x, appschools, accounts, students) {
 
-  # appschools <- getdata_appschool()
-
-  # funding <-
-  #   appschools %>%
-  #   dplyr::select(code_appschool, choice_funding = ec_type) %>%
-  #   dplyr::distinct() %>%
-  #   dplyr::filter(!is.na(choice_funding))
+  special <- tibble::tribble(
+    ~code_appschool, ~id_account,
+    "4013_tulane_1", "001d000000ALnWzAAL",
+    "4013_tulane_2", "001d000000ALnWzAAL",
+    "4013_community_1", "001d000000ALnWzAAL",
+    "4013_community_2", "001d000000ALnWzAAL",
+    "4013_ed_1", "001d000000ALnWzAAL",
+    "4012_tier_1", "001d000000ALnWyAAL",
+    "4012_tier_2", "001d000000ALnWyAAL",
+  )
 
   names_matchschool <-
     x %>%
     match_lookup_account(appschools = appschools, accounts = accounts) %>%
     dplyr::left_join(accounts, by = c("id_account")) %>%
     dplyr::select(code_appschool, choice_name = name_account, id_account, is_highdemand) %>%
-    dplyr::distinct()
+    dplyr::distinct() %>%
+    dplyr::bind_rows(special)
 
   students <-
     students %>%
@@ -160,10 +164,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       col_types = "text"
     ) %>%
     dplyr::select(-`CHOICE RANK`)
-
-  # prioritytable <- readr::read_csv(
-  #   glue::glue("{dir_external}/PriorityTable.csv")
-  # )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 

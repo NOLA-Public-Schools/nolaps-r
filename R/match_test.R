@@ -40,14 +40,7 @@ filter_priority <- function(x, priority, prioritytable) {
 #' @export
 match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs, siblings) {
 
-  # oaretentions <- readr::read_csv(glue::glue("{dir_external}/oa-retentions.csv"), col_types = "c")
-
-  # oaretentions <-
-  #   readr::read_csv(
-  #     glue::glue("{dir_external}/oa-retentions.csv"),
-  #     col_types = "c"
-  #   ) %>%
-  #   dplyr::select(oneappid = `OneApp ID`)
+  cat("\nValidating match file\n")
 
   # students <-
   #   getdata_student_active() %>%
@@ -100,13 +93,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     ))
 
   # Family link and twin data
-
-  # optouts <-
-  #   readr::read_csv(
-  #     glue::glue("{dir_external}/family-links-opt-out.csv"),
-  #     col_types = "c"
-  #   ) %>%
-  #   dplyr::pull(`OneApp ID`)
 
   dob <-
     students %>%
@@ -343,7 +329,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dir_out = dir_out,
     match = match,
     siblings = siblings,
-    students_with_family = students_with_family
+    students_with_family = students_with_family,
+    appinputs = appinputs
   )
 
   # Twin
@@ -563,95 +550,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   })
 
   write_if_bad(invalid_retained, dir_out)
-
-
-
-# Eligibility -------------------------------------------------------------
-
-  # TODO
-  # scholarship
-
-  print("Invalid eligibility")
-
-  dob <-
-    students %>%
-    dplyr::select(oneappid, student_dob)
-
-  badgrades <-
-    readr::read_csv(
-      glue::glue("{dir_external}/auto-ineligibilities.csv"),
-      col_types = "cc"
-    ) %>%
-    dplyr::select(code_appschool = `School Code`, grade = `Grade`) %>%
-    dplyr::mutate(ineligible_badgrades = TRUE)
-
-  expelled <-
-    readr::read_csv(
-      glue::glue("{dir_external}/expelled-students.csv"),
-      col_types = "ccccccccccccccc"
-    ) %>%
-    dplyr::select(oneappid = `OneApp ID`, code_appschool = `Current School App Code`) %>%
-    dplyr::mutate(ineligible_expelled = TRUE)
-
-  noreturn <-
-    readr::read_csv(
-      glue::glue("{dir_external}/no-return-students.csv"),
-      col_types = "cccccccccccccccccc"
-    ) %>%
-    dplyr::select(oneappid = `OneApp ID`, code_appschool = `Referring School App Code`) %>%
-    dplyr::mutate(ineligible_noreturn = TRUE)
-
-  asr_ineligible <-
-    choices %>%
-    dplyr::filter(eligibility == "Ineligible") %>%
-    dplyr::mutate(ineligible_asr = TRUE)
-
-  ineligibilities <-
-    readr::read_csv(
-      glue::glue("{dir_external}/student-ineligibilities.csv"),
-      col_types = "ccccccc"
-    ) %>%
-    dplyr::select(oneappid = `OneApp ID`, code_appschool = `App Code`) %>%
-    dplyr::mutate(ineligible_ineligibilities = TRUE)
-
-  invalid_eligibility <-
-    match %>%
-    dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible") %>%
-    dplyr::left_join(
-      badgrades,
-      by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
-    ) %>%
-    dplyr::left_join(
-      expelled,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    dplyr::left_join(
-      noreturn,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    dplyr::left_join(
-      asr_ineligible,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    dplyr::left_join(
-      ineligibilities,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    dplyr::filter(
-      (ineligible_badgrades & is.na(`GUARANTEED?`))
-      | ineligible_expelled
-      | ineligible_noreturn
-      | (ineligible_asr & is.na(`GUARANTEED?`))
-      | (ineligible_ineligibilities & is.na(`GUARANTEED?`))
-    )
-
-  testthat::test_that("No choice is marked eligible in match but ineligible in Salesforce or external input", {
-
-    testthat::expect_equal(nrow(invalid_eligibility), 0)
-
-  })
-
-  write_if_bad(invalid_eligibility, dir_out)
 
 }
 
@@ -910,9 +808,13 @@ test_expulsion <- function(dir_out, match, students) {
 
 
 #' @export
-test_family <- function(dir_out, siblings, match, students_with_family) {
+test_family <- function(dir_out, siblings, match, students_with_family, appinputs) {
 
   cat("\nFamily link\n")
+
+  optouts <-
+    appinputs %>%
+    filter(optout_family)
 
   diff_1 <-
     match %>%
@@ -928,16 +830,6 @@ test_family <- function(dir_out, siblings, match, students_with_family) {
     count(`FAMILY ID`) %>%
     filter(n > 1)
 
-  missing_subfamily <-
-    match %>%
-    filter(!is.na(`FAMILY ID`)) %>%
-    select(`FAMILY ID`, `STUDENT ID`, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
-    nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
-    distinct(`FAMILY ID`, data) %>%
-    count(`FAMILY ID`) %>%
-    filter(n > 1) %>%
-    filter(`FAMILY ID` %in% diff_1$`FAMILY ID` | `FAMILY ID` %in% diff_2$`FAMILY ID`)
-
   invalid_family <-
     match %>%
     left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
@@ -952,10 +844,20 @@ test_family <- function(dir_out, siblings, match, students_with_family) {
     left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
     filter(is_family) %>%
     filter(is.na(`FAMILY ID`)) %>%
-    # filter(!(`STUDENT ID` %in% optouts)) %>%
+    filter(!(`STUDENT ID` %in% optouts$oneappid)) %>%
     select(id_family, `STUDENT ID`) %>%
     distinct() %>%
     arrange(id_family, `STUDENT ID`)
+
+  missing_subfamily <-
+    match %>%
+    filter(!is.na(`FAMILY ID`)) %>%
+    select(`FAMILY ID`, `STUDENT ID`, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
+    nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
+    distinct(`FAMILY ID`, data) %>%
+    count(`FAMILY ID`) %>%
+    filter(n > 1) %>%
+    filter(`FAMILY ID` %in% diff_1$`FAMILY ID` | `FAMILY ID` %in% diff_2$`FAMILY ID`)
 
   test_helper(
     invalid_family,
@@ -967,9 +869,13 @@ test_family <- function(dir_out, siblings, match, students_with_family) {
     "All siblings with applications and same match choices are marked as family."
   )
 
+  test_helper(
+    missing_subfamily,
+    "All applicants within a family have the same first and second choice."
+  )
+
   write_if_bad(invalid_family, dir_out)
   write_if_bad(missing_family, dir_out)
-
   write_if_bad(missing_subfamily, dir_out)
 
 }
@@ -1931,33 +1837,33 @@ test_sibling_verified <- function(dir_out, match_priorities) {
 
   cat("\nVerified sibling\n")
 
-  match_priorities <-
-    match_priorities %>%
-    mutate(score_str = as.character(`ASSIGNMENT PRIORITY`)) %>%
-    mutate(sibling_priority = case_when(
-      !(GRADE %in% grades_ec()) & (str_length(score_str) >= 3) & (str_sub(score_str, start = -3, end = -3) == "1") ~ TRUE,
-      TRUE ~ FALSE
-      )
-    )
+  # match_priorities <-
+  #   match_priorities %>%
+  #   mutate(score_str = as.character(`ASSIGNMENT PRIORITY`)) %>%
+  #   mutate(sibling_priority = case_when(
+  #     !(GRADE %in% grades_ec()) & (str_length(score_str) >= 3) & (str_sub(score_str, start = -3, end = -3) == "1") ~ TRUE,
+  #     TRUE ~ FALSE
+  #     )
+  #   )
 
   invalid_sibling_verified <-
     match_priorities %>%
     filter(is_highdemand) %>%
     filter(!is_verifiedsibling) %>%
-    filter(!is.na(Sibling) | sibling_priority)
+    filter(!is.na(Sibling))
 
   missing_sibling_verified <-
     match_priorities %>%
     filter(is_highdemand) %>%
     filter(is_verifiedsibling) %>%
-    filter(is.na(Sibling) & !sibling_priority) %>%
+    filter(is.na(Sibling)) %>%
     filter(is.na(Ineligible)) %>%
     filter(is.na(`School Specific 1`))
 
   have <-
     match_priorities %>%
     filter(is_verifiedsibling) %>%
-    filter(!is.na(Sibling) | sibling_priority)
+    filter(!is.na(Sibling))
 
   cat(
     glue(
