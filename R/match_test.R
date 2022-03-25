@@ -914,6 +914,30 @@ test_family <- function(dir_out, siblings, match, students_with_family) {
 
   cat("\nFamily link\n")
 
+  diff_1 <-
+    match %>%
+    filter(!is.na(`FAMILY ID`), `CHOICE RANK` == 1) %>%
+    distinct(`FAMILY ID`, `CHOICE SCHOOL`) %>%
+    count(`FAMILY ID`) %>%
+    filter(n > 1)
+
+  diff_2 <-
+    match %>%
+    filter(!is.na(`FAMILY ID`), `CHOICE RANK` == 2) %>%
+    distinct(`FAMILY ID`, `CHOICE SCHOOL`) %>%
+    count(`FAMILY ID`) %>%
+    filter(n > 1)
+
+  missing_subfamily <-
+    match %>%
+    filter(!is.na(`FAMILY ID`)) %>%
+    select(`FAMILY ID`, `STUDENT ID`, `CHOICE RANK`, `CHOICE SCHOOL`) %>%
+    nest(data = c(`CHOICE RANK`, `CHOICE SCHOOL`)) %>%
+    distinct(`FAMILY ID`, data) %>%
+    count(`FAMILY ID`) %>%
+    filter(n > 1) %>%
+    filter(`FAMILY ID` %in% diff_1$`FAMILY ID` | `FAMILY ID` %in% diff_2$`FAMILY ID`)
+
   invalid_family <-
     match %>%
     left_join(students_with_family, by = c("STUDENT ID" = "oneappid")) %>%
@@ -945,6 +969,8 @@ test_family <- function(dir_out, siblings, match, students_with_family) {
 
   write_if_bad(invalid_family, dir_out)
   write_if_bad(missing_family, dir_out)
+
+  write_if_bad(missing_subfamily, dir_out)
 
 }
 
@@ -1905,24 +1931,33 @@ test_sibling_verified <- function(dir_out, match_priorities) {
 
   cat("\nVerified sibling\n")
 
+  match_priorities <-
+    match_priorities %>%
+    mutate(score_str = as.character(`ASSIGNMENT PRIORITY`)) %>%
+    mutate(sibling_priority = case_when(
+      !(GRADE %in% grades_ec()) & (str_length(score_str) >= 3) & (str_sub(score_str, start = -3, end = -3) == "1") ~ TRUE,
+      TRUE ~ FALSE
+      )
+    )
+
   invalid_sibling_verified <-
     match_priorities %>%
     filter(is_highdemand) %>%
     filter(!is_verifiedsibling) %>%
-    filter(!is.na(Sibling))
+    filter(!is.na(Sibling) | sibling_priority)
 
   missing_sibling_verified <-
     match_priorities %>%
     filter(is_highdemand) %>%
     filter(is_verifiedsibling) %>%
-    filter(is.na(Sibling)) %>%
+    filter(is.na(Sibling) & !sibling_priority) %>%
     filter(is.na(Ineligible)) %>%
     filter(is.na(`School Specific 1`))
 
   have <-
     match_priorities %>%
     filter(is_verifiedsibling) %>%
-    filter(!is.na(Sibling))
+    filter(!is.na(Sibling) | sibling_priority)
 
   cat(
     glue(

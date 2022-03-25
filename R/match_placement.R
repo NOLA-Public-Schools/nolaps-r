@@ -1,53 +1,61 @@
-#' @importFrom magrittr %>%
+#' @import dplyr
+#' @import glue
+#' @import readr
+#' @import stringr
 
 
 
 #' @export
-match_placement <- function(match, overmatches, dir_out, students_recent = getdata_student_recent()) {
+match_placement <- function(match, overmatches, dir_out, students_recent, appschools) {
 
-  cat("Generating placements upload\n")
+  cat("\nGenerating placements upload\n")
 
-  # overmatches <-
-  #   match %>%
-  #   dplyr::semi_join(overmatches) %>%
-  #   dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account)
+  appschools <-
+    appschools %>%
+    filter(status %in% c("Open", "Closing at End of School Year")) %>%
+    distinct(code_appschool, id_account, name_account)
 
   placements <-
     match %>%
-    dplyr::filter(stringr::str_length(`STUDENT ID`) == 9) %>%
-    dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
-    dplyr::select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, id_account, `GUARANTEED?`) %>%
-    # dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
-    # dplyr::bind_rows(overmatches) %>%
-    dplyr::left_join(students_recent, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::mutate(is_scholarship = stringr::str_detect(`CHOICE SCHOOL`, "_[NR]$")) %>%
-    dplyr::mutate(is_guaranteed = !is.na(`GUARANTEED?`)) %>%
-    dplyr::select(
-      id_student_recent = id_student,
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    filter(str_detect(`CHOICE SCHOOL`, "_[NR]$", negate = TRUE)) %>%
+    filter(`ASSIGNMENT STATUS` == "Accepted") %>%
+    select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
+    mutate(`CHOICE SCHOOL` = case_when(
+      str_detect(`CHOICE SCHOOL`, "4012_") ~ "4012",
+      str_detect(`CHOICE SCHOOL`, "4013_") ~ "4013",
+      TRUE ~ `CHOICE SCHOOL`
+    )) %>%
+    filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
+    bind_rows(overmatches) %>%
+    mutate(`CHOICE SCHOOL` = if_else(
+      `CHOICE SCHOOL` == "796" & GRADE == "PK4", "847",
+      `CHOICE SCHOOL`
+    )) %>%
+    left_join(appschools, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+    left_join(students_recent, by = c("STUDENT ID" = "oneappid")) %>%
+    select(
+      name_account_future = name_account,
       id_account_future = id_account,
       grade_future = GRADE,
-      is_guaranteed,
-      is_scholarship
+      id_student_recent = id_student
     ) %>%
-    dplyr::mutate(
-      id_schoolyear = "a100W000009Reex",
-      id_recordtype = "0120W000001tdvtQAA",
+    mutate(
+      id_schoolyear = "a106T00000AQgdMQAT", # 2021-2022
+      id_recordtype = "012d0000000tDWHAA2", # Round 1
       is_active = TRUE,
       is_archived = FALSE
     ) %>%
-    dplyr::arrange(id_account_future, grade_future) %>%
-    dplyr::mutate(grade_future = as.character(grade_future)) %>%
-    dplyr::mutate(grade_future = dplyr::case_when(
+    arrange(id_account_future, grade_future) %>%
+    mutate(grade_future = as.character(grade_future)) %>%
+    mutate(grade_future = case_when(
       grade_future == "1YR" ~ "1 YR",
       grade_future == "2YR" ~ "2 YR",
       TRUE ~ grade_future
       )
-    ) %>%
-    dplyr::relocate(c(is_guaranteed, is_scholarship), .after = tidyselect::last_col()) %>%
-    dplyr::mutate(is_guaranteed_scholarship = is_guaranteed & is_scholarship)
+    )
 
-  placements %>%
-    readr::write_excel_csv(glue::glue("{dir_out}/placements.csv"), na = "")
+  placements %>% write_excel_csv(glue("{dir_out}/placements.csv"), na = "")
 
   invisible(placements)
 

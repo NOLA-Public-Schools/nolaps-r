@@ -154,10 +154,12 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
     fix_grades()
 
-  # overmatches <- readr::read_csv(
-  #   glue::glue("{dir_external}/sibling-overmatches.csv"),
-  #   col_types = "ccic"
-  # )
+  overmatches <-
+    readxl::read_excel(
+      glue::glue("{dir_external}/sibling-overmatches.xlsx"),
+      col_types = "text"
+    ) %>%
+    dplyr::select(-`CHOICE RANK`)
 
   # prioritytable <- readr::read_csv(
   #   glue::glue("{dir_external}/PriorityTable.csv")
@@ -199,12 +201,13 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     siblings = siblings
   )
 
-  # match_placement(
-  #   match = match,
-  #   overmatches = NULL,
-  #   dir_out = dir_business,
-  #   students_recent = students_recent
-  # )
+  match_placement(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    students_recent = students_recent,
+    appschools = appschools
+  )
 
   # match_notification(
   #   match = match,

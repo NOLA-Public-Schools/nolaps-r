@@ -580,7 +580,8 @@ matchcalcs_priorityoutcomes <- function(x) {
 
   x %>%
     dplyr::select(
-      id_student, choice_name, is_highdemand, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`, id_account
+      id_student, choice_name, is_highdemand,
+      `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`, `ASSIGNMENT PRIORITY`, id_account
     ) %>%
     dplyr::mutate(dplyr::across(`QUALIFIED PRIORITIES`, ~ stringr::str_remove(., "/$"))) %>%
     tidyr::separate_rows(`QUALIFIED PRIORITIES`, sep = "/") %>%
