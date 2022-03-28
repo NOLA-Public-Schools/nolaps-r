@@ -12,6 +12,65 @@ match_briefing <- function(match, dir_out) {
 
   dir.create(glue("{dir_out}/briefing"))
 
+  # special logic to collapse Lake Forest and Lusher choices into single row
+
+  special_all <-
+    match %>%
+    filter(str_detect(`CHOICE SCHOOL`, "4012|4013")) %>%
+    mutate(`CHOICE SCHOOL` = case_when(
+      str_detect(`CHOICE SCHOOL`, "4012_") ~ "4012",
+      str_detect(`CHOICE SCHOOL`, "4013_") ~ "4013",
+      TRUE ~ `CHOICE SCHOOL`
+    )) %>%
+    group_by(`STUDENT ID`, `CHOICE SCHOOL`, `GUARANTEED?`) %>%
+    summarize(
+      `CHOICE RANK` = min(`CHOICE RANK`),
+      n_accepted = sum(`ASSIGNMENT STATUS` == "Accepted"),
+      n_waiting = sum(str_detect(`ASSIGNMENT STATUS`, "Waiting")),
+      n_ineligible = sum(`ASSIGNMENT STATUS` == "Ineligible")
+    )
+
+  special_accepted <-
+    special_all %>%
+    filter(n_accepted == 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Accepted")
+
+  special_waiting <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(n_waiting >= 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Waiting List")
+
+  special_ineligible <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_waiting$`STUDENT ID`)) %>%
+    filter(n_ineligible >= 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Ineligible")
+
+  special_notprocessed <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_waiting$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_ineligible$`STUDENT ID`)) %>%
+    mutate(`ASSIGNMENT STATUS` = "Not Processed")
+
+  match_clean <-
+    match %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    filter(str_detect(`CHOICE SCHOOL`, "_[NR]$", negate = TRUE)) %>%
+    filter(str_detect(`CHOICE SCHOOL`, "4012|4013", negate = TRUE)) %>%
+    bind_rows(special_accepted) %>%
+    bind_rows(special_waiting) %>%
+    bind_rows(special_ineligible) %>%
+    bind_rows(special_notprocessed)
+
+  write_if_bad(match_clean, dir_out)
+
+  match <- match_clean
+
+  # normal briefing summary logic
+
   match %>%
     filter(!(GRADE %in% grades_ec())) %>%
     matchcalcs_results_seekingnew(

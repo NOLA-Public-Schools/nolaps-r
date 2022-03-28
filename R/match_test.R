@@ -289,6 +289,15 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Basic data quality tests
 
+  # Invalid rank numbers
+
+  test_ranks(
+    dir_out = dir_out,
+    match = match
+  )
+
+  # Invalid grades
+
   test_grades(
     dir_out = dir_out,
     match = match
@@ -556,6 +565,36 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 # Basic data quality tests ------------------------------------------------
+
+
+
+#' @export
+test_ranks <- function(dir_out, match) {
+
+  cat("\nInvalid ranks\n")
+
+  invalid_ranks <-
+    match %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    filter(`CHOICE RANK` > 18)
+
+  cat(
+    glue(
+      "
+      {nrow(invalid_ranks)} records with invalid ranks
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_ranks,
+    "No match record has a rank larger than 18."
+  )
+
+  write_if_bad(invalid_ranks, dir_out)
+
+}
 
 
 
