@@ -1,13 +1,16 @@
-#' @importFrom magrittr %>%
-#' @importFrom dplyr arrange filter mutate select
-#' @importFrom dplyr group_by ungroup summarize
-#' @importFrom dplyr left_join
-#' @importFrom dplyr n
+#' @import dplyr
+#' @import glue
+#' @import lubridate
+#' @import purrr
+#' @import readxl
+#' @import salesforcer
+#' @import stringr
+#' @import tidyr
 
 
 
 #' @export
-match_notification_waitlists <- function(match, schools_waitlist = c("323", "324", "846", "847")) {
+match_notification_waitlists <- function(match, schools_waitlist = c("846", "847")) {
 
   match %>%
     filter(!(GRADE %in% grades_ec())) %>%
@@ -23,7 +26,7 @@ match_notification_waitlists <- function(match, schools_waitlist = c("323", "324
     mutate(waitlist_slot = 1:n()) %>%
     ungroup() %>%
     select(-`CHOICE RANK`) %>%
-    tidyr::pivot_wider(
+    pivot_wider(
       names_from = waitlist_slot,
       values_from = c(waitlist_school, waitlist_rank)
     )
@@ -37,7 +40,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
   participants <-
     match %>%
-    matchcalcs_participants_all(schools_waitlist = c("323", "324", "846", "847"))
+    matchcalcs_participants_all(schools_waitlist = c("846", "847"))
 
   acceptednew <-
     participants %>%

@@ -55,14 +55,14 @@ match_lookup_account <- function(x, appschools, accounts) {
 match_augment <- function(x, appschools, accounts, students) {
 
   special <- tibble::tribble(
-    ~code_appschool, ~id_account,
-    "4013_tulane_1", "001d000000ALnWzAAL",
-    "4013_tulane_2", "001d000000ALnWzAAL",
-    "4013_community_1", "001d000000ALnWzAAL",
-    "4013_community_2", "001d000000ALnWzAAL",
-    "4013_ed_1", "001d000000ALnWzAAL",
-    "4012_tier_1", "001d000000ALnWyAAL",
-    "4012_tier_2", "001d000000ALnWyAAL",
+    ~code_appschool, ~id_account, ~choice_name,
+    "4013_tulane_1", "001d000000ALnWzAAL", "Lusher Charter School",
+    "4013_tulane_2", "001d000000ALnWzAAL", "Lusher Charter School",
+    "4013_community_1", "001d000000ALnWzAAL", "Lusher Charter School",
+    "4013_community_2", "001d000000ALnWzAAL", "Lusher Charter School",
+    "4013_ed_1", "001d000000ALnWzAAL", "Lusher Charter School",
+    "4012_tier_1", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
+    "4012_tier_2", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
   )
 
   names_matchschool <-
@@ -70,8 +70,9 @@ match_augment <- function(x, appschools, accounts, students) {
     match_lookup_account(appschools = appschools, accounts = accounts) %>%
     dplyr::left_join(accounts, by = c("id_account")) %>%
     dplyr::select(code_appschool, choice_name = name_account, id_account, is_highdemand) %>%
-    dplyr::distinct() %>%
-    dplyr::bind_rows(special)
+    dplyr::distinct()
+  # %>%
+  #   dplyr::bind_rows(special)
 
   students <-
     students %>%
@@ -219,10 +220,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   #   students_recent = students_recent
   # )
 
-  # match_briefing(
-  #   match = match,
-  #   dir_out = dir_business
-  # )
+  match_briefing(
+    match = match,
+    dir_out = dir_business
+  )
 
 
 
