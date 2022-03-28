@@ -369,7 +369,7 @@ matchcalcs_summaryrow <- function(x, row_name) {
 
 
 #' @export
-matchcalcs_summarystats_full <- function(x, schools_waitlist = c("323", "324", "846", "847")) {
+matchcalcs_summarystats_full <- function(x, schools_waitlist = c("846", "847", "4012", "4013")) {
 
   with_bin_grade <-
     x %>%
