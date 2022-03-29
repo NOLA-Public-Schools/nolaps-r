@@ -22,13 +22,15 @@ match_briefing <- function(match, dir_out) {
       str_detect(`CHOICE SCHOOL`, "4013_") ~ "4013",
       TRUE ~ `CHOICE SCHOOL`
     )) %>%
-    group_by(`STUDENT ID`, GRADE, `CHOICE SCHOOL`, `GUARANTEED?`) %>%
+    group_by(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
     summarize(
       `CHOICE RANK` = min(`CHOICE RANK`),
+      n_guaranteed = sum(`GUARANTEED?` == 'YES'),
       n_accepted = sum(`ASSIGNMENT STATUS` == "Accepted"),
       n_waiting = sum(str_detect(`ASSIGNMENT STATUS`, "Waiting")),
       n_ineligible = sum(`ASSIGNMENT STATUS` == "Ineligible")
     ) %>%
+    mutate(`GUARANTEED?` = if_else(n_guaranteed == 1, 'YES', NA_character_)) %>%
     ungroup()
 
   special_accepted <-
@@ -71,7 +73,7 @@ match_briefing <- function(match, dir_out) {
       `CHOICE SCHOOL` == "4013" ~ "Lusher Charter School",
       TRUE ~ choice_name
     )) %>%
-    select(-c(n_accepted, n_waiting, n_ineligible))
+    select(-c(n_accepted, n_waiting, n_ineligible, n_guaranteed))
 
   write_if_bad(match_clean, dir_out)
 

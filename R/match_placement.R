@@ -35,6 +35,7 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
     left_join(appschools, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
     left_join(students_recent, by = c("STUDENT ID" = "oneappid")) %>%
     select(
+      oneappid = `STUDENT ID`,
       name_account_future = name_account,
       id_account_future = id_account,
       grade_future = GRADE,
@@ -42,7 +43,7 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
     ) %>%
     mutate(
       id_schoolyear = "a106T00000AQgdMQAT", # 2021-2022
-      id_recordtype = "012d0000000tDWHAA2", # Round 1
+      id_recordtype = "0120W000001tdvs", # Round 1
       is_active = TRUE,
       is_archived = FALSE
     ) %>%

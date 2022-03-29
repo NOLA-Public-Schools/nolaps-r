@@ -10,7 +10,7 @@
 
 
 #' @export
-match_notification_waitlists <- function(match, schools_waitlist = c("846", "847")) {
+match_notification_waitlists <- function(match, schools_waitlist = c("846", "847", "4012", "4013")) {
 
   match %>%
     filter(!(GRADE %in% grades_ec())) %>%
@@ -38,9 +38,73 @@ match_notification_waitlists <- function(match, schools_waitlist = c("846", "847
 #' @export
 match_notification <- function(match, overmatches, dir_out, apps, accounts, appschools, students_recent) {
 
+  # special logic to collapse Lake Forest and Lusher choices into single row
+
+  special_all <-
+    match %>%
+    filter(str_detect(`CHOICE SCHOOL`, "4012|4013")) %>%
+    mutate(`CHOICE SCHOOL` = case_when(
+      str_detect(`CHOICE SCHOOL`, "4012_") ~ "4012",
+      str_detect(`CHOICE SCHOOL`, "4013_") ~ "4013",
+      TRUE ~ `CHOICE SCHOOL`
+    )) %>%
+    group_by(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
+    summarize(
+      `CHOICE RANK` = min(`CHOICE RANK`),
+      n_guaranteed = sum(`GUARANTEED?` == 'YES'),
+      n_accepted = sum(`ASSIGNMENT STATUS` == "Accepted"),
+      n_waiting = sum(str_detect(`ASSIGNMENT STATUS`, "Waiting")),
+      n_ineligible = sum(`ASSIGNMENT STATUS` == "Ineligible")
+    ) %>%
+    mutate(`GUARANTEED?` = if_else(n_guaranteed == 1, 'YES', NA_character_)) %>%
+    ungroup()
+
+  special_accepted <-
+    special_all %>%
+    filter(n_accepted == 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Accepted")
+
+  special_waiting <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(n_waiting >= 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Waiting List")
+
+  special_ineligible <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_waiting$`STUDENT ID`)) %>%
+    filter(n_ineligible >= 1) %>%
+    mutate(`ASSIGNMENT STATUS` = "Ineligible")
+
+  special_notprocessed <-
+    special_all %>%
+    filter(!(`STUDENT ID` %in% special_accepted$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_waiting$`STUDENT ID`)) %>%
+    filter(!(`STUDENT ID` %in% special_ineligible$`STUDENT ID`)) %>%
+    mutate(`ASSIGNMENT STATUS` = "Not Processed")
+
+  match <-
+    match %>%
+    filter(str_length(`STUDENT ID`) == 9) %>%
+    filter(!str_detect(`CHOICE SCHOOL`, "4012")) %>%
+    filter(!str_detect(`CHOICE SCHOOL`, "4013")) %>%
+    bind_rows(special_accepted) %>%
+    bind_rows(special_waiting) %>%
+    bind_rows(special_ineligible) %>%
+    bind_rows(special_notprocessed) %>%
+    mutate(choice_name = case_when(
+      `CHOICE SCHOOL` == "4012" ~ "Lake Forest Elementary Charter School",
+      `CHOICE SCHOOL` == "4013" ~ "Lusher Charter School",
+      TRUE ~ choice_name
+    )) %>%
+    select(-c(n_accepted, n_waiting, n_ineligible, n_guaranteed))
+
+  # normal notification logic
+
   participants <-
     match %>%
-    matchcalcs_participants_all(schools_waitlist = c("846", "847"))
+    matchcalcs_participants_all(schools_waitlist = c("846", "847", "4012", "4013"))
 
   acceptednew <-
     participants %>%
@@ -50,7 +114,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       | (`STUDENT ID` %in% matchcalcs_accepted_belowguarantee(participants)$`STUDENT ID`)
     ) %>%
     dplyr::pull(`STUDENT ID`) %>%
-    # c(dplyr::pull(overmatches, `STUDENT ID`)) %>%
+    c(dplyr::pull(overmatches, `STUDENT ID`)) %>%
     unique()
 
   fallback <-
@@ -85,7 +149,8 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
     dplyr::filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
     dplyr::bind_rows(overmatches) %>%
-    dplyr::select(`STUDENT ID`, school_accepted = `CHOICE SCHOOL`) %>%
+    dplyr::mutate(is_guaranteed_accepted = !is.na(`GUARANTEED?`)) %>%
+    dplyr::select(`STUDENT ID`, school_accepted = `CHOICE SCHOOL`, is_guaranteed_accepted) %>%
     dplyr::mutate(is_scholarship = stringr::str_detect(school_accepted, "_[NR]$"))
 
   participants_aug <-
@@ -116,8 +181,9 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       is_ec & is_unassigned & is_waiting ~ "ec_unassigned_wl",
       is_ec & is_unassigned & (n_ineligible == n_choices) ~ "ec_unassigned_ineligible",
 
-      is_scholarship & is_acceptednew & is_waiting ~ "k12_acceptednew_schol_wl",
-      is_scholarship & is_acceptednew ~ "k12_acceptednew_schol",
+      # is_scholarship & is_acceptednew & is_waiting ~ "k12_acceptednew_schol_wl",
+      # is_scholarship & is_acceptednew ~ "k12_acceptednew_schol",
+      is_scholarship ~ "k12_acceptednew_schol",
 
       is_acceptednew & is_waiting ~ "k12_acceptednew_wl",
       is_acceptednew ~ "k12_acceptednew",
@@ -144,7 +210,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     left_join(match_lookup_account(match, appschools = appschools, accounts = accounts), by = c("school_accepted" = "code_appschool")) %>%
     left_join(accounts, by = c("id_account")) %>%
     mutate(school_address = stringr::str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
-    # left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
+    left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
     left_join(nolaps::schools_eval, by = "code_site") %>%
     left_join(guarantees, by = "oneappid") %>%
     fix_grades(grade_applying) %>%
@@ -177,7 +243,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       school_name,
       school_address, school_phone = phone,
       school_welcome = welcome, school_registration = registration, deadline,
-      # waitlist_school_1:waitlist_rank_4,
+      waitlist_school_1:waitlist_rank_2,
       snippet_exitgrade,
       snippet_eval,
       language_app, language_pref,
@@ -185,6 +251,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       name_account,
       is_assigned,
       is_guaranteed,
+      is_guaranteed_accepted,
       is_scholarship,
       id_account_guaranteed
     ) %>%
@@ -199,6 +266,8 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
   notifications %>%
     readr::write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
+
+  return(NULL)
 
   write_lettertypes <- function(x, dir_out) {
 
