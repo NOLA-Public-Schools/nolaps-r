@@ -489,7 +489,8 @@ matchcalcs_results_seekingnew <- function(
         sum(`ASSIGNMENT STATUS` == 'Accepted' & is.na(`GUARANTEED?`) & `CHOICE RANK` == 1),
       n_seekingnew_fallback =
         sum(`ASSIGNMENT STATUS` == 'Accepted' & !is.na(`GUARANTEED?`)),
-      n_seekingnew_unassigned = n_seekingnew - n_seekingnew_acceptednew - n_seekingnew_fallback
+      n_seekingnew_unassigned = n_seekingnew - n_seekingnew_acceptednew - n_seekingnew_fallback,
+      n_records_waiting = sum(stringr::str_detect(`ASSIGNMENT STATUS`, "Waiting"))
     ) %>%
     dplyr::mutate(
       rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,

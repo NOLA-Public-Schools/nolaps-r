@@ -201,6 +201,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       "
       select
         CreatedDate,
+        LastModifiedDate,
         OneApp_ID__c,
         Student__r.SchoolForce__Contact_Id__c,
         Student__c,
@@ -231,6 +232,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         Current_School__c,
         Current_School__r.School__c,
         Has_Completed_Verification__c,
+        EC_Program_Eligibility_Verified__c,
         Student__r.School_Year__c,
         Student__r.Recent_Record__c,
         Student__r.SchoolForce__Active__c
@@ -245,6 +247,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
   ) %>%
     dplyr::select(
       date_created = CreatedDate,
+      date_modified = LastModifiedDate,
       oneappid = OneApp_ID__c,
       id_contact = Student__r.SchoolForce__Contact_Id__c,
       id_student = Student__c,
@@ -275,6 +278,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       id_appschool_claimed = Current_School__c,
       id_account_claimed = Current_School__r.School__c,
       has_verified = Has_Completed_Verification__c,
+      strings_verified = EC_Program_Eligibility_Verified__c,
       year_student = Student__r.School_Year__c,
       is_recent = Student__r.Recent_Record__c,
       is_active = Student__r.SchoolForce__Active__c
@@ -288,6 +292,13 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       is_active
       ),
       as.logical
+      )
+    ) %>%
+    dplyr::mutate(across(c(
+      date_created,
+      date_modified
+      ),
+      lubridate::ymd_hms
       )
     ) %>%
     dplyr::mutate(across(c(

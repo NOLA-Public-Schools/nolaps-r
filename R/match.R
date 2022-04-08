@@ -202,13 +202,13 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     siblings = siblings
   )
 
-  # match_placement(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   students_recent = students_recent,
-  #   appschools = appschools
-  # )
+  match_placement(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    students_recent = students_recent,
+    appschools = appschools
+  )
 
   match_notification(
     match = match,
@@ -220,10 +220,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     students_recent = students_recent
   )
 
-  # match_briefing(
-  #   match = match,
-  #   dir_out = dir_business
-  # )
+  match_briefing(
+    match = match,
+    dir_out = dir_business
+  )
 
 
 

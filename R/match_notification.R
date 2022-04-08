@@ -183,6 +183,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
       # is_scholarship & is_acceptednew & is_waiting ~ "k12_acceptednew_schol_wl",
       # is_scholarship & is_acceptednew ~ "k12_acceptednew_schol",
+      is_scholarship & rank_accepted == 1 & rank_guaranteed == 1  ~ "guaranteed",
       is_scholarship ~ "k12_acceptednew_schol",
 
       is_acceptednew & is_waiting ~ "k12_acceptednew_wl",
