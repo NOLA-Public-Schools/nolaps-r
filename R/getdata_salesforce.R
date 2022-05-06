@@ -235,7 +235,18 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
         EC_Program_Eligibility_Verified__c,
         Student__r.School_Year__c,
         Student__r.Recent_Record__c,
-        Student__r.SchoolForce__Active__c
+        Student__r.SchoolForce__Active__c,
+        Eligibility_B3__c,
+        Eligibility_EC_Special_Needs__c,
+        Eligibility_EHS__c,
+        Eligibility_Head_Start__c,
+        Eligibility_LA4__c,
+        Eligibility_NOEEN__c,
+        Eligibility_NSECD__c,
+        Eligibility_PK4_Type_II__c,
+        Eligibility_PK_GT__c,
+        Eligibility_Tuition_LA__c,
+        Eligibility_Tuition_OR__c
       from Application__c
       where
         RecordType.Name = '{round}' and
@@ -281,7 +292,18 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       strings_verified = EC_Program_Eligibility_Verified__c,
       year_student = Student__r.School_Year__c,
       is_recent = Student__r.Recent_Record__c,
-      is_active = Student__r.SchoolForce__Active__c
+      is_active = Student__r.SchoolForce__Active__c,
+      is_eligible_b3 = Eligibility_B3__c,
+      is_eligible_ecsped = Eligibility_EC_Special_Needs__c,
+      is_eligible_ehs = Eligibility_EHS__c,
+      is_eligible_hs = Eligibility_Head_Start__c,
+      is_eligible_la4 = Eligibility_LA4__c,
+      is_eligible_noeen = Eligibility_NOEEN__c,
+      is_eligible_nsecd = Eligibility_NSECD__c,
+      is_eligible_pk4type2 = Eligibility_PK4_Type_II__c,
+      is_eligible_ecgt = Eligibility_PK_GT__c,
+      is_eligible_tuitionla = Eligibility_Tuition_LA__c,
+      is_eligible_tuitionor = Eligibility_Tuition_OR__c
     ) %>%
     fix_grades(var = grade_current) %>%
     fix_grades(var = grade_applying) %>%
@@ -289,7 +311,8 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       is_addressvalidated,
       has_verified,
       is_recent,
-      is_active
+      is_active,
+      starts_with("is_eligible_")
       ),
       as.logical
       )
@@ -507,11 +530,14 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       select
         CreatedDate,
         Application__r.OneApp_ID__c,
+        Application__r.Student__r.SchoolForce__Contact_Id__c,
+        Application__r.Student__c,
         Application__c,
         Application__r.Grade_Applying_For__c,
         Id,
         Rank__c,
         Application_School__r.School__c,
+        Application_School__r.School__r.Name,
         Application_School__c,
         Application_School__r.School_Code__c,
         Application_School__r.Selective_School__c,
@@ -524,7 +550,10 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
         In_Proximity_Preference__c,
         In_School_Zip_Preference__c,
         Verified_Sibling__c,
-        Child_Staff__c
+        Child_Staff__c,
+        Application__r.Address_Longitude__c,
+        Application__r.Address_Latitude__c,
+        Application_School__r.AddressLatitudeandLongitude__c
       from Application_School_Ranking__c
       where
         Application_School__c != null and
@@ -539,11 +568,14 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
     dplyr::select(
       date_created = CreatedDate,
       oneappid = Application__r.OneApp_ID__c,
+      id_contact = Application__r.Student__r.SchoolForce__Contact_Id__c,
+      id_student = Application__r.Student__c,
       id_app = Application__c,
       grade_applying = Application__r.Grade_Applying_For__c,
       id_appschoolranking = Id,
       rank = Rank__c,
       id_account = Application_School__r.School__c,
+      name_account = Application_School__r.School__r.Name,
       id_appschool = Application_School__c,
       code_appschool = Application_School__r.School_Code__c,
       is_selective = Application_School__r.Selective_School__c,
@@ -556,7 +588,10 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       is_priority_distance = In_Proximity_Preference__c,
       is_priority_zone = In_School_Zip_Preference__c,
       is_verifiedsibling = Verified_Sibling__c,
-      is_staffchild = Child_Staff__c
+      is_staffchild = Child_Staff__c,
+      lon_app = Application__r.Address_Longitude__c,
+      lat_app = Application__r.Address_Latitude__c,
+      latlon_appschool = Application_School__r.AddressLatitudeandLongitude__c
     ) %>%
     dplyr::mutate(across(c(
       is_selective,
@@ -570,7 +605,9 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       )
     ) %>%
     dplyr::mutate(across(c(
-      distance
+      distance,
+      lon_app,
+      lat_app
       ),
       as.numeric
       )
@@ -805,33 +842,45 @@ getdata_guardian <- function() {
 
 
 #' @export
-getdata_placement <- function(year = "2020-2021") {
+getdata_placement <- function(years) {
+
+  years <-
+    stringr::str_flatten(years, "', '") %>%
+    stringr::str_c("('", ., "')")
 
   salesforcer::sf_query(
     glue::glue_safe(
       "
       select
+        CreatedDate,
         Id,
         Placement_Active__c,
         School_Year_Name__c,
+        Placement_Student__r.SchoolForce__Contact_Id__c,
         Placement_Student__c,
         Future_School_Grade__c,
-        Future_School_Name__c
+        Future_School_Name__c,
+        Future_School_Name__r.Name,
+        RecordType.Name
       from Placement__c
       where
-        School_Year_Name__c = '{year}'
+        School_Year_Name__c in {years}
       "
     ),
     api_type = "Bulk 2.0",
     guess_types = FALSE
   ) %>%
     dplyr::select(
+      date_created = CreatedDate,
       id_placement = Id,
       is_active = Placement_Active__c,
       year_placement = School_Year_Name__c,
+      id_contact = Placement_Student__r.SchoolForce__Contact_Id__c,
       id_student = Placement_Student__c,
       grade_future = Future_School_Grade__c,
-      id_account_future = Future_School_Name__c
+      id_account_future = Future_School_Name__c,
+      name_account_future = Future_School_Name__r.Name,
+      recordtype = RecordType.Name
     ) %>%
     dplyr::mutate(across(c(
       is_active
@@ -859,7 +908,6 @@ getdata_priority <- function() {
         Application_School__r.School__r.School_Code_String__c,
         Application_School__r.School_Code__c,
         Grade__c,
-        New_Returning__c,
         Application_School__r.School__r.Governance__c,
         Application_School__r.EC_Program_Type__r.Name,
 
@@ -920,7 +968,6 @@ getdata_priority <- function() {
       code_site = Application_School__r.School__r.School_Code_String__c,
       code_appschool = Application_School__r.School_Code__c,
       grade = Grade__c,
-      new_returning = New_Returning__c,
       governance = Application_School__r.School__r.Governance__c,
       ec_type = Application_School__r.EC_Program_Type__r.Name,
 
@@ -1064,6 +1111,7 @@ query_student <- function() {
   glue::glue(
     "
     select
+      CreatedDate,
       School_Year__c,
       Recent_Record__c,
       SchoolForce__Active__c,
@@ -1075,11 +1123,13 @@ query_student <- function() {
       SchoolForce__Student_First_Name__c,
       SchoolForce__Student_Last_Name__c,
       SchoolForce__Date_of_Birth__c,
+      SchoolForce__Gender__c,
       SchoolForce__Address__c,
       SchoolForce__City__c,
       SchoolForce__State__c,
       SchoolForce__Zip_Code__c,
       SchoolForce__Email__c,
+      Primary_Contact_Number__c,
       Direct_Cert_Medicaid__c,
       Direct_Cert_SNAP__c,
       Current_Grade__c,
@@ -1089,6 +1139,8 @@ query_student <- function() {
       SchoolForce__School__r.Governance__c,
       Is_Student_In_Terminal_Grade__c,
       Application_Needed__c,
+      MR_Application_Submitted__c,
+      R2_Application_Submitted__c,
       Future_School_Grade__c,
       Future_School__c,
       Future_School__r.Name,
@@ -1120,6 +1172,7 @@ format_student <- function(x) {
 
   x %>%
     dplyr::select(
+      date_created = CreatedDate,
       year_student = School_Year__c,
       is_recent = Recent_Record__c,
       is_active = SchoolForce__Active__c,
@@ -1131,11 +1184,13 @@ format_student <- function(x) {
       student_firstname = SchoolForce__Student_First_Name__c,
       student_lastname = SchoolForce__Student_Last_Name__c,
       student_dob = SchoolForce__Date_of_Birth__c,
+      student_gender = SchoolForce__Gender__c,
       student_street = SchoolForce__Address__c,
       student_city = SchoolForce__City__c,
       student_state = SchoolForce__State__c,
       student_zip = SchoolForce__Zip_Code__c,
       student_email = SchoolForce__Email__c,
+      student_phone = Primary_Contact_Number__c,
       directcert_medicaid = Direct_Cert_Medicaid__c,
       directcert_snap = Direct_Cert_SNAP__c,
       grade_current = Current_Grade__c,
@@ -1145,6 +1200,8 @@ format_student <- function(x) {
       governance = SchoolForce__School__r.Governance__c,
       is_terminalgrade = Is_Student_In_Terminal_Grade__c,
       appneeded_r1 = Application_Needed__c,
+      appsubmitted_r1 = MR_Application_Submitted__c,
+      appsubmitted_r2 = R2_Application_Submitted__c,
       grade_future = Future_School_Grade__c,
       id_account_future = Future_School__c,
       name_account_future = Future_School__r.Name,
@@ -1169,7 +1226,9 @@ format_student <- function(x) {
       is_recent,
       is_terminalgrade,
       is_t9,
-      appneeded_r1
+      appneeded_r1,
+      appsubmitted_r1,
+      appsubmitted_r2
       ),
       as.logical
       )

@@ -25,12 +25,12 @@ match_briefing <- function(match, dir_out) {
     group_by(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
     summarize(
       `CHOICE RANK` = min(`CHOICE RANK`),
-      n_guaranteed = sum(`GUARANTEED?` == 'YES'),
-      n_accepted = sum(`ASSIGNMENT STATUS` == "Accepted"),
+      n_guaranteed = sum(`GUARANTEED?` == 'YES', na.rm = TRUE),
+      n_accepted = sum(`ASSIGNMENT STATUS` == "Accepted", na.rm = TRUE),
       n_waiting = sum(str_detect(`ASSIGNMENT STATUS`, "Waiting")),
-      n_ineligible = sum(`ASSIGNMENT STATUS` == "Ineligible")
+      n_ineligible = sum(`ASSIGNMENT STATUS` == "Ineligible", na.rm = TRUE)
     ) %>%
-    mutate(`GUARANTEED?` = if_else(n_guaranteed == 1, 'YES', NA_character_)) %>%
+    mutate(`GUARANTEED?` = if_else(n_guaranteed >= 1, 'YES', NA_character_)) %>%
     ungroup()
 
   special_accepted <-
@@ -80,6 +80,10 @@ match_briefing <- function(match, dir_out) {
   # normal briefing summary logic
 
   match_clean %>%
+    matchcalcs_participants_all(schools_waitlist = c("846", "847", "4012", "4013")) %>%
+    write_excel_csv(glue("{dir_out}/briefing/results_by_student.csv"), na = "")
+
+  match_clean %>%
     filter(!(GRADE %in% grades_ec())) %>%
     matchcalcs_results_seekingnew(
       schools_waitlist = c("846", "847", "4012", "4013"),
@@ -111,6 +115,13 @@ match_briefing <- function(match, dir_out) {
     filter(GRADE %in% c("K", "9")) %>%
     matchcalcs_results_seekingnew(schools_waitlist = c("846", "847", "4012", "4013")) %>%
     write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_k9.csv"), na = "")
+
+  match_clean %>%
+    filter(GRADE %in% c("K", "9")) %>%
+    matchcalcs_results_seekingnew(
+      choice_name, `CHOICE SCHOOL`, schools_waitlist = c("846", "847", "4012", "4013")
+    ) %>%
+    write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_k9_by_school.csv"), na = "")
 
   match_clean %>%
     matchcalcs_results_seekingnew(GRADE, schools_waitlist = c("846", "847", "4012", "4013")) %>%
@@ -150,6 +161,13 @@ match_briefing <- function(match, dir_out) {
       schools_waitlist = c("846", "847", "4012", "4013")
     ) %>%
     write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_by_school_grade.csv"), na = "")
+
+  match_clean %>%
+    matchcalcs_results_seekingnew(
+      choice_name, `CHOICE SCHOOL`,
+      schools_waitlist = c("846", "847", "4012", "4013")
+    ) %>%
+    write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_by_school.csv"), na = "")
 
   match_clean %>%
     matchcalcs_participants_all(schools_waitlist = c("846", "847", "4012", "4013")) %>%

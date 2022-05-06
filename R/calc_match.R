@@ -16,7 +16,7 @@ matchcalcs_participants_accepted <- function(x, ...) {
 
   x %>%
     dplyr::filter(`ASSIGNMENT STATUS` == 'Accepted') %>%
-    dplyr::select(`STUDENT ID`, rank_accepted = `CHOICE RANK`, ...)
+    dplyr::select(`STUDENT ID`, rank_accepted = `CHOICE RANK`, school_assigned = `CHOICE SCHOOL`, ...)
 
 }
 
@@ -27,7 +27,7 @@ matchcalcs_participants_guaranteed <- function(x, ...) {
 
   x %>%
     dplyr::filter(`GUARANTEED?` == 'YES') %>%
-    dplyr::select(`STUDENT ID`, rank_guaranteed = `CHOICE RANK`, ...)
+    dplyr::select(`STUDENT ID`, rank_guaranteed = `CHOICE RANK`, school_guaranteed = `CHOICE SCHOOL`, ...)
 
 }
 

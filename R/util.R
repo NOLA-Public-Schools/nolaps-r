@@ -160,6 +160,9 @@ fix_names <- function(x) {
     stringr::str_replace_all(., "É", "E") %>%
     stringr::str_replace_all(., "é", "e") %>%
     stringr::str_remove(., "\\(DO NOT PLACE\\)") %>%
+    stringr::str_remove(., "DO NOT PLACE- ") %>%
+    stringr::str_remove(., "DO NOT PLACE - ") %>%
+    stringr::str_remove(., "DO NOT PLACE ") %>%
     stringr::str_squish(.)
 
 }
