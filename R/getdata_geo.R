@@ -1,4 +1,5 @@
 #' @importFrom magrittr %>%
+#' @importFrom sf st_read
 
 
 
@@ -18,20 +19,26 @@ key_googlemaps <- function() {
 # Geographies -------------------------------------------------------------
 
 
-
 #' @export
 getdata_catchments <- function() {
 
-  sf::st_read(path_data("Geographies/Catchments/catchments.shp"))
+  st_read(path_data("Geographies/Catchments/catchments.shp"))
 
 }
 
+
+#' @export
+getdata_council_districts <- function() {
+
+  st_read(path_data("Geographies/City Council Districts/council_districts.shp"))
+
+}
 
 
 #' @export
 getdata_districts <- function() {
 
-  sf::st_read(path_data("Geographies/Districts/districts.shp"))
+  st_read(path_data("Geographies/Districts/districts.shp"))
 
 }
 
@@ -40,7 +47,7 @@ getdata_districts <- function() {
 #' @export
 getdata_neighborhoods <- function() {
 
-  sf::st_read(path_data("Geographies/Neighborhoods/neighborhoods.shp")) %>%
+  st_read(path_data("Geographies/Neighborhoods/neighborhoods.shp")) %>%
     dplyr::rename(neighborhood = name)
 
 }
@@ -50,7 +57,7 @@ getdata_neighborhoods <- function() {
 #' @export
 getdata_planning <- function() {
 
-  sf::st_read(path_data("Geographies/Planning Districts/planning_districts.shp"))
+  st_read(path_data("Geographies/Planning Districts/planning_districts.shp"))
 
 }
 
@@ -59,7 +66,7 @@ getdata_planning <- function() {
 #' @export
 getdata_zips_orleans <- function() {
 
-  sf::st_read(path_data("Geographies/Zip Codes/zips_orleans.shp"))
+  st_read(path_data("Geographies/Zip Codes/zips_orleans.shp"))
 
 }
 
@@ -68,7 +75,7 @@ getdata_zips_orleans <- function() {
 #' @export
 getdata_zips_split <- function() {
 
-  sf::st_read(path_data("Geographies/Zip Codes/zips_split.shp"))
+  st_read(path_data("Geographies/Zip Codes/zips_split.shp"))
 
 }
 
