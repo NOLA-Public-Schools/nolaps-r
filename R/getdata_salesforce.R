@@ -713,7 +713,8 @@ getdata_facility <- function() {
         Ownership__c,
         Status__c,
         Longitude__c,
-        Latitude__c
+        Latitude__c,
+        Active_Student_Count__c
       from Facility__c
       "
     ),
@@ -727,7 +728,14 @@ getdata_facility <- function() {
       ownership = Ownership__c,
       status = Status__c,
       lon = Longitude__c,
-      lat = Latitude__c
+      lat = Latitude__c,
+      n_students = Active_Student_Count__c
+    ) %>%
+    dplyr::mutate(across(c(
+      n_students
+      ),
+      as.numeric
+      )
     )
 
 }
