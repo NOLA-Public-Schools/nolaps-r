@@ -2,6 +2,8 @@
 #' @importFrom glue glue
 #' @importFrom readr read_rds write_rds
 #' @importFrom rlang is_na
+#'
+#' @import dplyr
 
 
 
@@ -93,9 +95,16 @@ match_augment <- function(x, appschools, accounts, students) {
 #' @export
 match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
-  dir_in <- args[1]
-  dir_out <- args[2]
-  use_cache <- args[3]
+  dir_in <- str_remove(args[str_detect(args, "--in=")], "--in=")
+  dir_out <- str_remove(args[str_detect(args, "--out=")], "--out=")
+  round <- str_remove(args[str_detect(args, "--round=")], "--round=")
+  use_cache <- FALSE
+
+  if (length(args[str_detect(args, "--cache=")] == 1)) {
+    if (str_remove(args[str_detect(args, "--cache=")], "--cache=") == "true") {
+      use_cache <- TRUE
+    }
+  }
 
   dir_external <- glue::glue("{dir_in}/external")
 
@@ -108,12 +117,23 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   cat("\nLoading data. Please wait.\n")
 
-  if (is_na(use_cache)) {
+  if (use_cache) {
+
+    accounts <- read_rds(glue("{dir_in}/accounts.rds"))
+    apps <- read_rds(glue("{dir_in}/apps.rds"))
+    appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
+    appschools <- read_rds(glue("{dir_in}/appschools.rds"))
+    choices <- read_rds(glue("{dir_in}/choices.rds"))
+    priorities <- read_rds(glue("{dir_in}/priorities.rds"))
+    siblings <- read_rds(glue("{dir_in}/siblings.rds"))
+    students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
+
+  } else {
 
     accounts <- getdata_account()
     accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
 
-    apps <- getdata_app(round = "Round 1")
+    apps <- getdata_app(round = round)
     apps %>% write_rds(glue("{dir_in}/apps.rds"))
 
     appinputs <- getdata_appinput()
@@ -122,7 +142,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     appschools <- getdata_appschool()
     appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
 
-    choices <- getdata_appschoolranking(round = "Round 1")
+    choices <- getdata_appschoolranking(round = round)
     choices %>% write_rds(glue("{dir_in}/choices.rds"))
 
     priorities <- getdata_priority()
@@ -133,17 +153,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
     students_recent <- getdata_student_recent()
     students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
-
-  } else {
-
-    accounts <- read_rds(glue("{dir_in}/accounts.rds"))
-    apps <- read_rds(glue("{dir_in}/apps.rds"))
-    appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
-    appschools <- read_rds(glue("{dir_in}/appschools.rds"))
-    choices <- read_rds(glue("{dir_in}/choices.rds"))
-    priorities <- read_rds(glue("{dir_in}/priorities.rds"))
-    siblings <- read_rds(glue("{dir_in}/siblings.rds"))
-    students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
 
   }
 
@@ -192,7 +201,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match = match,
     dir_external = dir_external,
     dir_out = dir_review,
-    round = "Round 1",
+    round = round,
     students = students_recent,
     apps = apps,
     choices = choices,
@@ -202,28 +211,28 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     siblings = siblings
   )
 
-  match_placement(
-    match = match,
-    overmatches = overmatches,
-    dir_out = dir_business,
-    students_recent = students_recent,
-    appschools = appschools
-  )
-
-  match_notification(
-    match = match,
-    overmatches = overmatches,
-    dir_out = dir_business,
-    apps = apps,
-    accounts = accounts,
-    appschools = appschools,
-    students_recent = students_recent
-  )
-
-  match_briefing(
-    match = match,
-    dir_out = dir_business
-  )
+  # match_placement(
+  #   match = match,
+  #   overmatches = overmatches,
+  #   dir_out = dir_business,
+  #   students_recent = students_recent,
+  #   appschools = appschools
+  # )
+  #
+  # match_notification(
+  #   match = match,
+  #   overmatches = overmatches,
+  #   dir_out = dir_business,
+  #   apps = apps,
+  #   accounts = accounts,
+  #   appschools = appschools,
+  #   students_recent = students_recent
+  # )
+  #
+  # match_briefing(
+  #   match = match,
+  #   dir_out = dir_business
+  # )
 
 
 

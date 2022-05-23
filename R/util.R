@@ -23,6 +23,7 @@ fix_grades <- function(x, var = GRADE) {
         "K", "1", "2", "3", "4", "5", "6", "7", "8",
         "T9",
         "9", "10", "11", "12",
+        "Guarantee",
         "Other"
         ), ordered = TRUE
       )
@@ -164,6 +165,45 @@ fix_names <- function(x) {
     stringr::str_remove(., "DO NOT PLACE - ") %>%
     stringr::str_remove(., "DO NOT PLACE ") %>%
     stringr::str_squish(.)
+
+}
+
+
+#' @export
+fix_grades_vec <- function(x) {
+  x %>%
+    stringr::str_remove_all(., "[:space:]") %>%
+    factor(
+      .,
+      levels = c(
+        "UB",
+        "INFSPED",
+        "INF",
+        "1YR",
+        "2YR",
+        "PK3",
+        "PK4",
+        "PKSPED",
+        "PK",
+        "K",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "T9",
+        "9",
+        "10",
+        "11",
+        "12",
+        "Guarantee",
+        "Other"
+      ),
+      ordered = TRUE
+    )
 
 }
 

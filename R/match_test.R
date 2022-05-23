@@ -49,10 +49,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   #   dplyr::filter(grade_current != 12 | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))) %>%
   #   dplyr::left_join(accounts, by = c("id_account_current" = "id_account"))
 
-  # students_futureschool <-
-  #   students %>%
-  #   filter(!is.na(id_account_future))
-
   # Data preparation
 
   apps_with_choices <- apps %>% filter(id_app %in% choices$id_app)
@@ -60,6 +56,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   students_active <-
     students %>%
     filter(is_active)
+
+  students_futureschool <-
+    students %>%
+    filter(!is.na(id_account_future))
 
   match_priorities <-
     match %>%
@@ -168,126 +168,18 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Begin tests
 
-
-
-# Invalid match records ---------------------------------------------------
-
-  cat("\nInvalid match records\n")
-
-  if (round == "Round 1") {
-
-    # see <-
-    #   readr::read_csv(
-    #     glue::glue("{dir_external}/additional-student-information-rows.csv")
-    #   ) %>%
-    #   dplyr::pull(`Student ID`)
-
-    invalid_participants <-
-      match %>%
-      filter(str_length(`STUDENT ID`) == 9) %>%
-      filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid)
-        & !(`STUDENT ID` %in% students_active$oneappid)
-        # & !(`STUDENT ID` %in% see)
-      ) %>%
-      select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
-      arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
-
-    test_text <- "All match records trace back to application with choices or active student."
-
-  } else if (round == "Round 2") {
-
-    invalid_participants <-
-      match %>%
-      dplyr::filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid)
-        & !(`STUDENT ID` %in% students_futureschool$oneappid)
-      ) %>%
-      dplyr::select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
-      dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
-
-    test_text <- "All match records trace back to application with choices or recent student with future school."
-
-  }
-
-  testthat::with_reporter(
-    "stop", {
-      testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(invalid_participants), 0)
-      })
-    }
-  )
-
-  write_if_bad(invalid_participants, dir_out)
-
-
-
-# Missing match records ---------------------------------------------------
-
-  cat("\nMissing applications\n")
-
-  missing_apps <-
-    apps_with_choices %>%
-    filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    select(id_student, oneappid, id_app)
-
-  test_text <- "All applications with a choice are in the match."
-
-  testthat::with_reporter(
-    "stop", {
-      testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(missing_apps), 0)
-      })
-    }
-  )
-
-  write_if_bad(missing_apps, dir_out)
-
-
-
-  cat("\nMissing roll-forwards\n")
-
-  if (round == "Round 1") {
-
-    missing_rollforwards <-
-      students_active %>%
-      filter(!is.na(id_account_current)) %>%
-      filter(is_terminalgrade == FALSE) %>%
-      filter(
-        grade_current != 12
-        # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
-      ) %>%
-      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      select(name_account_current, grade_current, oneappid, id_student) %>%
-      arrange(name_account_current, grade_current)
-
-    test_text <- "All active students in non-terminal grade are in the match."
-
-  } else if (round == "Round 2") {
-
-    missing_rollforwards <-
-      students_futureschool %>%
-      dplyr::filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      dplyr::select(id_student, oneappid, grade_future, name_account_future) %>%
-      dplyr::arrange(name_account_future, grade_future, oneappid)
-
-    test_text <- "All recent students with future school are in match"
-
-  }
-
-  testthat::with_reporter(
-    "stop", {
-      testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(missing_rollforwards), 0)
-      })
-    }
-  )
-
-  write_if_bad(missing_rollforwards, dir_out)
-
   ###
 
   # Basic data quality tests
+
+  test_participants(
+    dir_out = dir_out,
+    round = round,
+    match = match,
+    apps_with_choices = apps_with_choices,
+    students_active = students_active,
+    students_futureschool = students_futureschool
+  )
 
   # Invalid rank numbers
 
@@ -351,6 +243,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     students_with_family = students_with_family
   )
 
+  return(NULL)
+
   # Priorities
 
   # Current-school priorities
@@ -368,25 +262,25 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Closing school
 
-  test_closing(
-    dir_out = dir_out,
-    round = round,
-    prioritykey = prioritykey,
-    priorities = priorities,
-    match_priorities = match_priorities,
-    students = students_active
-  )
+  # test_closing(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   prioritykey = prioritykey,
+  #   priorities = priorities,
+  #   match_priorities = match_priorities,
+  #   students = students_active
+  # )
 
   # Feeder
 
-  test_feeder(
-    dir_out = dir_out,
-    round = round,
-    prioritykey = prioritykey,
-    match_priorities = match_priorities,
-    students = students_active,
-    choices = choices
-  )
+  # test_feeder(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   prioritykey = prioritykey,
+  #   match_priorities = match_priorities,
+  #   students = students_active,
+  #   choices = choices
+  # )
 
   # Application priorities
 
@@ -503,7 +397,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_assignment(dir_out = dir_out, match = match)
 
-  return(NULL)
+  # end tests
 
 
 
@@ -565,6 +459,130 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
 
 # Basic data quality tests ------------------------------------------------
+
+
+
+#' @export
+test_participants <- function(dir_out, round, match, students_active, students_futureschool, apps_with_choices) {
+
+  cat("\nInvalid match records\n")
+
+  if (round == "Round 1") {
+
+    invalid_participants <-
+      match %>%
+      filter(str_length(`STUDENT ID`) == 9) %>%
+      filter(
+        !(`STUDENT ID` %in% apps_with_choices$oneappid)
+        & !(`STUDENT ID` %in% students_active$oneappid)
+        # & !(`STUDENT ID` %in% see)
+      ) %>%
+      select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
+      arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+
+    test_text <- "All match records trace back to application with choices or active student."
+
+  } else if (round == "Round 2") {
+
+    invalid_participants <-
+      match %>%
+      filter(
+        !(`STUDENT ID` %in% apps_with_choices$oneappid)
+        & !(`STUDENT ID` %in% students_futureschool$oneappid)
+      ) %>%
+      select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
+      arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+
+    test_text <- "All match records trace back to application with choices or recent student with future school."
+
+  }
+
+  cat(
+    glue(
+      "
+      {nrow(invalid_participants)} records with invalid participants
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    invalid_participants,
+    test_text = test_text
+  )
+
+  write_if_bad(invalid_participants, dir_out)
+
+  cat("\nMissing applications\n")
+
+  missing_apps <-
+    apps_with_choices %>%
+    filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+    select(id_student, oneappid, id_app)
+
+  cat(
+    glue(
+      "
+      {nrow(missing_apps)} missing applications
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    missing_apps,
+    "All applications with a choice are in the match."
+  )
+
+  write_if_bad(missing_apps, dir_out)
+
+  cat("\nMissing roll-forwards\n")
+
+  if (round == "Round 1") {
+
+    missing_rollforwards <-
+      students_active %>%
+      filter(!is.na(id_account_current)) %>%
+      filter(is_terminalgrade == FALSE) %>%
+      filter(
+        grade_current != 12
+        # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
+      ) %>%
+      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      select(name_account_current, grade_current, oneappid, id_student) %>%
+      arrange(name_account_current, grade_current)
+
+    test_text <- "All active students in non-terminal grade are in the match."
+
+  } else if (round == "Round 2") {
+
+    missing_rollforwards <-
+      students_futureschool %>%
+      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      select(id_student, oneappid, grade_future, name_account_future) %>%
+      arrange(name_account_future, grade_future, oneappid)
+
+    test_text <- "All recent students with future school are in match."
+
+  }
+
+  cat(
+    glue(
+      "
+      {nrow(missing_rollforwards)} missing roll-forwards
+      \n
+      "
+    )
+  )
+
+  test_helper(
+    missing_rollforwards,
+    test_text
+  )
+
+  write_if_bad(missing_rollforwards, dir_out)
+
+}
 
 
 
@@ -653,7 +671,6 @@ test_grades <- function(dir_out, match) {
 
 
 
-
 # Eligibility tests -------------------------------------------------------
 
 
@@ -728,7 +745,7 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     ) %>%
     select(
       `ELIGIBLE?`, `GUARANTEED?`,
-      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student, id_appschoolranking,
+      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_appschoolranking,
       eligibility, eligibility_decision, programtype, is_selective, questions_selective
     ) %>%
     distinct() %>%
@@ -1316,6 +1333,10 @@ test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities)
   appinputs <-
     appinputs %>%
     filter(has_100fpl)
+
+  print(levels(unique(match_priorities$GRADE)))
+
+  print(levels(unique(offers$grade)))
 
   invalid_100fpl <-
     match_priorities %>%
