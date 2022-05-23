@@ -1,10 +1,10 @@
 #' @import dplyr
+#' @import glue
 #' @import lubridate
 #' @import salesforcer
 #' @import stringr
 
 #' @importFrom magrittr %>%
-#' @importFrom glue glue glue_safe
 
 
 
@@ -188,6 +188,35 @@ getdata_account_highdemand <- function() {
       code_site = School_Code_String__c,
       is_highdemand = High_Demand_School__c
     )
+
+}
+
+
+
+#' @export
+getdata_accountability <- function() {
+
+  salesforcer::sf_query(
+    glue(
+      "
+      select
+        Id,
+        Name,
+        SIS_Site_Code__c,
+        Federal_Site_Code__c,
+        Total_Enrollment__c
+      from Accountability_Site__c
+      "
+    )
+  ) %>%
+    select(
+      id_accountability = Id,
+      name_accountability = Name,
+      code_site = SIS_Site_Code__c,
+      code_site_federal = Federal_Site_Code__c,
+      n_total = Total_Enrollment__c
+    ) %>%
+    mutate(across(n_total, as.numeric))
 
 }
 
