@@ -168,12 +168,12 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
     fix_grades()
 
-  overmatches <-
-    readxl::read_excel(
-      glue::glue("{dir_external}/sibling-overmatches.xlsx"),
-      col_types = "text"
-    ) %>%
-    dplyr::select(-`CHOICE RANK`)
+  # overmatches <-
+  #   readxl::read_excel(
+  #     glue::glue("{dir_external}/sibling-overmatches.xlsx"),
+  #     col_types = "text"
+  #   ) %>%
+  #   dplyr::select(-`CHOICE RANK`)
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 

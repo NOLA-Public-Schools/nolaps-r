@@ -197,8 +197,8 @@ getdata_sped <- function() {
 getdata_sps <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema("db_owner", "sps")
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "sps")
   )
 
 }

@@ -204,7 +204,9 @@ getdata_accountability <- function() {
         Name,
         SIS_Site_Code__c,
         Federal_Site_Code__c,
-        Total_Enrollment__c
+        Total_Enrollment__c,
+        Letter_Grade__c,
+        School_Performance_Score__c
       from Accountability_Site__c
       "
     )
@@ -214,7 +216,9 @@ getdata_accountability <- function() {
       name_accountability = Name,
       code_site = SIS_Site_Code__c,
       code_site_federal = Federal_Site_Code__c,
-      n_total = Total_Enrollment__c
+      n_total = Total_Enrollment__c,
+      grade_sps_cb = Letter_Grade__c,
+      index_sps_cb = School_Performance_Score__c
     ) %>%
     mutate(across(n_total, as.numeric))
 
