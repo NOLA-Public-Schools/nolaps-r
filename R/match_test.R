@@ -53,6 +53,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   apps_with_choices <- apps %>% filter(id_app %in% choices$id_app)
 
+  students_app <- apps_with_choices$id_student
+
   students_active <-
     students %>%
     filter(is_active)
@@ -259,18 +261,17 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dob = dob
   )
 
-  return(NULL)
-
   # Closing school
 
-  # test_closing(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   prioritykey = prioritykey,
-  #   priorities = priorities,
-  #   match_priorities = match_priorities,
-  #   students = students_active
-  # )
+  test_closing(
+    dir_out = dir_out,
+    priorities = priorities,
+    match_priorities = match_priorities,
+    students_active = students_active,
+    students_app = students_app
+  )
+
+  return(NULL)
 
   # Feeder
 
@@ -1188,7 +1189,7 @@ test_guarantee <- function(dir_out, round, prioritykey, match_priorities, studen
 
 
 #' @export
-test_closing <- function(dir_out, round, prioritykey, priorities, match_priorities, students) {
+test_closing <- function(dir_out, priorities, match_priorities, students_active, students_app) {
 
   cat("\nClosing school\n")
 
@@ -1197,36 +1198,19 @@ test_closing <- function(dir_out, round, prioritykey, priorities, match_prioriti
     filter(!is.na(Order_Closing_Public__c)) %>%
     select(code_appschool, grade)
 
-  key_closing <-
-    prioritykey %>%
-    mutate(across(closing, as.logical)) %>%
-    filter(closing == TRUE)
-
-  if (round == "Round 1") {
-
-    shouldhave <-
-      students %>%
-      select(code_site_current, grade_current, oneappid) %>%
-      left_join(
-        key_closing,
-        by = c("code_site_current" = "code_site", "grade_current")
-      ) %>%
-      filter(closing == TRUE)
-
-  } else if (round == "Round 2") {
-
-    NULL
-
-  }
+  shouldhave <-
+    students_active %>%
+    filter(is_priority_closing) %>%
+    filter(id_student %in% students_app) %>%
+    filter(grade_current != grade_terminal) %>%
+    filter(!(grade_current %in% grades_ec())) %>%
+    select(oneappid)
 
   invalid_closing <-
     match_priorities %>%
     anti_join(
       shouldhave,
-      by = c(
-        "GRADE" = "grade_applying",
-        "STUDENT ID" = "oneappid"
-      )
+      by = c("STUDENT ID" = "oneappid")
     ) %>%
     filter(!is.na(`Closing Public School`))
 
@@ -1234,12 +1218,11 @@ test_closing <- function(dir_out, round, prioritykey, priorities, match_prioriti
     match_priorities %>%
     semi_join(
       shouldhave,
-      by = c(
-        "GRADE" = "grade_applying",
-        "STUDENT ID" = "oneappid"
-      )
+      by = c("STUDENT ID" = "oneappid")
     ) %>%
-    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")) %>%
+    semi_join(
+      offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
+    ) %>%
     filter(is.na(`Closing Public School`)) %>%
     filter(is.na(Ineligible))
 

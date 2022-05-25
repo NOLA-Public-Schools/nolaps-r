@@ -1199,7 +1199,9 @@ query_student <- function() {
       Future_School__r.School_Welcome_Message__c,
       Expelled_From__c,
       Expulsion_ReEntry_Status__c,
-      Expulsion_End_Date__c
+      Expulsion_End_Date__c,
+      SchoolForce__School__r.Closing_School_Priority__c,
+      SchoolForce__School__r.Terminal_Grade__c
     from Schoolforce__Student__c
     "
   )
@@ -1260,13 +1262,16 @@ format_student <- function(x) {
       school_welcome = Future_School__r.School_Welcome_Message__c,
       id_account_expelled = Expelled_From__c,
       expelled_status = Expulsion_ReEntry_Status__c,
-      expelled_date_end = Expulsion_End_Date__c
+      expelled_date_end = Expulsion_End_Date__c,
+      is_priority_closing = SchoolForce__School__r.Closing_School_Priority__c,
+      grade_terminal = SchoolForce__School__r.Terminal_Grade__c
     ) %>%
     dplyr::mutate(across(c(
       is_active,
       is_recent,
       is_terminalgrade,
       is_t9,
+      is_priority_closing,
       appneeded_r1,
       appsubmitted_r1,
       appsubmitted_r2
@@ -1282,7 +1287,8 @@ format_student <- function(x) {
       )
     ) %>%
     fix_grades(grade_current) %>%
-    fix_grades(grade_future)
+    fix_grades(grade_future) %>%
+    fix_grades(grade_terminal)
 
 }
 
