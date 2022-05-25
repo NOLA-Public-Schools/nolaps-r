@@ -14,40 +14,9 @@
 
 
 #' @export
-filter_priority <- function(x, priority, prioritytable) {
-
-  doesnthave_all <-
-    prioritytable %>%
-    dplyr::filter(Grade == "ALL", {{ priority }} == 0) %>%
-    dplyr::distinct(`School Code`)
-
-  doesnthave_grade <-
-    prioritytable %>%
-    dplyr::filter(Grade != "ALL", {{ priority }} == 0) %>%
-    dplyr::distinct(`School Code`, Grade)
-
-  x %>%
-    dplyr::anti_join(doesnthave_grade, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade")) %>%
-    dplyr::anti_join(doesnthave_all, by = c("CHOICE SCHOOL" = "School Code")) %>%
-    dplyr::filter(is.na(Ineligible)) %>%
-    dplyr::filter(is.na({{ priority }}))
-
-
-}
-
-
-
-#' @export
 match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs, siblings) {
 
   cat("\nValidating match file\n")
-
-  # students <-
-  #   getdata_student_active() %>%
-  #   dplyr::filter(!is.na(id_account_current)) %>%
-  #   dplyr::filter(is_terminalgrade == "false") %>%
-  #   dplyr::filter(grade_current != 12 | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))) %>%
-  #   dplyr::left_join(accounts, by = c("id_account_current" = "id_account"))
 
   # Data preparation
 
@@ -71,28 +40,28 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       by = c("id_account", "STUDENT ID" = "oneappid")
     )
 
-  prioritykey <-
-    read_excel(
-      glue("{dir_external}/priority-key.xlsx"),
-      col_types = "text"
-    ) %>%
-    select(
-      code_appschool = `Application School Code`,
-      code_site = `Site Code`,
-      grade_current = `You are in grade`,
-      grade_applying = `And you are applying to`,
-      guarantee = `Guaranteed (Active Students have guarantee to x)`,
-      closing = `Closing School`,
-      feeder = `Feeder School (Active Students feed into x)`
-    ) %>%
-    mutate(code_site = stringr::str_pad(
-      code_site, width = 6, side = "left", pad = "0")
-    ) %>%
-    mutate(code_site = stringr::str_replace(
-      code_site,
-      "^(36[:digit:]{3})_(.+)",
-      "0\\1_\\2"
-    ))
+  # prioritykey <-
+  #   read_excel(
+  #     glue("{dir_external}/priority-key.xlsx"),
+  #     col_types = "text"
+  #   ) %>%
+  #   select(
+  #     code_appschool = `Application School Code`,
+  #     code_site = `Site Code`,
+  #     grade_current = `You are in grade`,
+  #     grade_applying = `And you are applying to`,
+  #     guarantee = `Guaranteed (Active Students have guarantee to x)`,
+  #     closing = `Closing School`,
+  #     feeder = `Feeder School (Active Students feed into x)`
+  #   ) %>%
+  #   mutate(code_site = stringr::str_pad(
+  #     code_site, width = 6, side = "left", pad = "0")
+  #   ) %>%
+  #   mutate(code_site = stringr::str_replace(
+  #     code_site,
+  #     "^(36[:digit:]{3})_(.+)",
+  #     "0\\1_\\2"
+  #   ))
 
   # Family link and twin data
 
@@ -254,7 +223,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   test_guarantee(
     dir_out = dir_out,
     round = round,
-    prioritykey = prioritykey,
     match_priorities = match_priorities,
     students_active = students_active,
     students_futureschool = students_futureschool,
@@ -270,8 +238,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     students_active = students_active,
     students_app = students_app
   )
-
-  return(NULL)
 
   # Feeder
 
@@ -290,7 +256,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_100fpl(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -300,7 +265,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_disadvantage(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -310,7 +274,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_iep(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -320,7 +283,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_french(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -330,7 +292,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_montessori(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -340,7 +301,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_military(
     dir_out = dir_out,
-    round = round,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
@@ -348,13 +308,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # UNO
 
-  test_uno(
-    dir_out = dir_out,
-    round = round,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_uno(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Choice-specific priorities
 
@@ -374,24 +333,24 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Verified sibling
 
-  test_sibling_verified(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
+  # test_sibling_verified(
+  #   dir_out = dir_out,
+  #   match_priorities = match_priorities
+  # )
 
   # Staff child
 
-  test_staffchild(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
+  # test_staffchild(
+  #   dir_out = dir_out,
+  #   match_priorities = match_priorities
+  # )
 
   # Sibling or staff child
 
-  test_sibling_staffchild(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
+  # test_sibling_staffchild(
+  #   dir_out = dir_out,
+  #   match_priorities = match_priorities
+  # )
 
   # Assignment tests
 
@@ -400,6 +359,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   test_assignment(dir_out = dir_out, match = match)
 
   # end tests
+
+  return(NULL)
 
 
 
@@ -473,14 +434,12 @@ test_participants <- function(dir_out, round, match, students_active, students_f
 
     invalid_participants <-
       match %>%
-      filter(str_length(`STUDENT ID`) == 9) %>%
       filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid)
-        & !(`STUDENT ID` %in% students_active$oneappid)
-        # & !(`STUDENT ID` %in% see)
+        !(`STUDENT ID` %in% apps_with_choices$oneappid) &
+        !(`STUDENT ID` %in% students_active$oneappid)
       ) %>%
-      select(`CHOICE SCHOOL`, GRADE, `STUDENT ID`) %>%
-      arrange(`CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+      select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+      arrange(choice_name, `CHOICE SCHOOL`, GRADE)
 
     test_text <- "All match records trace back to application with choices or active student."
 
@@ -489,11 +448,11 @@ test_participants <- function(dir_out, round, match, students_active, students_f
     invalid_participants <-
       match %>%
       filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid)
-        & !(`STUDENT ID` %in% students_futureschool$oneappid)
+        !(`STUDENT ID` %in% apps_with_choices$oneappid) &
+        !(`STUDENT ID` %in% students_futureschool$oneappid)
       ) %>%
-      select(id_student, `STUDENT ID`, GRADE, `CHOICE SCHOOL`, choice_name) %>%
-      arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
+      select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+      arrange(choice_name, `CHOICE SCHOOL`, GRADE)
 
     test_text <- "All match records trace back to application with choices or recent student with future school."
 
@@ -510,17 +469,18 @@ test_participants <- function(dir_out, round, match, students_active, students_f
 
   test_helper(
     invalid_participants,
-    test_text = test_text
+    test_text
   )
 
   write_if_bad(invalid_participants, dir_out)
+
 
   cat("\nMissing applications\n")
 
   missing_apps <-
     apps_with_choices %>%
     filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    select(id_student, oneappid, id_app)
+    select(id_app, id_student, oneappid)
 
   cat(
     glue(
@@ -561,10 +521,10 @@ test_participants <- function(dir_out, round, match, students_active, students_f
     missing_rollforwards <-
       students_futureschool %>%
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      select(id_student, oneappid, grade_future, name_account_future) %>%
-      arrange(name_account_future, grade_future, oneappid)
+      select(name_account_future, grade_future, oneappid, id_student) %>%
+      arrange(name_account_future, grade_future)
 
-    test_text <- "All recent students with future school are in match."
+    test_text <- "All recent students with future school are in the match."
 
   }
 
@@ -595,7 +555,6 @@ test_ranks <- function(dir_out, match) {
 
   invalid_ranks <-
     match %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
     filter(`CHOICE RANK` > 18)
 
   cat(
@@ -625,7 +584,6 @@ test_grades <- function(dir_out, match) {
 
   invalid_grades <-
     match %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
     left_join(
       getdata_account_gradespan(),
       by = c("id_account")
@@ -644,7 +602,7 @@ test_grades <- function(dir_out, match) {
         "4012_tier_2"
       ))
     ) %>%
-    select(`ELIGIBLE?`, choice_name, id_account, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
+    select(`ELIGIBLE?`, choice_name, GRADE, `STUDENT ID`, id_student, id_account) %>%
     arrange(`ELIGIBLE?`, choice_name, GRADE)
 
   invalid_grades_eligible <-
@@ -987,18 +945,18 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
 
 #' @export
-test_guarantee <- function(dir_out, round, prioritykey, match_priorities, students_active, students_futureschool, dob) {
+test_guarantee <- function(dir_out, round, match_priorities, students_active, students_futureschool, dob) {
 
   cat("\nGuarantee\n")
 
-  key_guarantee <-
-    prioritykey %>%
-    filter(!is.na(guarantee))
-
-  codes_appschool <-
-    prioritykey %>%
-    select(code_site, code_appschool) %>%
-    distinct()
+  # key_guarantee <-
+  #   prioritykey %>%
+  #   filter(!is.na(guarantee))
+  #
+  # codes_appschool <-
+  #   prioritykey %>%
+  #   select(code_site, code_appschool) %>%
+  #   distinct()
 
   if (round == "Round 1") {
 
@@ -1373,7 +1331,7 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
 
 
 #' @export
-test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_100fpl <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\n100% FPL\n")
 
@@ -1385,10 +1343,6 @@ test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities)
   appinputs <-
     appinputs %>%
     filter(has_100fpl)
-
-  print(levels(unique(match_priorities$GRADE)))
-
-  print(levels(unique(offers$grade)))
 
   invalid_100fpl <-
     match_priorities %>%
@@ -1443,7 +1397,7 @@ test_100fpl <- function(dir_out, round, priorities, appinputs, match_priorities)
 
 
 #' @export
-test_disadvantage <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_disadvantage <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nEconomic disadvantage\n")
 
@@ -1507,7 +1461,7 @@ test_disadvantage <- function(dir_out, round, priorities, appinputs, match_prior
 
 
 #' @export
-test_french <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_french <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nFrench\n")
 
@@ -1573,7 +1527,7 @@ test_french <- function(dir_out, round, priorities, appinputs, match_priorities)
 
 
 #' @export
-test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_iep <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nIEP\n")
 
@@ -1637,7 +1591,7 @@ test_iep <- function(dir_out, round, priorities, appinputs, match_priorities) {
 
 
 #' @export
-test_montessori <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_montessori <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nMontessori\n")
 
@@ -1703,7 +1657,7 @@ test_montessori <- function(dir_out, round, priorities, appinputs, match_priorit
 
 
 #' @export
-test_military <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_military <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nMilitary\n")
 
@@ -1769,7 +1723,7 @@ test_military <- function(dir_out, round, priorities, appinputs, match_prioritie
 
 
 #' @export
-test_uno <- function(dir_out, round, priorities, appinputs, match_priorities) {
+test_uno <- function(dir_out, priorities, appinputs, match_priorities) {
 
   cat("\nUNO\n")
 
@@ -1852,7 +1806,6 @@ test_distance <- function(dir_out, match_priorities) {
 
   have <-
     match_priorities %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
     filter(!is.na(`Child of Student`))
 
   cat(
@@ -1907,7 +1860,6 @@ test_zone <- function(dir_out, match_priorities) {
 
   have <-
     match_priorities %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
     filter(!is.na(Geography))
 
   cat(
@@ -1948,15 +1900,6 @@ test_zone <- function(dir_out, match_priorities) {
 test_sibling_verified <- function(dir_out, match_priorities) {
 
   cat("\nVerified sibling\n")
-
-  # match_priorities <-
-  #   match_priorities %>%
-  #   mutate(score_str = as.character(`ASSIGNMENT PRIORITY`)) %>%
-  #   mutate(sibling_priority = case_when(
-  #     !(GRADE %in% grades_ec()) & (str_length(score_str) >= 3) & (str_sub(score_str, start = -3, end = -3) == "1") ~ TRUE,
-  #     TRUE ~ FALSE
-  #     )
-  #   )
 
   invalid_sibling_verified <-
     match_priorities %>%
@@ -2137,7 +2080,6 @@ test_assignment <- function(dir_out, match) {
 
   assignments_all <-
     match %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
     count(choice_name, `CHOICE SCHOOL`, GRADE, `ASSIGNMENT STATUS`) %>%
     pivot_wider(names_from = "ASSIGNMENT STATUS", values_from = "n") %>%
     select(
@@ -2163,16 +2105,6 @@ test_assignment <- function(dir_out, match) {
       is.na(waiting),
       is.na(waiting_family)
     )
-
-  # cat(
-  #   glue(
-  #     "
-  #     {nrow(distinct(have, `STUDENT ID`))} students
-  #     {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-  #     \n
-  #     "
-  #   )
-  # )
 
   cat("\nGrades with no assignments\n")
 

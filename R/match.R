@@ -134,20 +134,21 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     accounts <- getdata_account()
     accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
 
-    apps <- getdata_app(round = round)
-    apps %>% write_rds(glue("{dir_in}/apps.rds"))
-
-    appinputs <- getdata_appinput()
-    appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
-
     appschools <- getdata_appschool()
     appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
 
-    choices <- getdata_appschoolranking(round = round)
-    choices %>% write_rds(glue("{dir_in}/choices.rds"))
-
     priorities <- getdata_priority()
     priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
+
+
+    apps <- getdata_app(round = round)
+    apps %>% write_rds(glue("{dir_in}/apps.rds"))
+
+    appinputs <- getdata_appinput(round = round)
+    appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
+
+    choices <- getdata_appschoolranking(round = round)
+    choices %>% write_rds(glue("{dir_in}/choices.rds"))
 
     siblings <- getdata_sibling()
     siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
