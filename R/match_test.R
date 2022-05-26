@@ -254,12 +254,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # 100% FPL
 
-  test_100fpl(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_100fpl(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Economic disadvantage
 
@@ -281,30 +281,30 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # French
 
-  test_french(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_french(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Montessori
 
-  test_montessori(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_montessori(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Military
 
-  test_military(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_military(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # UNO
 
