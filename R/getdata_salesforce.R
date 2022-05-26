@@ -565,6 +565,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
         Application__r.OneApp_ID__c,
         Application__r.Student__r.SchoolForce__Contact_Id__c,
         Application__r.Student__c,
+        Application__r.Student__r.SchoolForce__School__c,
         Application__c,
         Application__r.Grade_Applying_For__c,
         Id,
@@ -603,6 +604,7 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       oneappid = Application__r.OneApp_ID__c,
       id_contact = Application__r.Student__r.SchoolForce__Contact_Id__c,
       id_student = Application__r.Student__c,
+      id_account_current = Application__r.Student__r.SchoolForce__School__c,
       id_app = Application__c,
       grade_applying = Application__r.Grade_Applying_For__c,
       id_appschoolranking = Id,
@@ -770,6 +772,33 @@ getdata_facility <- function() {
       as.numeric
       )
     )
+
+}
+
+
+
+#' @export
+getdata_feeder <- function() {
+
+  sf_query(
+    glue(
+      "
+      select
+        Sending_School__c,
+        Priority__r.Application_School__r.School__c,
+        Grade__c
+      from Feeder__c
+      "
+    ),
+    api_type = "REST",
+    guess_types = FALSE
+  ) %>%
+    select(
+      id_account_current = Sending_School__c,
+      id_account_applying = Priority__r.Application_School__r.School__c,
+      grade_applying = Grade__c
+    ) %>%
+    fix_grades(grade_applying)
 
 }
 

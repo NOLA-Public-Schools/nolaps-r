@@ -14,7 +14,7 @@
 
 
 #' @export
-match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, appinputs, siblings) {
+match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, feeders, appinputs, siblings) {
 
   cat("\nValidating match file\n")
 
@@ -39,29 +39,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
       choices,
       by = c("id_account", "STUDENT ID" = "oneappid")
     )
-
-  # prioritykey <-
-  #   read_excel(
-  #     glue("{dir_external}/priority-key.xlsx"),
-  #     col_types = "text"
-  #   ) %>%
-  #   select(
-  #     code_appschool = `Application School Code`,
-  #     code_site = `Site Code`,
-  #     grade_current = `You are in grade`,
-  #     grade_applying = `And you are applying to`,
-  #     guarantee = `Guaranteed (Active Students have guarantee to x)`,
-  #     closing = `Closing School`,
-  #     feeder = `Feeder School (Active Students feed into x)`
-  #   ) %>%
-  #   mutate(code_site = stringr::str_pad(
-  #     code_site, width = 6, side = "left", pad = "0")
-  #   ) %>%
-  #   mutate(code_site = stringr::str_replace(
-  #     code_site,
-  #     "^(36[:digit:]{3})_(.+)",
-  #     "0\\1_\\2"
-  #   ))
 
   # Family link and twin data
 
@@ -241,14 +218,13 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Feeder
 
-  # test_feeder(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   prioritykey = prioritykey,
-  #   match_priorities = match_priorities,
-  #   students = students_active,
-  #   choices = choices
-  # )
+  test_feeder(
+    dir_out = dir_out,
+    feeders = feeders,
+    match_priorities = match_priorities,
+    students_active = students_active,
+    choices = choices
+  )
 
   # Application priorities
 
@@ -1221,54 +1197,25 @@ test_closing <- function(dir_out, priorities, match_priorities, students_active,
 
 
 #' @export
-test_feeder <- function(dir_out, round, prioritykey, match_priorities, students, choices) {
+test_feeder <- function(dir_out, feeders, match_priorities, students_active, choices) {
 
   cat("\nFeeder\n")
 
-  key_feeder <-
-    prioritykey %>%
-    filter(!is.na(feeder)) %>%
-    select(-code_appschool)
-
-  if (round == "Round 1") {
-
-    students <-
-      students %>%
-      select(code_site_current, grade_current, oneappid)
-
-  } else if (round == "Round 2") {
-
-    students_feeder <-
-      students %>%
-      dplyr::filter(!is.na(id_account_future) | is_active) %>%
-      dplyr::mutate(code_site = dplyr::case_when(
-        !is.na(code_site_future) ~ code_site_future,
-        TRUE ~ code_site
-      )
-      ) %>%
-      dplyr::filter(code_site %in% key_feeder$code_site) %>%
-      dplyr::select(oneappid, code_site, grade_current) %>%
-      fix_grades(grade_current)
-
-  }
-
   shouldhave <-
     choices %>%
-    select(code_appschool, grade_applying, oneappid) %>%
-    left_join(students, by = "oneappid") %>%
-    left_join(
-      key_feeder,
-      by = c("code_site_current" = "code_site", "grade_current", "grade_applying")
-    ) %>%
-    mutate(gets_feeder = str_detect(feeder, code_appschool)) %>%
-    filter(gets_feeder == TRUE)
+    filter(id_student %in% students_active$id_student) %>%
+    select(oneappid, id_account_current, id_account, grade_applying) %>%
+    semi_join(
+      feeders,
+      by = c("id_account_current", "id_account" = "id_account_applying", "grade_applying")
+    )
 
   invalid_feeder <-
     match_priorities %>%
     anti_join(
       shouldhave,
       by = c(
-        "CHOICE SCHOOL" = "code_appschool",
+        "id_account",
         "GRADE" = "grade_applying",
         "STUDENT ID" = "oneappid"
       )
@@ -1280,7 +1227,7 @@ test_feeder <- function(dir_out, round, prioritykey, match_priorities, students,
     semi_join(
       shouldhave,
       by = c(
-        "CHOICE SCHOOL" = "code_appschool",
+        "id_account",
         "GRADE" = "grade_applying",
         "STUDENT ID" = "oneappid"
       )

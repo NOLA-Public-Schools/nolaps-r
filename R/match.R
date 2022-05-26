@@ -125,6 +125,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
     appschools <- read_rds(glue("{dir_in}/appschools.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
+    feeders <- read_rds(glue("{dir_in}/feeders.rds"))
     priorities <- read_rds(glue("{dir_in}/priorities.rds"))
     siblings <- read_rds(glue("{dir_in}/siblings.rds"))
     students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
@@ -136,6 +137,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
     appschools <- getdata_appschool()
     appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
+
+    feeders <- getdata_feeder()
+    feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
 
     priorities <- getdata_priority()
     priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
@@ -209,6 +213,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     choices = choices,
     appschools = appschools,
     priorities = priorities,
+    feeders = feeders,
     appinputs = appinputs,
     siblings = siblings
   )
