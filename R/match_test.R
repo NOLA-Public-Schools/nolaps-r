@@ -309,10 +309,10 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   # Verified sibling
 
-  # test_sibling_verified(
-  #   dir_out = dir_out,
-  #   match_priorities = match_priorities
-  # )
+  test_sibling_verified(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
 
   # Staff child
 
@@ -1859,8 +1859,9 @@ test_sibling_verified <- function(dir_out, match_priorities) {
     filter(is_highdemand) %>%
     filter(is_verifiedsibling) %>%
     filter(is.na(Sibling)) %>%
-    filter(is.na(Ineligible)) %>%
-    filter(is.na(`School Specific 1`))
+    filter(is.na(Ineligible))
+  # %>%
+  #   filter(is.na(`School Specific 1`))
 
   have <-
     match_priorities %>%
