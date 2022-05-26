@@ -925,15 +925,6 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
 
   cat("\nGuarantee\n")
 
-  # key_guarantee <-
-  #   prioritykey %>%
-  #   filter(!is.na(guarantee))
-  #
-  # codes_appschool <-
-  #   prioritykey %>%
-  #   select(code_site, code_appschool) %>%
-  #   distinct()
-
   if (round == "Round 1") {
 
     underage <-
@@ -1027,20 +1018,14 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
     #   left_join(codes_appschool, by = c("code_site_current" = "code_site")) %>%
     #   mutate(guarantee = code_appschool)
     #
-    # prohibited <-
-    #   students %>%
-    #   filter(
-    #     (expelled_status == "Re-entry Prohibited")
-    #     | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
-    #   ) %>%
-    #   mutate(is_expelled = TRUE) %>%
-    #   select(oneappid, id_account_expelled, is_expelled)
-    #
-    # return_prohibited <-
-    #   match_priorities %>%
-    #   select(`STUDENT ID`, `CHOICE SCHOOL`, id_account) %>%
-    #   left_join(prohibited, by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")) %>%
-    #   filter(is_expelled)
+    return_prohibited <-
+      students_futureschool %>%
+      filter(
+        (expelled_status == "Re-entry Prohibited")
+        | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
+      ) %>%
+      mutate(is_expelled = TRUE) %>%
+      select(oneappid, id_account_expelled)
 
     shouldhave <-
       students_futureschool %>%
@@ -1079,13 +1064,13 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
           "oneappid" = "STUDENT ID"
         )
       ) %>%
-      # anti_join(
-      #   return_prohibited,
-      #   by = c(
-      #     "guarantee" = "CHOICE SCHOOL",
-      #     "oneappid" = "STUDENT ID"
-      #   )
-      # ) %>%
+      anti_join(
+        return_prohibited,
+        by = c(
+          "id_account_guarantee" = "id_account_expelled",
+          "oneappid"
+        )
+      ) %>%
       arrange(name_account_future, grade_future)
 
   }
