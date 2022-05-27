@@ -1005,19 +1005,23 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
 
   } else if (round == "Round 2") {
 
-    # underage <-
-    #   students_active %>%
-    #   filter(
-    #     (grade_future == "1YR" & student_dob > "2021-09-30") |
-    #     (grade_future == "2YR" & student_dob > "2020-09-30") |
-    #     (grade_future == "PK3" & student_dob > "2019-09-30") |
-    #     (grade_future == "PK4" & student_dob > "2018-09-30") |
-    #     (grade_future == "K" & student_dob > "2017-09-30")
-    #   ) %>%
-    #   transmute(oneappid, code_site_current, grade_current, grade_applying = grade_current) %>%
-    #   left_join(codes_appschool, by = c("code_site_current" = "code_site")) %>%
-    #   mutate(guarantee = code_appschool)
-    #
+    underage <-
+      students_futureschool %>%
+      filter(
+        (grade_future == "1YR" & student_dob > "2021-09-30") |
+        (grade_future == "2YR" & student_dob > "2020-09-30") |
+        (grade_future == "PK3" & student_dob > "2019-09-30") |
+        (grade_future == "PK4" & student_dob > "2018-09-30") |
+        (grade_future == "K" & student_dob > "2017-09-30")
+      ) %>%
+      transmute(
+        id_account_guarantee = id_account_current,
+        name_account_future = name_account_current,
+        grade_future = grade_current,
+        oneappid,
+        id_student
+      )
+
     return_prohibited <-
       students_futureschool %>%
       filter(
@@ -1035,7 +1039,9 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
         grade_future,
         oneappid,
         id_student
-      )
+      ) %>%
+      filter(!(oneappid %in% underage$oneappid)) %>%
+      bind_rows(underage)
 
     invalid_guarantee <-
       match_priorities %>%
