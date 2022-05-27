@@ -143,6 +143,12 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match = match
   )
 
+  test_retentions(
+    dir_out = dir_out,
+    match = match,
+    students_active = students_active
+  )
+
   # Eligibility tests
 
   # Age
@@ -335,63 +341,6 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
   test_assignment(dir_out = dir_out, match = match)
 
   # end tests
-
-  return(NULL)
-
-
-
-# Retentions --------------------------------------------------------------
-
-  placements_inactive <- getdata_placement() %>% filter(!is_active)
-
-  retained <-
-    students_active %>%
-    dplyr::filter(promotion == "Retained") %>%
-    dplyr::filter(!(grade_current == "8" & is_t9)) %>%
-    dplyr::select(id_student, oneappid, grade_current)
-
-  shouldbe_retained <-
-    match %>%
-    dplyr::filter(`STUDENT ID` %in% retained$oneappid) %>%
-    dplyr::select(`STUDENT ID`, GRADE)
-
-  missing_retained <-
-    retained %>%
-    dplyr::anti_join(
-      shouldbe_retained,
-      by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
-    ) %>%
-    dplyr::anti_join(placements_inactive, by = c("id_student"))
-
-  cat("Missing retentions\n")
-
-  testthat::test_that("All retained students except for rising T9 and placement deactivations are assigned to current grade", {
-
-    testthat::expect_equal(nrow(missing_retained), 0)
-
-  })
-
-  write_if_bad(missing_retained, dir_out)
-
-  invalid_retained <-
-    match %>%
-    dplyr::filter(is_active & !is.na(id_account_current) & (GRADE == grade_current)) %>%
-    dplyr::select(id_student, `STUDENT ID`, GRADE, choice_name) %>%
-    dplyr::distinct() %>%
-    dplyr::anti_join(retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")) %>%
-    # dplyr::filter(GRADE != "12") %>%
-    dplyr::filter(!(GRADE %in% grades_ec())) %>%
-    dplyr::arrange(GRADE)
-
-  cat("Invalid retentions\n")
-
-  testthat::test_that("All students applying to current grade in match are marked retained in Salesforce", {
-
-    testthat::expect_equal(nrow(invalid_retained), 0)
-
-  })
-
-  write_if_bad(invalid_retained, dir_out)
 
 }
 
@@ -602,6 +551,54 @@ test_grades <- function(dir_out, match) {
 
   write_if_bad(invalid_grades, dir_out)
   write_if_bad(invalid_grades_eligible, dir_out)
+
+}
+
+
+
+#' @export
+test_retentions <- function(dir_out, match, students_active) {
+
+  cat("\nRetentions\n")
+
+  retained <-
+    students_active %>%
+    filter(promotion == "Retained") %>%
+    filter(!(grade_current == "8" & is_t9)) %>%
+    select(id_student, oneappid, grade_current)
+
+  invalid_retained <-
+    match %>%
+    filter(is_active & (GRADE == grade_current)) %>%
+    select(GRADE, `STUDENT ID`, id_student) %>%
+    distinct() %>%
+    anti_join(
+      retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")
+    ) %>%
+    filter(!(GRADE %in% grades_ec())) %>%
+    # filter(GRADE != "12") %>%
+    arrange(GRADE)
+
+  test_helper(
+    invalid_retained,
+    "All students applying to current grade in match are marked as retained."
+  )
+
+  write_if_bad(invalid_retained, dir_out)
+
+  missing_retained <-
+    retained %>%
+    anti_join(
+      match,
+      by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
+    )
+
+  test_helper(
+    missing_retained,
+    "All retained students except for T9 are in the match for their current grade."
+  )
+
+  write_if_bad(missing_retained, dir_out)
 
 }
 
