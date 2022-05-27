@@ -133,7 +133,9 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
 
   test_ranks(
     dir_out = dir_out,
-    match = match
+    match = match,
+    apps_with_choices = apps_with_choices,
+    choices = choices
   )
 
   # Invalid grades
@@ -474,7 +476,62 @@ test_participants <- function(dir_out, round, match, students_active, students_f
 
 
 #' @export
-test_ranks <- function(dir_out, match) {
+test_ranks <- function(dir_out, match, apps_with_choices, choices) {
+
+  cat("\nChoices\n")
+
+  match_clean <-
+    match %>%
+    filter(`STUDENT ID` %in% apps_with_choices$oneappid) %>%
+    mutate(`CHOICE SCHOOL` = str_remove(
+      `CHOICE SCHOOL`, "_((tulane)|(community)|(ed)|(tier))_[12]$"
+      )
+    ) %>%
+    group_by(`STUDENT ID`) %>%
+    arrange(`CHOICE RANK`) %>%
+    select(`STUDENT ID`, `CHOICE SCHOOL`) %>%
+    ungroup() %>%
+    distinct() %>%
+    group_by(`STUDENT ID`) %>%
+    mutate(rank = 1:n())
+
+  choices <-
+    choices %>%
+    mutate(rank = as.numeric(str_remove(rank, "Rank ")))
+
+  invalid_choices <-
+    match_clean %>%
+    anti_join(choices, by = c(
+      "STUDENT ID" = "oneappid",
+      "CHOICE SCHOOL" = "code_appschool",
+      "rank"
+    )) %>%
+    left_join(match, by = c("STUDENT ID", "CHOICE SCHOOL")) %>%
+    filter(`GUARANTEED?` != "YES")
+
+  missing_choices <-
+    choices %>%
+    anti_join(match_clean, by = c(
+      "oneappid" = "STUDENT ID",
+      "code_appschool" = "CHOICE SCHOOL",
+      "rank"
+    ))
+
+  test_helper(
+    invalid_choices,
+    "Every match choice traces back to application."
+  )
+
+  write_if_bad(invalid_choices, dir_out)
+
+  test_helper(
+    missing_choices,
+    "Every application choice is reflected in the match."
+  )
+
+  write_if_bad(missing_choices, dir_out)
+
+
 
   cat("\nInvalid ranks\n")
 
