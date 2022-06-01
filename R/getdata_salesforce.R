@@ -747,6 +747,7 @@ getdata_facility <- function() {
         Address__c,
         Ownership__c,
         Status__c,
+        Parcel_Has_Structure__c,
         Longitude__c,
         Latitude__c,
         Active_Student_Count__c
@@ -762,6 +763,7 @@ getdata_facility <- function() {
       address = Address__c,
       ownership = Ownership__c,
       status = Status__c,
+      has_structure = Parcel_Has_Structure__c,
       lon = Longitude__c,
       lat = Latitude__c,
       n_students = Active_Student_Count__c
@@ -770,6 +772,12 @@ getdata_facility <- function() {
       n_students
       ),
       as.numeric
+      )
+    ) %>%
+    dplyr::mutate(across(c(
+      has_structure
+      ),
+      as.logical
       )
     )
 

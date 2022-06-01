@@ -215,7 +215,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     priorities = priorities,
     feeders = feeders,
     appinputs = appinputs,
-    siblings = siblings
+    siblings = siblings,
+    accounts = accounts
   )
 
   # match_placement(

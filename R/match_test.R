@@ -14,7 +14,9 @@
 
 
 #' @export
-match_test <- function(match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, feeders, appinputs, siblings) {
+match_test <- function(
+  match, dir_external, dir_out, round, students, apps, choices, appschools, priorities, feeders, appinputs, siblings, accounts
+  ) {
 
   cat("\nValidating match file\n")
 
@@ -129,7 +131,7 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     students_futureschool = students_futureschool
   )
 
-  # Invalid rank numbers
+  # Invalid choices and rank numbering
 
   test_ranks(
     dir_out = dir_out,
@@ -144,6 +146,8 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     dir_out = dir_out,
     match = match
   )
+
+  # Retentions
 
   test_retentions(
     dir_out = dir_out,
@@ -315,6 +319,20 @@ match_test <- function(match, dir_external, dir_out, round, students, apps, choi
     match_priorities = match_priorities
   )
 
+  # Non-verified siblings
+
+  test_sibling(
+    dir_out = dir_out,
+    round = round,
+    match_priorities = match_priorities,
+    students_recent = students,
+    siblings = siblings,
+    appschoolrankings = choices,
+    appschools = appschools,
+    apps = apps_with_choices,
+    accounts = accounts
+  )
+
   # Verified sibling
 
   test_sibling_verified(
@@ -478,7 +496,7 @@ test_participants <- function(dir_out, round, match, students_active, students_f
 #' @export
 test_ranks <- function(dir_out, match, apps_with_choices, choices) {
 
-  cat("\nChoices\n")
+  cat("\nChoices and rank ordering\n")
 
   match_clean <-
     match %>%
@@ -519,7 +537,7 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
 
   test_helper(
     invalid_choices,
-    "Every match choice traces back to application."
+    "Every match record traces back to application or guarantee school."
   )
 
   write_if_bad(invalid_choices, dir_out)
@@ -533,7 +551,7 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
 
 
 
-  cat("\nInvalid ranks\n")
+  cat("\nInvalid rank numbers\n")
 
   invalid_ranks <-
     match %>%
