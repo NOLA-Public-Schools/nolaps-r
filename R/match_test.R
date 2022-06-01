@@ -1221,7 +1221,12 @@ test_closing <- function(dir_out, priorities, match_priorities, students_active,
       offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
     ) %>%
     filter(is.na(`Closing Public School`)) %>%
-    filter(is.na(Ineligible))
+    filter(is.na(Ineligible)) %>%
+    filter(!(`CHOICE SCHOOL` %in% c(
+      "4012",
+      "4012_tier_1",
+      "4012_tier_2"
+    )))
 
   have <-
     match_priorities %>%
