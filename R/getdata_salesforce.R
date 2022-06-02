@@ -28,7 +28,6 @@ mutate_code_site_group <- function(x) {
 
   x %>%
     dplyr::mutate(code_site_group = dplyr::case_when(
-      code_site %in% einstein()$code_site ~ "Einstein",
       stringr::str_detect(code_site, "^[:alnum:]{5,6}") ~ stringr::str_pad(
         stringr::str_extract(code_site, "^[:alnum:]{5,6}"),
         width = 6,

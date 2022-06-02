@@ -651,7 +651,7 @@ test_retentions <- function(dir_out, match, students_active) {
       retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")
     ) %>%
     filter(!(GRADE %in% grades_ec())) %>%
-    # filter(GRADE != "12") %>%
+    filter(GRADE != "12") %>%
     arrange(GRADE)
 
   test_helper(
