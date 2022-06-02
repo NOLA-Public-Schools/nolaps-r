@@ -555,7 +555,7 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
 
   invalid_ranks <-
     match %>%
-    filter(`CHOICE RANK` > 18)
+    filter(`CHOICE RANK` > 20)
 
   cat(
     glue(
@@ -568,7 +568,7 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
 
   test_helper(
     invalid_ranks,
-    "No match record has a rank larger than 18."
+    "No match record has a rank larger than 20."
   )
 
   write_if_bad(invalid_ranks, dir_out)
