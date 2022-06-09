@@ -768,6 +768,8 @@ getdata_facility <- function() {
       n_students = Active_Student_Count__c
     ) %>%
     dplyr::mutate(across(c(
+      lon,
+      lat,
       n_students
       ),
       as.numeric

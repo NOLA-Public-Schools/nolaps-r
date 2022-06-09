@@ -36,9 +36,9 @@ getdata_council_districts <- function() {
 
 
 #' @export
-getdata_districts <- function() {
+getdata_board_districts <- function() {
 
-  st_read(path_data("Geographies/Districts/districts.shp"))
+  st_read(path_data("Geographies/School Board Districts/board_districts.shp"))
 
 }
 

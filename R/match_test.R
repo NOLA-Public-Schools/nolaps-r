@@ -269,21 +269,21 @@ match_test <- function(
 
   # French
 
-  # test_french(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_french(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Montessori
 
-  # test_montessori(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_montessori(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Military
 
@@ -747,6 +747,10 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
 
   match <-
     match %>%
+    # mutate(`CHOICE SCHOOL` = str_remove(
+    #   `CHOICE SCHOOL`, "_((tulane)|(community)|(ed)|(tier))_[12]$"
+    #   )
+    # ) %>%
     left_join(
       choices,
       by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
