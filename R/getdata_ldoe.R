@@ -182,6 +182,18 @@ getdata_multistat <- function() {
 
 
 #' @export
+getdata_pep_staff <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema("public", "pep_staff")
+  )
+
+}
+
+
+
+#' @export
 getdata_sped <- function() {
 
   dplyr::tbl(

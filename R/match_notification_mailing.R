@@ -12,7 +12,7 @@ match_notification_mailing <- function(
   test_email = "test@test.com",
   test_sample = 1,
   students_recent = getdata_student_recent(),
-  apps = getdata_app(round = "Round 1"),
+  apps = getdata_app(round = "Round 2"),
   match
   ) {
 

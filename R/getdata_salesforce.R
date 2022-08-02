@@ -234,6 +234,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
       select
         CreatedDate,
         LastModifiedDate,
+        Archived__c,
         OneApp_ID__c,
         Student__r.SchoolForce__Contact_Id__c,
         Student__c,
@@ -291,6 +292,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
     dplyr::select(
       date_created = CreatedDate,
       date_modified = LastModifiedDate,
+      is_archived = Archived__c,
       oneappid = OneApp_ID__c,
       id_contact = Student__r.SchoolForce__Contact_Id__c,
       id_student = Student__c,
@@ -340,6 +342,7 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
     fix_grades(var = grade_current) %>%
     fix_grades(var = grade_applying) %>%
     dplyr::mutate(dplyr::across(c(
+      is_archived,
       is_addressvalidated,
       has_verified,
       is_recent,
@@ -841,7 +844,9 @@ getdata_gradecapacity <- function() {
         Requested_Round_2_Target__c,
         School_Name__r.Designated_Content_Approver__c,
         School_Name__r.Enrollment_POC_Email__c,
-        Facility__c
+        Facility__c,
+        Facility__r.Name,
+        Facility__r.Address__c
       from Grade_Capacity__c
       "
     ),
@@ -865,12 +870,14 @@ getdata_gradecapacity <- function() {
       target_101 = Projection_Seat_Target__c,
       target_match = Match_Target__c,
       target_match_future = Future_Match_Target__c,
-      target_101_future = Future_10_1_Target__c,
+      # target_101_future = Future_10_1_Target__c,
       target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
       email_approver = School_Name__r.Designated_Content_Approver__c,
       email_enrollment = School_Name__r.Enrollment_POC_Email__c,
-      id_facility = Facility__c
+      id_facility = Facility__c,
+      name_facility = Facility__r.Name,
+      address = Facility__r.Address__c
     ) %>%
     fix_grades(var = grade) %>%
     dplyr::mutate(across(c(
@@ -1406,7 +1413,7 @@ getdata_student_recent <- function() {
 
 
 #' @export
-getdata_student_year <- function(years = c("2021-2022")) {
+getdata_student_year <- function(years = date_currentyear()) {
 
   years <-
     stringr::str_flatten(years, "', '") %>%
@@ -1421,7 +1428,10 @@ getdata_student_year <- function(years = c("2021-2022")) {
         SchoolForce__Contact_Id__c,
         Id,
         MR_Application_Submitted__c,
-        R2_Application_Submitted__c
+        R2_Application_Submitted__c,
+        SchoolForce__School__c,
+        SchoolForce__School__r.Name,
+        SchoolForce__Active__c
       from Schoolforce__Student__c
       where
         School_Year__c in {years}
@@ -1436,11 +1446,15 @@ getdata_student_year <- function(years = c("2021-2022")) {
       id_contact = SchoolForce__Contact_Id__c,
       id_student = Id,
       appsubmitted_r1 = MR_Application_Submitted__c,
-      appsubmitted_r2 = R2_Application_Submitted__c
-    ) |>
+      appsubmitted_r2 = R2_Application_Submitted__c,
+      id_account_current = SchoolForce__School__c,
+      name_account_current = SchoolForce__School__r.Name,
+      is_active = SchoolForce__Active__c
+    ) %>%
     dplyr::mutate(across(c(
       appsubmitted_r1,
-      appsubmitted_r2
+      appsubmitted_r2,
+      is_active
       ),
       as.logical
       )

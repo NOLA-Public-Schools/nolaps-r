@@ -13,6 +13,11 @@ date_appstart_3year <- function() {"2019-11-01T00:00:00Z"}
 
 
 #' @export
+date_currentyear <- function() {"2022-2023"}
+
+
+
+#' @export
 fix_grades <- function(x, var = GRADE) {
 
   x %>%

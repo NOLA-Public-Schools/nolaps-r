@@ -17,8 +17,6 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
 
   placements <-
     match %>%
-    filter(str_length(`STUDENT ID`) == 9) %>%
-    filter(str_detect(`CHOICE SCHOOL`, "_[NR]$", negate = TRUE)) %>%
     filter(`ASSIGNMENT STATUS` == "Accepted") %>%
     select(`STUDENT ID`, GRADE, `CHOICE SCHOOL`) %>%
     mutate(`CHOICE SCHOOL` = case_when(
@@ -42,8 +40,9 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
       id_student_recent = id_student
     ) %>%
     mutate(
-      id_schoolyear = "a106T00000AQgdMQAT", # 2021-2022
-      id_recordtype = "0120W000001tdvs", # Round 1
+      id_schoolyear = "a106T00000AQgdM", # 2021-2022
+      # id_recordtype_r1 = "0120W000001tdvs",
+      id_recordtype_r2 = "0120W000001tdvt",
       is_active = TRUE,
       is_archived = FALSE
     ) %>%

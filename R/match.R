@@ -174,12 +174,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
     fix_grades()
 
-  # overmatches <-
-  #   readxl::read_excel(
-  #     glue::glue("{dir_external}/sibling-overmatches.xlsx"),
-  #     col_types = "text"
-  #   ) %>%
-  #   dplyr::select(-`CHOICE RANK`)
+  overmatches <-
+    readxl::read_excel(
+      glue::glue("{dir_external}/sibling-overmatches.xlsx"),
+      col_types = "text"
+    )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
@@ -219,23 +218,23 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     accounts = accounts
   )
 
-  # match_placement(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   students_recent = students_recent,
-  #   appschools = appschools
-  # )
-  #
-  # match_notification(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   apps = apps,
-  #   accounts = accounts,
-  #   appschools = appschools,
-  #   students_recent = students_recent
-  # )
+  match_placement(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    students_recent = students_recent,
+    appschools = appschools
+  )
+
+  match_notification(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    apps = apps,
+    accounts = accounts,
+    appschools = appschools,
+    students_recent = students_recent
+  )
   #
   # match_briefing(
   #   match = match,

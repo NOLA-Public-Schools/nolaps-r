@@ -8,7 +8,7 @@ Description: More about what it does (maybe more than one line). Use four spaces
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 Suggests: 
     testthat
 Depends: 
@@ -21,6 +21,7 @@ Imports:
     purrr,
     readr,
     readxl,
+    RPostgres,
     salesforcer,
     sf,
     stringr,
