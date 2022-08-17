@@ -3,6 +3,7 @@
 #' @import lubridate
 #' @import salesforcer
 #' @import stringr
+#' @import tidyr
 
 #' @importFrom magrittr %>%
 
@@ -195,7 +196,7 @@ getdata_account_highdemand <- function() {
 #' @export
 getdata_accountability <- function() {
 
-  salesforcer::sf_query(
+  sf_query(
     glue(
       "
       select
@@ -205,7 +206,10 @@ getdata_accountability <- function() {
         Federal_Site_Code__c,
         Total_Enrollment__c,
         Letter_Grade__c,
-        School_Performance_Score__c
+        School_Performance_Score__c,
+        Rate_Economically_Disadvantaged__c,
+        Rate_Minority__c,
+        Rate_Limited_English_Proficiency__c
       from Accountability_Site__c
       "
     )
@@ -217,9 +221,20 @@ getdata_accountability <- function() {
       code_site_federal = Federal_Site_Code__c,
       n_total = Total_Enrollment__c,
       grade_sps_cb = Letter_Grade__c,
-      index_sps_cb = School_Performance_Score__c
+      index_sps_cb = School_Performance_Score__c,
+      rate_disadvantage = Rate_Economically_Disadvantaged__c,
+      rate_minority = Rate_Minority__c,
+      rate_limeng = Rate_Limited_English_Proficiency__c
     ) %>%
-    mutate(across(n_total, as.numeric))
+    mutate(across(
+      c(
+        n_total,
+        starts_with("rate_")
+
+      ),
+      as.numeric
+      )
+    )
 
 }
 
@@ -676,6 +691,7 @@ getdata_contact <- function() {
         LastName,
         SchoolForce__Date_of_Birth__c,
         Email,
+        Primary_Contact_Number__c,
         LastModifiedDate,
         RecordType.Name
       from Contact
@@ -690,6 +706,7 @@ getdata_contact <- function() {
       lastname = LastName,
       dob = SchoolForce__Date_of_Birth__c,
       email = Email,
+      phone = Primary_Contact_Number__c,
       date_modified = LastModifiedDate,
       contact_type = RecordType.Name
     )
@@ -899,7 +916,7 @@ getdata_gradecapacity <- function() {
 #' @export
 getdata_guardian <- function() {
 
-  salesforcer::sf_query(
+  sf_query(
     glue::glue(
       "
       select
@@ -907,17 +924,17 @@ getdata_guardian <- function() {
         Reference_Id__c
       from Family_Relationship__c
       where
-        Relationship_to_Student__c in ('Guardian', 'Parent')
+        Relationship_to_Student__c in ('Guardian', 'Parent', 'Relative')
       "
     ),
     api_type = "Bulk 2.0",
     guess_types = FALSE
   ) %>%
-    dplyr::select(
+    select(
       student_oneappid = Student_OneApp_ID__c,
       id_relationship = Reference_Id__c
     ) %>%
-    tidyr::separate(
+    separate(
       col = id_relationship,
       into = c("id_contact_student", "id_contact_guardian"),
       sep = "_"
@@ -1204,7 +1221,7 @@ query_student <- function() {
       eScholar_LASID__c,
       Local_ID__c,
       OneApp_ID__c,
-      SchoolForce__Contact_Id__c,
+      SchoolForce__Individual__c,
       Id,
       SchoolForce__Student_First_Name__c,
       SchoolForce__Student_Last_Name__c,
@@ -1267,7 +1284,7 @@ format_student <- function(x) {
       lasid_escholar = eScholar_LASID__c,
       lasid = Local_ID__c,
       oneappid = OneApp_ID__c,
-      id_contact = SchoolForce__Contact_Id__c,
+      id_contact = SchoolForce__Individual__c,
       id_student = Id,
       student_firstname = SchoolForce__Student_First_Name__c,
       student_lastname = SchoolForce__Student_Last_Name__c,

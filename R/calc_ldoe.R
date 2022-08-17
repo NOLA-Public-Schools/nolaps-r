@@ -205,7 +205,7 @@ calc_proficiency <- function(x, ...) {
 
 
 #' @export
-calc_proficiency_diff <- function(x, ...) {
+calc_proficiency_diff <- function(x, ..., digits = 0) {
   x %>%
     calc_proficiency(...) %>%
     dplyr::group_by(...) %>%
@@ -218,7 +218,7 @@ calc_proficiency_diff <- function(x, ...) {
     ) %>%
     dplyr::mutate(dplyr::across(
       tidyselect::starts_with("rate_") | tidyselect::starts_with("diff_"),
-      ~ round(., digits = 3))
+      ~ round(., digits = digits))
     )
 }
 
