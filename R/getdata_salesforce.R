@@ -204,6 +204,8 @@ getdata_accountability <- function() {
         Name,
         SIS_Site_Code__c,
         Federal_Site_Code__c,
+        Closed__c,
+        Contract_End_Date__c,
         Total_Enrollment__c,
         Letter_Grade__c,
         School_Performance_Score__c,
@@ -212,13 +214,16 @@ getdata_accountability <- function() {
         Rate_Limited_English_Proficiency__c
       from Accountability_Site__c
       "
-    )
+    ),
+    guess_types = FALSE
   ) %>%
     select(
       id_accountability = Id,
       name_accountability = Name,
       code_site = SIS_Site_Code__c,
       code_site_federal = Federal_Site_Code__c,
+      is_closed = Closed__c,
+      date_contract_end = Contract_End_Date__c,
       n_total = Total_Enrollment__c,
       grade_sps_cb = Letter_Grade__c,
       index_sps_cb = School_Performance_Score__c,
@@ -230,9 +235,22 @@ getdata_accountability <- function() {
       c(
         n_total,
         starts_with("rate_")
-
       ),
       as.numeric
+      )
+    ) %>%
+    mutate(across(
+      c(
+        starts_with("date_")
+      ),
+      as_date
+      )
+    ) %>%
+    mutate(across(
+      c(
+        starts_with("is_")
+      ),
+      as.logical
       )
     )
 
