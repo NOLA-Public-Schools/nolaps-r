@@ -787,7 +787,8 @@ getdata_facility <- function() {
         Parcel_Has_Structure__c,
         Longitude__c,
         Latitude__c,
-        Active_Student_Count__c
+        Active_Student_Count__c,
+        Program_Capacity__c
       from Facility__c
       "
     ),
@@ -803,12 +804,14 @@ getdata_facility <- function() {
       has_structure = Parcel_Has_Structure__c,
       lon = Longitude__c,
       lat = Latitude__c,
-      n_students = Active_Student_Count__c
+      n_students = Active_Student_Count__c,
+      program_capacity = Program_Capacity__c
     ) %>%
     dplyr::mutate(across(c(
       lon,
       lat,
-      n_students
+      n_students,
+      program_capacity
       ),
       as.numeric
       )
@@ -1219,6 +1222,40 @@ getdata_recordtype <- function() {
 
 }
 
+
+
+#' @export
+getdata_roundrobin <- function() {
+
+  sf_query(
+    glue(
+      "
+      select
+        Id,
+        Grade_Capacity__c,
+        Exempt_from_Current_Cycle__c,
+        Match_to_Seat_Availability__c
+      from Round_Robin__c
+      "
+    )
+  ) %>%
+    select(
+      id_roundrobin = Id,
+      id_gradecapacity = Grade_Capacity__c,
+      is_exempt_roundrobin = Exempt_from_Current_Cycle__c,
+      match_to_10_1 = Match_to_Seat_Availability__c
+    ) %>%
+    mutate(
+      across(c(
+        is_exempt_roundrobin,
+        match_to_10_1
+      ),
+      as.logical
+      )
+    ) %>%
+    mutate(is_exempt_10_1 = !match_to_10_1)
+
+}
 
 
 

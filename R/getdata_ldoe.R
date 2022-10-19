@@ -113,8 +113,8 @@ getdata_demographic <- function() {
 getdata_disadvantage <- function() {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe_test(),
-    dbplyr::in_schema('db_owner', 'disadvantage')
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema('public', 'disadvantage')
   )
 
 }

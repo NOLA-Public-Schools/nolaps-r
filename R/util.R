@@ -127,6 +127,37 @@ grades_next <- function() {
 
 
 #' @export
+grades_previous <- function() {
+
+  tibble::tribble(
+    ~grade_current, ~grade_previous,
+    "1YR", "INF",
+    "2YR", "1YR",
+    "PK3", "2YR",
+    "PK4", "PK3",
+    "K", "PK4",
+    "1", "K",
+    "2", "1",
+    "3", "2",
+    "4", "3",
+    "5", "4",
+    "6", "5",
+    "7", "6",
+    "8", "7",
+    "9", "8",
+    "10", "9",
+    "11", "10",
+    "12", "11"
+  )
+  # %>%
+  #   fix_grades(grade_current) %>%
+  #   fix_grades(grade_previous)
+
+}
+
+
+
+#' @export
 grades_text_numeric <- function() {
 
   tibble::tribble(
