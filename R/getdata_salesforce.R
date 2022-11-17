@@ -205,6 +205,7 @@ getdata_accountability <- function() {
         SIS_Site_Code__c,
         Federal_Site_Code__c,
         Closed__c,
+        Single_Site__c,
         Contract_End_Date__c,
         Total_Enrollment__c,
         Letter_Grade__c,
@@ -223,6 +224,7 @@ getdata_accountability <- function() {
       code_site = SIS_Site_Code__c,
       code_site_federal = Federal_Site_Code__c,
       is_closed = Closed__c,
+      is_singlesite = Single_Site__c,
       date_contract_end = Contract_End_Date__c,
       n_total = Total_Enrollment__c,
       grade_sps_cb = Letter_Grade__c,
@@ -520,7 +522,8 @@ getdata_appschool <- function() {
         Grade_10_Zip_Preference__c,
         Grade_11_Zip_Preference__c,
         Grade_12_Zip_Preference__c,
-        School_Type__c
+        School_Type__c,
+        Facility__c
       from Application_School__c
       "
     ),
@@ -571,7 +574,8 @@ getdata_appschool <- function() {
       zonepref_10 = Grade_10_Zip_Preference__c,
       zonepref_11 = Grade_11_Zip_Preference__c,
       zonepref_12 = Grade_12_Zip_Preference__c,
-      schooltype = School_Type__c
+      schooltype = School_Type__c,
+      id_facility = Facility__c
     ) %>%
     dplyr::mutate(dplyr::across(c(
       is_ec,
@@ -884,7 +888,8 @@ getdata_gradecapacity <- function() {
         School_Name__r.Enrollment_POC_Email__c,
         Facility__c,
         Facility__r.Name,
-        Facility__r.Address__c
+        Facility__r.Address__c,
+        Facility__r.Catchment_Zone__c
       from Grade_Capacity__c
       "
     ),
@@ -915,7 +920,8 @@ getdata_gradecapacity <- function() {
       email_enrollment = School_Name__r.Enrollment_POC_Email__c,
       id_facility = Facility__c,
       name_facility = Facility__r.Name,
-      address = Facility__r.Address__c
+      address = Facility__r.Address__c,
+      catchment = Facility__r.Catchment_Zone__c
     ) %>%
     fix_grades(var = grade) %>%
     dplyr::mutate(across(c(
