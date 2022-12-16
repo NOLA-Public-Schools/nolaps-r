@@ -64,6 +64,11 @@ grades_hs <- function() {c("T9", "9", "10", "11", "12")}
 
 
 #' @export
+grades_k12 <- function() {c(grades_k8(), grades_hs())}
+
+
+
+#' @export
 grades_inf8 <- function() {c(grades_ec(), grades_k8())}
 
 
