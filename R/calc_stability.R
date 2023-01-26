@@ -64,7 +64,7 @@ rate_stability_1year <- function(year, x, enrollment, ...) {
     dplyr::filter(!(GradePlacementCd %in% c("12", "15", "20", "24", "T9"))) %>%
     dplyr::left_join(grades_numeric(), by = c("GradePlacementCd" = "grade")) %>%
     dplyr::left_join(hasgrade_nextyear, by = c("SiteCd", "grade_numeric" = "grade_current")) %>%
-    dplyr::left_join(enrollment_year2, by = c("CorrectedIDNum" = "StudentIdNum")) %>%
+    dplyr::left_join(enrollment_year2, by = c("StudentIdNum" = "StudentIdNum")) %>%
     dplyr::filter(!is.na(grade_next)) %>%
     dplyr::mutate(is_sameschool = SiteCd == SiteCd_year2)
 
