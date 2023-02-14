@@ -158,6 +158,18 @@ getdata_graduation <- function() {
 
 
 #' @export
+getdata_grad_roster_4 <- function() {
+
+  dplyr::tbl(
+    src = nolaps::connection_ldoe(),
+    dbplyr::in_schema('public', 'grad_roster_4')
+  )
+
+}
+
+
+
+#' @export
 getdata_masterysummary <- function() {
 
   dplyr::tbl(
