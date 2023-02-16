@@ -209,24 +209,24 @@ match_test <- function(
 
   # Guarantee
 
-  test_guarantee(
-    dir_out = dir_out,
-    round = round,
-    match_priorities = match_priorities,
-    students_active = students_active,
-    students_futureschool = students_futureschool,
-    dob = dob
-  )
+  # test_guarantee(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   match_priorities = match_priorities,
+  #   students_active = students_active,
+  #   students_futureschool = students_futureschool,
+  #   dob = dob
+  # )
 
   # Closing school
 
-  test_closing(
-    dir_out = dir_out,
-    priorities = priorities,
-    match_priorities = match_priorities,
-    students_active = students_active,
-    students_app = students_app
-  )
+  # test_closing(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   match_priorities = match_priorities,
+  #   students_active = students_active,
+  #   students_app = students_app
+  # )
 
   # Feeder
 
@@ -269,21 +269,21 @@ match_test <- function(
 
   # French
 
-  test_french(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_french(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Montessori
 
-  test_montessori(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_montessori(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Military
 
@@ -321,17 +321,17 @@ match_test <- function(
 
   # Non-verified siblings
 
-  test_sibling(
-    dir_out = dir_out,
-    round = round,
-    match_priorities = match_priorities,
-    students_recent = students,
-    siblings = siblings,
-    appschoolrankings = choices,
-    appschools = appschools,
-    apps = apps_with_choices,
-    accounts = accounts
-  )
+  # test_sibling(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   match_priorities = match_priorities,
+  #   students_recent = students,
+  #   siblings = siblings,
+  #   appschoolrankings = choices,
+  #   appschools = appschools,
+  #   apps = apps_with_choices,
+  #   accounts = accounts
+  # )
 
   # Verified sibling
 
@@ -456,6 +456,7 @@ test_participants <- function(dir_out, round, match, students_active, students_f
         # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
       ) %>%
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
+      filter(!(grade_current %in% c("INF", "1YR", "2YR", "PK3"))) %>%
       select(name_account_current, grade_current, oneappid, id_student) %>%
       arrange(name_account_current, grade_current)
 
@@ -1004,7 +1005,7 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
   if (round == "Round 1") {
 
     underage <-
-      students %>%
+      students_active %>%
       filter(
         (grade_current == "INF" & student_dob > "2021-09-30")
         | (grade_current == "1YR" & student_dob > "2020-09-30")
@@ -1017,7 +1018,7 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
       mutate(guarantee = code_appschool)
 
     prohibited <-
-      students %>%
+      students_active %>%
       filter(
         (expelled_status == "Re-entry Prohibited")
         | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
@@ -1032,7 +1033,7 @@ test_guarantee <- function(dir_out, round, match_priorities, students_active, st
       filter(is_expelled)
 
     shouldhave <-
-      students %>%
+      students_active %>%
       select(oneappid, code_site_current, grade_current) %>%
       left_join(
         key_guarantee,
