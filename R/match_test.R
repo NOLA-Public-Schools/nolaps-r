@@ -243,13 +243,13 @@ match_test <- function(
 
   # Closing school
 
-  # test_closing(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   match_priorities = match_priorities,
-  #   students_active = students_active,
-  #   students_app = students_app
-  # )
+  test_closing(
+    dir_out = dir_out,
+    priorities = priorities,
+    match_priorities = match_priorities,
+    students_active = students_active,
+    students_app = students_app
+  )
 
   # Feeder
 
@@ -310,12 +310,12 @@ match_test <- function(
 
   # Military
 
-  # test_military(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_military(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # UNO
 
