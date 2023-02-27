@@ -1186,9 +1186,11 @@ getdata_sibling <- function() {
     glue::glue(
       "
       select
+        Id,
         Student_OneApp_ID__c,
         PG_Sibling_OneApp_ID__c,
-        Reference_Id__c
+        Reference_Id__c,
+        PG_Sibling_Name__c
       from Family_Relationship__c
       where
         Relationship_to_Student__c = 'Sibling'
@@ -1198,12 +1200,14 @@ getdata_sibling <- function() {
     guess_types = FALSE
   ) %>%
     dplyr::select(
+      id_relationship = Id,
       student_oneappid = Student_OneApp_ID__c,
       sibling_oneappid = PG_Sibling_OneApp_ID__c,
-      id_relationship = Reference_Id__c
+      id_crosswalk = Reference_Id__c,
+      id_sibling = PG_Sibling_Name__c
     ) %>%
     tidyr::separate(
-      col = id_relationship,
+      col = id_crosswalk,
       into = c("id_contact_student", "id_contact_sibling"),
       sep = "_"
     )
