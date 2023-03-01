@@ -67,6 +67,7 @@ getdata_account <- function() {
         Id,
         Name,
         School_Code_String__c,
+        Application_Code__c,
         Governance__c,
         EC_Funding_Source__c,
         School_Status__c,
@@ -103,6 +104,7 @@ getdata_account <- function() {
       id_account = Id,
       name_account = Name,
       code_site = School_Code_String__c,
+      code_appschool_account = Application_Code__c,
       governance = Governance__c,
       fundingsource = EC_Funding_Source__c,
       status = School_Status__c,
@@ -1090,6 +1092,7 @@ getdata_priority <- function() {
       from Priority__c
       where
         Application_School__r.School__r.School_Status__c = 'Open' or
+        Application_School__r.School__r.School_Status__c = 'Opening Next Year' or
         Application_School__r.School__r.School_Status__c = 'Closing at End of School Year'
       "
     )
