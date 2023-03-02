@@ -292,21 +292,21 @@ match_test <- function(
 
   # French
 
-  # test_french(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_french(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Montessori
 
-  # test_montessori(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_montessori(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Military
 
