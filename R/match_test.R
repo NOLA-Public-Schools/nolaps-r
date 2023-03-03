@@ -1124,6 +1124,7 @@ test_guarantee <- function(
           "oneappid" = "STUDENT ID"
         )
       ) %>%
+      filter(!(grade_applying %in% grades_ec())) %>%
       arrange(name_account_current, grade_current, grade_applying, guarantee)
 
   } else if (round == "Round 2") {
