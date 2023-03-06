@@ -1069,6 +1069,9 @@ test_guarantee <- function(
       mutate(guarantee = case_when(
         can_roll ~ id_account_current,
         !can_roll &
+          grade_current == "12" &
+          promotion == "Retained" ~ id_account_current,
+        !can_roll &
           !is_terminalgrade &
           !is.na(id_account_guarantee) ~ id_account_guarantee,
         !can_roll ~ NA_character_
