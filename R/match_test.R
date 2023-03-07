@@ -690,7 +690,8 @@ test_retentions <- function(dir_out, match, students_active) {
     anti_join(
       match,
       by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
-    )
+    ) %>%
+    filter(!(grade_current %in% grades_ec()))
 
   test_helper(
     missing_retained,
