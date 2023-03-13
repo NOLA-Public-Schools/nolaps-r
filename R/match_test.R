@@ -344,17 +344,18 @@ match_test <- function(
 
   # Non-verified siblings
 
-  # test_sibling(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   match_priorities = match_priorities,
-  #   students_recent = students,
-  #   siblings = siblings,
-  #   appschoolrankings = choices,
-  #   appschools = appschools,
-  #   apps = apps_with_choices,
-  #   accounts = accounts
-  # )
+  test_sibling_account(
+    dir_out = dir_out,
+    round = round,
+    match_priorities = match_priorities,
+    students_recent = students,
+    siblings = siblings,
+    appschoolrankings = choices,
+    appschools = appschools,
+    apps = apps_with_choices,
+    accounts = accounts,
+    accounts_gradespan = accounts_gradespan
+  )
 
   # Verified sibling
 
@@ -407,7 +408,8 @@ test_participants <- function(dir_out, round, match, students_active, students_f
         !(`STUDENT ID` %in% students_active$oneappid)
       ) %>%
       select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
-      arrange(choice_name, `CHOICE SCHOOL`, GRADE)
+      arrange(choice_name, `CHOICE SCHOOL`, GRADE) %>%
+      filter(!(`CHOICE SCHOOL` == "4005" & GRADE %in% grades_hs()))
 
     test_text <- "All match records trace back to application with choices or active student."
 
@@ -476,7 +478,6 @@ test_participants <- function(dir_out, round, match, students_active, students_f
       filter(is_terminalgrade == FALSE) %>%
       filter(
         grade_current != 12
-        # | (grade_current == 12 & (oneappid %in% oaretentions$`OneApp ID`))
       ) %>%
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
       filter(!(grade_current %in% c("INF", "1YR", "2YR", "PK3"))) %>%
