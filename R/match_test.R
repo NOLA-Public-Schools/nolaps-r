@@ -16,7 +16,7 @@
 #' @export
 match_test <- function(
   match, dir_external, dir_out, round,
-  students, apps, choices, appschools, priorities, feeders, appinputs, siblings, accounts
+  students, apps, choices, choices_external, appschools, priorities, feeders, appinputs, siblings, accounts
   ) {
 
   cat("\nValidating match file\n")
@@ -151,7 +151,8 @@ match_test <- function(
     match = match,
     apps_with_choices = apps_with_choices,
     students_active = students_active,
-    students_futureschool = students_futureschool
+    students_futureschool = students_futureschool,
+    choices_external = choices_external
   )
 
   # Invalid choices and rank numbering
@@ -238,7 +239,8 @@ match_test <- function(
     match_priorities = match_priorities,
     students_active = students_active,
     students_futureschool = students_futureschool,
-    dob = dob
+    dob = dob,
+    choices_external = choices_external
   )
 
   # Closing school
@@ -395,7 +397,7 @@ match_test <- function(
 
 
 #' @export
-test_participants <- function(dir_out, round, match, students_active, students_futureschool, apps_with_choices) {
+test_participants <- function(dir_out, round, match, students_active, students_futureschool, apps_with_choices, choices_external) {
 
   cat("\nInvalid match records\n")
 
@@ -409,7 +411,10 @@ test_participants <- function(dir_out, round, match, students_active, students_f
       ) %>%
       select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
       arrange(choice_name, `CHOICE SCHOOL`, GRADE) %>%
-      filter(!(`CHOICE SCHOOL` == "4005" & GRADE %in% grades_hs()))
+      anti_join(choices_external, by = join_by(
+        `STUDENT ID` == `Student ID`,
+        `CHOICE SCHOOL` == `School Code`
+      ))
 
     test_text <- "All match records trace back to application with choices or active student."
 
@@ -1024,7 +1029,7 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
 #' @export
 test_guarantee <- function(
-    dir_out, round, match_priorities, students_active, students_futureschool, dob
+    dir_out, round, match_priorities, students_active, students_futureschool, dob, choices_external
     ) {
 
   cat("\nGuarantee\n")
@@ -1086,6 +1091,13 @@ test_guarantee <- function(
           grade_next
         )
       ) %>%
+      mutate(
+        grade_next = if_else(
+          id_account_current == "001d000000ALnWRAA1" & grade_current == "PK3" & student_dob <= "2018-09-30",
+          "K",
+          grade_next
+        )
+      ) %>%
       filter((grade_current != "12" | promotion == "Retained")) %>%
       select(
         oneappid,
@@ -1106,7 +1118,11 @@ test_guarantee <- function(
           "STUDENT ID" = "oneappid"
         )
       ) %>%
-      filter(!is.na(Guaranteed))
+      filter(!is.na(Guaranteed)) %>%
+      anti_join(choices_external, by = join_by(
+        `STUDENT ID` == `Student ID`,
+        `CHOICE SCHOOL` == `School Code`
+      ))
 
     have <-
       match_priorities %>%
@@ -1130,6 +1146,7 @@ test_guarantee <- function(
         )
       ) %>%
       filter(!(grade_applying %in% grades_ec())) %>%
+      filter(!(oneappid %in% choices_external$`Student ID`)) %>%
       arrange(name_account_current, grade_current, grade_applying, guarantee)
 
   } else if (round == "Round 2") {

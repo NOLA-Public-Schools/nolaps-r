@@ -434,7 +434,8 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
         Input_Table_IEP__c,
         Input_Table_Military_Child__c,
         Input_Table_Montessori__c,
-        Input_Table_UNO__c
+        Input_Table_UNO__c,
+        Input_Table_Address_Verified__c
       from Match_Input_Tables__c
       where
         Application__r.RecordType.Name = '{round}' and
@@ -454,7 +455,8 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       has_iep = Input_Table_IEP__c,
       has_military = Input_Table_Military_Child__c,
       has_montessori = Input_Table_Montessori__c,
-      has_uno = Input_Table_UNO__c
+      has_uno = Input_Table_UNO__c,
+      has_verifiedaddress = Input_Table_Address_Verified__c
     ) %>%
     mutate(across(c(
       optout_family,
@@ -465,7 +467,8 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       has_iep,
       has_military,
       has_montessori,
-      has_uno
+      has_uno,
+      has_verifiedaddress
       ),
       ~ as.logical(as.numeric(.))
       )
