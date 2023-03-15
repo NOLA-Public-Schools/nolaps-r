@@ -922,7 +922,7 @@ getdata_gradecapacity <- function() {
       target_101 = Projection_Seat_Target__c,
       target_match = Match_Target__c,
       target_match_future = Future_Match_Target__c,
-      # target_101_future = Future_10_1_Target__c,
+      target_101_future = Future_10_1_Target__c,
       target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
       email_approver = School_Name__r.Designated_Content_Approver__c,
@@ -937,6 +937,7 @@ getdata_gradecapacity <- function() {
       seats_available,
       currentregister_active,
       target_101,
+      target_101_future,
       target_101_requested,
       n_sections,
       students_per_section

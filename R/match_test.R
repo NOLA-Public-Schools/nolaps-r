@@ -321,12 +321,12 @@ match_test <- function(
 
   # UNO
 
-  # test_uno(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_uno(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Choice-specific priorities
 
@@ -486,6 +486,7 @@ test_participants <- function(dir_out, round, match, students_active, students_f
       ) %>%
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
       filter(!(grade_current %in% c("INF", "1YR", "2YR", "PK3"))) %>%
+      filter(student_dob <= "2018-09-30") %>%
       select(name_account_current, grade_current, oneappid, id_student) %>%
       arrange(name_account_current, grade_current)
 
@@ -917,6 +918,10 @@ test_family <- function(dir_out, siblings, match, students_with_family, appinput
 
   diff_1 <-
     match %>%
+    mutate(`CHOICE SCHOOL` = str_remove(`CHOICE SCHOOL`, "_.+$")) %>%
+    distinct(`FAMILY ID`, `STUDENT ID`, `CHOICE SCHOOL`) %>%
+    group_by(`STUDENT ID`) %>%
+    mutate(`CHOICE RANK` = 1:n()) %>%
     filter(!is.na(`FAMILY ID`), `CHOICE RANK` == 1) %>%
     distinct(`FAMILY ID`, `CHOICE SCHOOL`) %>%
     count(`FAMILY ID`) %>%
@@ -924,6 +929,10 @@ test_family <- function(dir_out, siblings, match, students_with_family, appinput
 
   diff_2 <-
     match %>%
+    mutate(`CHOICE SCHOOL` = str_remove(`CHOICE SCHOOL`, "_.+$")) %>%
+    distinct(`FAMILY ID`, `STUDENT ID`, `CHOICE SCHOOL`) %>%
+    group_by(`STUDENT ID`) %>%
+    mutate(`CHOICE RANK` = 1:n()) %>%
     filter(!is.na(`FAMILY ID`), `CHOICE RANK` == 2) %>%
     distinct(`FAMILY ID`, `CHOICE SCHOOL`) %>%
     count(`FAMILY ID`) %>%
