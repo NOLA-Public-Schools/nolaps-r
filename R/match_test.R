@@ -1111,7 +1111,8 @@ test_guarantee <- function(
       select(
         oneappid,
         name_account_current, grade_current,
-        grade_applying = grade_next, guarantee
+        grade_applying = grade_next, guarantee,
+        governance
       ) %>%
       filter(!(oneappid %in% underage$oneappid)) %>%
       bind_rows(underage) %>%
@@ -1156,6 +1157,7 @@ test_guarantee <- function(
       ) %>%
       filter(!(grade_applying %in% grades_ec())) %>%
       filter(!(oneappid %in% choices_external$`Student ID`)) %>%
+      filter(governance != "Scholarship") %>%
       arrange(name_account_current, grade_current, grade_applying, guarantee)
 
   } else if (round == "Round 2") {
