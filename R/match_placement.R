@@ -12,7 +12,7 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
 
   appschools <-
     appschools %>%
-    filter(status %in% c("Open", "Closing at End of School Year")) %>%
+    filter(status %in% c("Open", "Opening Next Year")) %>%
     distinct(code_appschool, id_account, name_account)
 
   placements <-
@@ -26,10 +26,6 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
     )) %>%
     filter(!(`STUDENT ID` %in% overmatches$`STUDENT ID`)) %>%
     bind_rows(overmatches) %>%
-    mutate(`CHOICE SCHOOL` = if_else(
-      `CHOICE SCHOOL` == "796" & GRADE == "PK4", "847",
-      `CHOICE SCHOOL`
-    )) %>%
     left_join(appschools, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
     left_join(students_recent, by = c("STUDENT ID" = "oneappid")) %>%
     select(
@@ -40,13 +36,14 @@ match_placement <- function(match, overmatches, dir_out, students_recent, appsch
       id_student_recent = id_student
     ) %>%
     mutate(
-      id_schoolyear = "a106T00000AQgdM", # 2021-2022
-      # id_recordtype_r1 = "0120W000001tdvs",
-      id_recordtype_r2 = "0120W000001tdvt",
+      id_schoolyear = "a106T00000ARcym", # 2022-2023
+      id_recordtype_r1 = "0120W000001tdvs",
+      # id_recordtype_r2 = "0120W000001tdvt",
       is_active = TRUE,
       is_archived = FALSE
     ) %>%
-    arrange(id_account_future, grade_future) %>%
+    fix_grades(grade_future) %>%
+    arrange(name_account_future, grade_future) %>%
     mutate(grade_future = as.character(grade_future)) %>%
     mutate(grade_future = case_when(
       grade_future == "1YR" ~ "1 YR",

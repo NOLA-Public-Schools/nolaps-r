@@ -180,11 +180,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       col_types = stringr::str_c(stringr::str_dup("c", 14))
     )
 
-  # overmatches <-
-  #   readxl::read_excel(
-  #     glue::glue("{dir_external}/sibling-overmatches.xlsx"),
-  #     col_types = "text"
-  #   )
+  overmatches <-
+    readxl::read_excel(
+      glue::glue("{dir_external}/sibling-overmatches.xlsx"),
+      col_types = "text"
+    )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
@@ -225,24 +225,24 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     accounts = accounts
   )
 
-  # match_placement(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   students_recent = students_recent,
-  #   appschools = appschools
-  # )
-  #
-  # match_notification(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   apps = apps,
-  #   accounts = accounts,
-  #   appschools = appschools,
-  #   students_recent = students_recent
-  # )
-  #
+  match_placement(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    students_recent = students_recent,
+    appschools = appschools
+  )
+
+  match_notification(
+    match = match,
+    overmatches = overmatches,
+    dir_out = dir_business,
+    apps = apps,
+    accounts = accounts,
+    appschools = appschools,
+    students_recent = students_recent
+  )
+
   # match_briefing(
   #   match = match,
   #   dir_out = dir_business

@@ -16,34 +16,21 @@ match_notification_salesforce <- function(notifications, dir_out, students_recen
 
   letters_salesforce <-
     notifications %>%
-    filter(str_length(oneappid) == 9) %>%
     left_join(nolaps::lettertypes_salesforce, by = c("lettertype" = "lettertype_mailmerge")) %>%
     left_join(students_recent, by = c("oneappid")) %>%
     mutate(is_new = is_assigned & !is_guaranteed_accepted) %>%
-    # dplyr::mutate(is_new_r2 = dplyr::case_when(
-    #   is.na(id_account) ~ FALSE,
-    #   is.na(id_account_guaranteed) ~ TRUE,
-    #   id_account_guaranteed != id_account ~ TRUE,
-    #   TRUE ~ FALSE
-    #   )
-    # ) %>%
-    # mutate(year_letter = "SY 21-22") %>%
+    # mutate(year_letter = "SY 22-23") %>%
     select(
       oneappid,
       id_student_recent = id_student,
       grade_applying,
       # year_letter,
-      # lettertype_salesforce,
-      # matchtype,
-      lettertype_salesforce_r2,
-      matchtype_r2,
+      lettertype_salesforce,
+      matchtype,
       is_assigned,
       is_new,
-      # is_new_r2,
       is_guaranteed,
-      is_guaranteed_accepted,
-      is_scholarship,
-      is_guaranteed_scholarship
+      is_guaranteed_accepted
     )
 
   letters_salesforce %>%
