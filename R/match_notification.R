@@ -95,7 +95,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     bind_rows(special_notprocessed) %>%
     mutate(choice_name = case_when(
       `CHOICE SCHOOL` == "4012" ~ "Lake Forest Elementary Charter School",
-      `CHOICE SCHOOL` == "4013" ~ "Lusher Charter School",
+      `CHOICE SCHOOL` == "4013" ~ "The Willow School (Formerly Lusher)",
       TRUE ~ choice_name
     )) %>%
     select(-c(n_accepted, n_waiting, n_ineligible, n_guaranteed))
@@ -208,12 +208,19 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     fix_grades(grade_terminal) %>%
     mutate(deadline = getdata_registration()[[1]][[1]]) %>%
     mutate(school_name = str_squish(stringr::str_remove(name_account, "\\(DO NOT PLACE\\)"))) %>%
+    mutate(across(.cols = c(waitlist_school_1, waitlist_school_2, waitlist_school_3), (\(x) str_replace_na(x, "")))) %>%
+    mutate(waitlist_cat = str_c(waitlist_school_1, waitlist_school_2, waitlist_school_3, sep = ", ")) %>%
+    mutate(waitlist_cat = str_remove(waitlist_cat, ", , ")) %>%
+    mutate(waitlist_cat = str_remove(waitlist_cat, ", $")) %>%
+    mutate(lettertype = if_else(is_unassigned & is.na(id_app), "other", lettertype)) %>%
+    mutate(pg_email = if_else(is.na(pg_email), email, pg_email)) %>%
     select(
       lettertype, oneappid, grade_applying,
       applicant_firstname:phone_2,
       school_name,
       school_address, school_phone = phone,
       school_welcome = welcome, school_registration = registration, deadline,
+      waitlist_cat,
       waitlist_school_1:waitlist_rank_3,
       language_app, language_pref,
       id_account,
@@ -233,6 +240,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
   notifications %>%
     select(-c(id_account:id_account_guaranteed)) %>%
+    filter(lettertype != "guaranteed") %>%
     write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
 
   return(NULL)
