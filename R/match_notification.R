@@ -204,8 +204,9 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
     mutate(school_address = str_c(street.y, ", ", city.y, ", ", state.y, " ", zip.y)) %>%
     left_join(match_notification_waitlists(match), by = c("oneappid" = "STUDENT ID")) %>%
     left_join(guarantees, by = "oneappid") %>%
+    # left_join(students_recent, by = "oneappid") %>%
     fix_grades(grade_applying) %>%
-    fix_grades(grade_terminal) %>%
+    # fix_grades(grade_terminal) %>%
     mutate(deadline = getdata_registration()[[1]][[1]]) %>%
     mutate(school_name = str_squish(stringr::str_remove(name_account, "\\(DO NOT PLACE\\)"))) %>%
     mutate(across(.cols = c(waitlist_school_1, waitlist_school_2, waitlist_school_3), (\(x) str_replace_na(x, "")))) %>%
@@ -230,6 +231,8 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       is_guaranteed_accepted,
       id_account_guaranteed
     ) %>%
+    # filter(lettertype != "guaranteed") %>%
+    filter(lettertype != "other") %>%
     arrange(oneappid)
 
   match_notification_salesforce(
@@ -240,7 +243,6 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
   notifications %>%
     select(-c(id_account:id_account_guaranteed)) %>%
-    filter(lettertype != "guaranteed") %>%
     write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
 
   return(NULL)

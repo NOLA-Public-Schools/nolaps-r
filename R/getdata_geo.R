@@ -38,7 +38,10 @@ getdata_council_districts <- function() {
 #' @export
 getdata_board_districts <- function() {
 
-  st_read(path_data("Geographies/School Board Districts/board_districts.shp"))
+  st_read(
+    path_data("Geographies/School Board Districts/board_districts.shp")
+  ) %>%
+    dplyr::rename(board_district = district)
 
 }
 

@@ -243,10 +243,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     students_recent = students_recent
   )
 
-  # match_briefing(
-  #   match = match,
-  #   dir_out = dir_business
-  # )
+  match_briefing(
+    match = match,
+    dir_out = dir_business
+  )
 
 
 

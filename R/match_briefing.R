@@ -70,7 +70,7 @@ match_briefing <- function(match, dir_out) {
     bind_rows(special_notprocessed) %>%
     mutate(choice_name = case_when(
       `CHOICE SCHOOL` == "4012" ~ "Lake Forest Elementary Charter School",
-      `CHOICE SCHOOL` == "4013" ~ "Lusher Charter School",
+      `CHOICE SCHOOL` == "4013" ~ "The Willow School (Formerly Lusher)",
       TRUE ~ choice_name
     )) %>%
     select(-c(n_accepted, n_waiting, n_ineligible, n_guaranteed))
