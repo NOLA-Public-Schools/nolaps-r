@@ -801,7 +801,8 @@ getdata_facility <- function() {
         Longitude__c,
         Latitude__c,
         Active_Student_Count__c,
-        Program_Capacity__c
+        Program_Capacity__c,
+        Census_Tract__c
       from Facility__c
       "
     ),
@@ -818,7 +819,8 @@ getdata_facility <- function() {
       lon = Longitude__c,
       lat = Latitude__c,
       n_students = Active_Student_Count__c,
-      program_capacity = Program_Capacity__c
+      program_capacity = Program_Capacity__c,
+      tract = Census_Tract__c
     ) %>%
     dplyr::mutate(across(c(
       lon,
