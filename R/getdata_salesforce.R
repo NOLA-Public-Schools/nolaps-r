@@ -900,7 +900,8 @@ getdata_gradecapacity <- function() {
         Facility__c,
         Facility__r.Name,
         Facility__r.Address__c,
-        Facility__r.Catchment_Zone__c
+        Facility__r.Catchment_Zone__c,
+        Facility__r.School_Board_District__c
       from Grade_Capacity__c
       "
     ),
@@ -932,7 +933,8 @@ getdata_gradecapacity <- function() {
       id_facility = Facility__c,
       name_facility = Facility__r.Name,
       address = Facility__r.Address__c,
-      catchment = Facility__r.Catchment_Zone__c
+      catchment = Facility__r.Catchment_Zone__c,
+      board_district = Facility__r.School_Board_District__c
     ) %>%
     fix_grades(var = grade) %>%
     dplyr::mutate(across(c(

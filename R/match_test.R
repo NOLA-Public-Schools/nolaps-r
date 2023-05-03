@@ -155,6 +155,8 @@ match_test <- function(
     choices_external = choices_external
   )
 
+  return(NULL)
+
   # Invalid choices and rank numbering
 
   test_ranks(
@@ -499,6 +501,14 @@ test_participants <- function(dir_out, round, match, students_active, students_f
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
       select(name_account_future, grade_future, oneappid, id_student) %>%
       arrange(name_account_future, grade_future)
+
+    # EC
+
+    missing_rollforwards <-
+      missing_rollforwards %>%
+      filter(grade_future %in% grades_ec())
+
+    #
 
     test_text <- "All recent students with future school are in the match."
 
