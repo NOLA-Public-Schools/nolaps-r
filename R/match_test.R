@@ -155,8 +155,6 @@ match_test <- function(
     choices_external = choices_external
   )
 
-  return(NULL)
-
   # Invalid choices and rank numbering
 
   test_ranks(
@@ -172,6 +170,8 @@ match_test <- function(
     dir_out = dir_out,
     match = match
   )
+
+  return(NULL)
 
   # Retentions
 
