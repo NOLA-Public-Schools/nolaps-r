@@ -174,17 +174,17 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
     fix_grades()
 
-  choices_external <-
-    readr::read_csv(
-      glue::glue("{dir_in}/additional-student-preference-priority-rows.csv"),
-      col_types = stringr::str_c(stringr::str_dup("c", 14))
-    )
-
-  overmatches <-
-    readxl::read_excel(
-      glue::glue("{dir_external}/sibling-overmatches.xlsx"),
-      col_types = "text"
-    )
+  # choices_external <-
+  #   readr::read_csv(
+  #     glue::glue("{dir_in}/additional-student-preference-priority-rows.csv"),
+  #     col_types = stringr::str_c(stringr::str_dup("c", 14))
+  #   )
+  #
+  # overmatches <-
+  #   readxl::read_excel(
+  #     glue::glue("{dir_external}/sibling-overmatches.xlsx"),
+  #     col_types = "text"
+  #   )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
@@ -216,7 +216,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     students = students_recent,
     apps = apps,
     choices = choices,
-    choices_external = choices_external,
+    # choices_external = choices_external,
     appschools = appschools,
     priorities = priorities,
     feeders = feeders,
