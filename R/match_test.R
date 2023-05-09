@@ -1177,11 +1177,11 @@ test_guarantee <- function(
     underage <-
       students_futureschool %>%
       filter(
-        (grade_future == "1YR" & student_dob > "2021-09-30") |
-        (grade_future == "2YR" & student_dob > "2020-09-30") |
-        (grade_future == "PK3" & student_dob > "2019-09-30") |
-        (grade_future == "PK4" & student_dob > "2018-09-30") |
-        (grade_future == "K" & student_dob > "2017-09-30")
+        (grade_future == "1YR" & student_dob > "2022-09-30") |
+        (grade_future == "2YR" & student_dob > "2021-09-30") |
+        (grade_future == "PK3" & student_dob > "2020-09-30") |
+        (grade_future == "PK4" & student_dob > "2019-09-30") |
+        (grade_future == "K" & student_dob > "2018-09-30")
       ) %>%
       transmute(
         id_account_guarantee = id_account_current,
@@ -1195,7 +1195,7 @@ test_guarantee <- function(
       students_futureschool %>%
       filter(
         (expelled_status == "Re-entry Prohibited")
-        | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2022-10-01"))
+        | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2023-10-01"))
       ) %>%
       mutate(is_expelled = TRUE) %>%
       select(oneappid, id_account_expelled)
@@ -1210,7 +1210,8 @@ test_guarantee <- function(
         id_student
       ) %>%
       filter(!(oneappid %in% underage$oneappid)) %>%
-      bind_rows(underage)
+      bind_rows(underage) %>%
+      filter(grade_future %in% grades_ec())
 
     invalid_guarantee <-
       match_priorities %>%
