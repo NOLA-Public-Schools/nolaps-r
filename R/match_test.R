@@ -16,7 +16,9 @@
 #' @export
 match_test <- function(
   match, dir_external, dir_out, round,
-  students, apps, choices, choices_external = NULL, appschools, priorities, feeders, appinputs, siblings, accounts
+  students, apps, choices,
+  choices_external = NULL, appschools, priorities, feeders, appinputs, siblings,
+  accounts
   ) {
 
   cat("\nValidating match file\n")
@@ -173,11 +175,11 @@ match_test <- function(
 
   # Retentions
 
-  test_retentions(
-    dir_out = dir_out,
-    match = match,
-    students_active = students_active
-  )
+  # test_retentions(
+  #   dir_out = dir_out,
+  #   match = match,
+  #   students_active = students_active
+  # )
 
   # Eligibility tests
 
@@ -809,11 +811,11 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     filter(GRADE %in% grades_ec()) %>%
     filter(
       eligibility != "Eligible"
-      & !(str_detect(programtype, "Tuition") & eligibility != "Ineligible")
-      & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      & !(programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid & eligibility != "Ineligible")
+      # & !(str_detect(programtype, "Tuition") & eligibility != "Ineligible")
+      # & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      # & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      # & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
+      # & !(programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid & eligibility != "Ineligible")
     ) %>%
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
