@@ -171,8 +171,6 @@ match_test <- function(
     match = match
   )
 
-  return(NULL)
-
   # Retentions
 
   test_retentions(
@@ -247,23 +245,23 @@ match_test <- function(
 
   # Closing school
 
-  test_closing(
-    dir_out = dir_out,
-    priorities = priorities,
-    match_priorities = match_priorities,
-    students_active = students_active,
-    students_app = students_app
-  )
+  # test_closing(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   match_priorities = match_priorities,
+  #   students_active = students_active,
+  #   students_app = students_app
+  # )
 
   # Feeder
 
-  test_feeder(
-    dir_out = dir_out,
-    feeders = feeders,
-    match_priorities = match_priorities,
-    students_active = students_active,
-    choices = choices
-  )
+  # test_feeder(
+  #   dir_out = dir_out,
+  #   feeders = feeders,
+  #   match_priorities = match_priorities,
+  #   students_active = students_active,
+  #   choices = choices
+  # )
 
   # Application priorities
 
@@ -278,57 +276,57 @@ match_test <- function(
 
   # Economic disadvantage
 
-  test_disadvantage(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
-
-  # IEP
-
-  # test_iep(
+  # test_disadvantage(
   #   dir_out = dir_out,
   #   priorities = priorities,
   #   appinputs = appinputs,
   #   match_priorities = match_priorities
   # )
 
-  # French
+  # IEP
 
-  test_french(
+  test_iep(
     dir_out = dir_out,
     priorities = priorities,
     appinputs = appinputs,
     match_priorities = match_priorities
   )
+
+  # French
+
+  # test_french(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Montessori
 
-  test_montessori(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_montessori(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Military
 
-  test_military(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_military(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # UNO
 
-  test_uno(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
+  # test_uno(
+  #   dir_out = dir_out,
+  #   priorities = priorities,
+  #   appinputs = appinputs,
+  #   match_priorities = match_priorities
+  # )
 
   # Choice-specific priorities
 
@@ -386,7 +384,7 @@ match_test <- function(
 
   # Assignment status
 
-  test_assignment(dir_out = dir_out, match = match)
+  # test_assignment(dir_out = dir_out, match = match)
 
   # end tests
 
