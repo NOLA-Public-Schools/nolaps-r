@@ -269,12 +269,12 @@ match_test <- function(
 
   # 100% FPL
 
-  # test_100fpl(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
+  test_100fpl(
+    dir_out = dir_out,
+    priorities = priorities,
+    appinputs = appinputs,
+    match_priorities = match_priorities
+  )
 
   # Economic disadvantage
 
@@ -370,10 +370,10 @@ match_test <- function(
 
   # Staff child
 
-  # test_staffchild(
-  #   dir_out = dir_out,
-  #   match_priorities = match_priorities
-  # )
+  test_staffchild(
+    dir_out = dir_out,
+    match_priorities = match_priorities
+  )
 
   # Sibling or staff child
 
@@ -386,7 +386,7 @@ match_test <- function(
 
   # Assignment status
 
-  # test_assignment(dir_out = dir_out, match = match)
+  test_assignment(dir_out = dir_out, match = match)
 
   # end tests
 
