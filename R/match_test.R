@@ -348,7 +348,20 @@ match_test <- function(
 
   # Non-verified siblings
 
-  test_sibling_account(
+  # test_sibling_account(
+  #   dir_out = dir_out,
+  #   round = round,
+  #   match_priorities = match_priorities,
+  #   students_recent = students,
+  #   siblings = siblings,
+  #   appschoolrankings = choices,
+  #   appschools = appschools,
+  #   apps = apps_with_choices,
+  #   accounts = accounts,
+  #   accounts_gradespan = accounts_gradespan
+  # )
+
+  test_sibling(
     dir_out = dir_out,
     round = round,
     match_priorities = match_priorities,
@@ -358,7 +371,7 @@ match_test <- function(
     appschools = appschools,
     apps = apps_with_choices,
     accounts = accounts,
-    accounts_gradespan = accounts_gradespan
+    priorities = priorities
   )
 
   # Verified sibling

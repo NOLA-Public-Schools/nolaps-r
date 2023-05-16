@@ -13,7 +13,7 @@
 
 
 #' @export
-test_sibling <- function(dir_out, round, match_priorities, students_recent, siblings, appschoolrankings, appschools, apps, accounts) {
+test_sibling <- function(dir_out, round, match_priorities, students_recent, siblings, appschoolrankings, appschools, apps, accounts, priorities) {
 
   cat("\nNon-verified sibling\n")
 
@@ -185,15 +185,13 @@ test_sibling <- function(dir_out, round, match_priorities, students_recent, sibl
     has_sibling <-
       applicants_with_siblingschools %>%
       filter(code_site_group == sibling_code_site_group)
-    # %>%
-    #   anti_join(
-    #     students_futureschool,
-    #     by = c(
-    #       "applicant_oneappid" = "oneappid",
-    #       "id_account" = "id_account_future")
-    #   )
 
   }
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Sibling__c)) %>%
+    select(code_appschool, grade)
 
   invalid_sibling <-
     match_priorities %>%
@@ -206,29 +204,30 @@ test_sibling <- function(dir_out, round, match_priorities, students_recent, sibl
     filter(!is_highdemand) %>%
     semi_join(has_sibling, by = c("id_account", "STUDENT ID" = "applicant_oneappid")) %>%
     filter(is.na(Sibling)) %>%
-    filter(is.na(Ineligible))
+    filter(is.na(Ineligible)) %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade"))
 
-  # have <-
-  #   match_priorities %>%
-  #   filter(is_verifiedsibling) %>%
-  #   filter(!is.na(Sibling))
+  have <-
+    match_priorities %>%
+    filter(!is_verifiedsibling) %>%
+    filter(!is.na(Sibling))
 
-  # cat(
-  #   glue(
-  #     "
-  #     {nrow(distinct(have, `STUDENT ID`))} students
-  #     {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-  #     \n
-  #     "
-  #   )
-  # )
-  #
-  # have %>%
-  #   count(choice_name, GRADE) %>%
-  #   slice_sample(n = nrow(.)) %>%
-  #   print()
-  #
-  # cat("\n")
+  cat(
+    glue(
+      "
+      {nrow(distinct(have, `STUDENT ID`))} students
+      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
+      \n
+      "
+    )
+  )
+
+  have %>%
+    count(choice_name, GRADE) %>%
+    slice_sample(n = nrow(.)) %>%
+    print()
+
+  cat("\n")
 
   test_helper(
     invalid_sibling,
