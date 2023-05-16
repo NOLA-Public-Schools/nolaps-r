@@ -376,10 +376,10 @@ match_test <- function(
 
   # Verified sibling
 
-  test_sibling_verified(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
+  # test_sibling_verified(
+  #   dir_out = dir_out,
+  #   match_priorities = match_priorities
+  # )
 
   # Staff child
 
@@ -2029,13 +2029,13 @@ test_sibling_verified <- function(dir_out, match_priorities) {
 
   invalid_sibling_verified <-
     match_priorities %>%
-    filter(is_highdemand) %>%
+    # filter(is_highdemand) %>%
     filter(!is_verifiedsibling) %>%
     filter(!is.na(Sibling))
 
   missing_sibling_verified <-
     match_priorities %>%
-    filter(is_highdemand) %>%
+    # filter(is_highdemand) %>%
     filter(is_verifiedsibling) %>%
     filter(is.na(Sibling)) %>%
     filter(is.na(Ineligible))

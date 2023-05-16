@@ -188,6 +188,19 @@ test_sibling <- function(dir_out, round, match_priorities, students_recent, sibl
 
   }
 
+  # EC Round 2, single test for verified and non-verified
+
+  has_verified <-
+    match_priorities %>%
+    filter(is_verifiedsibling)
+
+  has_sibling <-
+    match_priorities %>%
+    semi_join(has_sibling, by = c("id_account", "STUDENT ID" = "applicant_oneappid")) %>%
+    bind_rows(has_verified)
+
+  #
+
   offers <-
     priorities %>%
     filter(!is.na(Order_Sibling__c)) %>%
@@ -195,21 +208,21 @@ test_sibling <- function(dir_out, round, match_priorities, students_recent, sibl
 
   invalid_sibling <-
     match_priorities %>%
-    filter(!is_highdemand) %>%
-    anti_join(has_sibling, by = c("id_account", "STUDENT ID" = "applicant_oneappid")) %>%
+    #filter(!is_highdemand) %>%
+    anti_join(has_sibling, by = c("id_account", "STUDENT ID")) %>%
     filter(!is.na(Sibling))
 
   missing_sibling <-
     match_priorities %>%
-    filter(!is_highdemand) %>%
-    semi_join(has_sibling, by = c("id_account", "STUDENT ID" = "applicant_oneappid")) %>%
+    #filter(!is_highdemand) %>%
+    semi_join(has_sibling, by = c("id_account", "STUDENT ID")) %>%
     filter(is.na(Sibling)) %>%
     filter(is.na(Ineligible)) %>%
     semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade"))
 
   have <-
     match_priorities %>%
-    filter(!is_verifiedsibling) %>%
+    # filter(!is_verifiedsibling) %>%
     filter(!is.na(Sibling))
 
   cat(
