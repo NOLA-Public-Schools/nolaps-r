@@ -813,7 +813,7 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     ) %>%
     select(
       `ELIGIBLE?`, `GUARANTEED?`,
-      choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_appschoolranking,
+      id_account.x, choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_appschoolranking,
       eligibility, eligibility_decision, programtype, is_selective, questions_selective
     ) %>%
     distinct() %>%
@@ -844,6 +844,21 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     filter(`ELIGIBLE?` == "YES") %>%
     filter(is.na(`GUARANTEED?`))
 
+  #
+
+  invalid_grades <-
+    match %>%
+    left_join(
+      getdata_account_gradespan(),
+      by = join_by(id_account.x == id_account)
+    ) %>%
+    rowwise() %>%
+    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
+    ungroup() %>%
+    pull(`STUDENT ID`)
+
+  #
+
   missing_eligibility_ec <-
     match %>%
     filter(GRADE %in% grades_ec()) %>%
@@ -858,7 +873,7 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
       ))
     ) %>%
     filter(`ELIGIBLE?` == "NO") %>%
-    filter(`CHOICE SCHOOL` != "835")
+    filter(!(`STUDENT ID` %in% invalid_grades))
 
   cat(
     glue(
