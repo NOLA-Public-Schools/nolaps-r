@@ -336,6 +336,7 @@ match_test <- function(
 
   test_distance(
     dir_out = dir_out,
+    priorities = priorities,
     match_priorities = match_priorities
   )
 
@@ -1930,9 +1931,14 @@ test_uno <- function(dir_out, priorities, appinputs, match_priorities) {
 
 
 #' @export
-test_distance <- function(dir_out, match_priorities) {
+test_distance <- function(dir_out, match_priorities, priorities) {
 
   cat("\nDistance\n")
+
+  offers <-
+    priorities %>%
+    filter(!is.na(Order_Distance__c)) %>%
+    select(code_appschool, grade)
 
   invalid_distance <-
     match_priorities %>%
@@ -1943,7 +1949,8 @@ test_distance <- function(dir_out, match_priorities) {
     match_priorities %>%
     filter(is_priority_distance) %>%
     filter(is.na(`Child of Student`)) %>%
-    filter(is.na(Ineligible))
+    filter(is.na(Ineligible)) %>%
+    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade"))
 
   have <-
     match_priorities %>%
