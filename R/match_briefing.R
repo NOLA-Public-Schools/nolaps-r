@@ -93,6 +93,15 @@ match_briefing <- function(match, dir_out) {
     write_excel_csv(glue("{dir_out}/briefing/n_seekingnew_all_k12.csv"), na = "")
 
   match_clean %>%
+    filter((GRADE %in% grades_ec())) %>%
+    matchcalcs_results_seekingnew(
+      schools_waitlist = c("846", "847", "4012", "4013"),
+      exclude_ineligible = FALSE,
+      exclude_notprocessed = FALSE
+    ) %>%
+    write_excel_csv(glue("{dir_out}/briefing/n_seekingnew_all_ec.csv"), na = "")
+
+  match_clean %>%
     filter(!(GRADE %in% grades_ec())) %>%
     matchcalcs_results_seekingnew(GRADE,
       schools_waitlist = c("846", "847", "4012", "4013"),
@@ -110,6 +119,11 @@ match_briefing <- function(match, dir_out) {
     filter(!(GRADE %in% grades_ec())) %>%
     matchcalcs_results_seekingnew(schools_waitlist = c("846", "847", "4012", "4013")) %>%
     write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_k12.csv"), na = "")
+
+  match_clean %>%
+    filter((GRADE %in% grades_ec())) %>%
+    matchcalcs_results_seekingnew(schools_waitlist = c("846", "847", "4012", "4013")) %>%
+    write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_ec.csv"), na = "")
 
   match_clean %>%
     filter(GRADE %in% c("K", "9")) %>%
@@ -133,6 +147,11 @@ match_briefing <- function(match, dir_out) {
     write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_siblingmatch_k12.csv"), na = "")
 
   match_clean %>%
+    filter((GRADE %in% grades_ec())) %>%
+    matchcalcs_results_seekingnew_sibling(schools_waitlist = c("846", "847", "4012", "4013")) %>%
+    write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_siblingmatch_ec.csv"), na = "")
+
+  match_clean %>%
     filter(GRADE %in% c("K", "9")) %>%
     matchcalcs_results_seekingnew_sibling(schools_waitlist = c("846", "847", "4012", "4013")) %>%
     write_excel_csv(glue("{dir_out}/briefing/rate_newplacement_siblingmatch_k9.csv"), na = "")
@@ -145,6 +164,15 @@ match_briefing <- function(match, dir_out) {
       exclude_notprocessed = FALSE
     ) %>%
     write_excel_csv(glue("{dir_out}/briefing/unassigned_k12.csv"), na = "")
+
+  match_clean %>%
+    filter((GRADE %in% grades_ec())) %>%
+    matchcalcs_results_seekingnew_unassigned(
+      schools_waitlist = c("846", "847", "4012", "4013"),
+      exclude_ineligible = FALSE,
+      exclude_notprocessed = FALSE
+    ) %>%
+    write_excel_csv(glue("{dir_out}/briefing/unassigned_ec.csv"), na = "")
 
   match_clean %>%
     matchcalcs_results_seekingnew(
@@ -172,6 +200,7 @@ match_briefing <- function(match, dir_out) {
   match_clean %>%
     matchcalcs_participants_all(schools_waitlist = c("846", "847", "4012", "4013")) %>%
     filter(GRADE %in% grades_ec()) %>%
+    group_by(GRADE) %>%
     summarize(
       n_ec = n(),
       n_eligible_1ormore = sum(n_ineligible < n_choices),
