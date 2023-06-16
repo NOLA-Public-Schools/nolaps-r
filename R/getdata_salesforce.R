@@ -903,7 +903,8 @@ getdata_gradecapacity <- function() {
         Facility__r.Catchment_Zone__c,
         Facility__r.School_Board_District__c,
         School_Name__r.BillingPostalCode,
-        Sibling_Unification__c
+        Sibling_Unification__c,
+        Reactivations__c
       from Grade_Capacity__c
       "
     ),
@@ -938,7 +939,8 @@ getdata_gradecapacity <- function() {
       catchment = Facility__r.Catchment_Zone__c,
       board_district = Facility__r.School_Board_District__c,
       zip = School_Name__r.BillingPostalCode,
-      is_siblingunification = Sibling_Unification__c
+      is_siblingunification = Sibling_Unification__c,
+      is_reactivation = Reactivations__c
     ) %>%
     fix_grades(var = grade) %>%
     dplyr::mutate(across(c(
@@ -954,7 +956,8 @@ getdata_gradecapacity <- function() {
       )
     ) %>%
     dplyr::mutate(across(c(
-      is_siblingunification
+      is_siblingunification,
+      is_reactivation
       ),
       as.logical
       )
