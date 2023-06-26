@@ -905,7 +905,7 @@ getdata_gradecapacity <- function() {
         School_Name__r.BillingPostalCode,
         Sibling_Unification__c,
         Reactivations__c
-      from Grade_Capacity__c
+      from Grade_Level__c
       "
     ),
     api_type = "REST",
