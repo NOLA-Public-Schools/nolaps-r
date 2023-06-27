@@ -877,13 +877,13 @@ getdata_gradecapacity <- function() {
       "
       select
         Id,
-        School_Name__c,
-        School_Name__r.Name,
-        School_Name__r.School_Code_String__c,
+
+        School_Program__r.Name,
+
         Grade__c,
-        School_Name__r.Governance__c,
-        School_Name__r.School_Status__c,
-        School_Name__r.Letter_Grade__c,
+        School_Program__r.School__r.Governance__c,
+        School_Program__r.School__r.School_Status__c,
+
         Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c,
@@ -895,17 +895,17 @@ getdata_gradecapacity <- function() {
         Future_10_1_Target__c,
         Requested_10_1_Target__c,
         Requested_Round_2_Target__c,
-        School_Name__r.Designated_Content_Approver__c,
-        School_Name__r.Enrollment_POC_Email__c,
+
+
         Facility__c,
         Facility__r.Name,
         Facility__r.Address__c,
         Facility__r.Catchment_Zone__c,
         Facility__r.School_Board_District__c,
-        School_Name__r.BillingPostalCode,
+
         Sibling_Unification__c,
         Reactivations__c
-      from Grade_Capacity__c
+      from Grade_Level__c
       "
     ),
     api_type = "REST",
@@ -913,13 +913,13 @@ getdata_gradecapacity <- function() {
   ) %>%
     dplyr::select(
       id_gradecapacity = Id,
-      id_account = School_Name__c,
-      name_account = School_Name__r.Name,
-      code_site = School_Name__r.School_Code_String__c,
+      # id_account = School_Name__c,
+      name_account = School_Program__r.Name,
+      # code_site = School_Name__r.School_Code_String__c,
       grade = Grade__c,
-      governance = School_Name__r.Governance__c,
-      status = School_Name__r.School_Status__c,
-      lettergrade = School_Name__r.Letter_Grade__c,
+      governance = School_Program__r.School__r.Governance__c,
+      status = School_Program__r.School__r.School_Status__c,
+      # lettergrade = School_Name__r.Letter_Grade__c,
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c,
@@ -931,14 +931,14 @@ getdata_gradecapacity <- function() {
       target_101_future = Future_10_1_Target__c,
       target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
-      email_approver = School_Name__r.Designated_Content_Approver__c,
-      email_enrollment = School_Name__r.Enrollment_POC_Email__c,
+      # email_approver = School_Name__r.Designated_Content_Approver__c,
+      # email_enrollment = School_Name__r.Enrollment_POC_Email__c,
       id_facility = Facility__c,
       name_facility = Facility__r.Name,
       address = Facility__r.Address__c,
       catchment = Facility__r.Catchment_Zone__c,
       board_district = Facility__r.School_Board_District__c,
-      zip = School_Name__r.BillingPostalCode,
+      # zip = School_Name__r.BillingPostalCode,
       is_siblingunification = Sibling_Unification__c,
       is_reactivation = Reactivations__c
     ) %>%
