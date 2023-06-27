@@ -878,11 +878,11 @@ getdata_gradecapacity <- function() {
       select
         Id,
 
-        # program name
+        School_Program__r.Name,
 
         Grade__c,
-        # accountability site (Account in new instance) governance
-        # accountability site (Account in new instance) school status
+        School_Program__r.School__r.Governance__c,
+        School_Program__r.School__r.School_Status__c,
 
         Available_Seats__c,
         Current_Active_Register__c,
@@ -914,11 +914,11 @@ getdata_gradecapacity <- function() {
     dplyr::select(
       id_gradecapacity = Id,
       # id_account = School_Name__c,
-      name_account = ...,
+      name_account = School_Program__r.Name,
       # code_site = School_Name__r.School_Code_String__c,
       grade = Grade__c,
-      governance = ...,
-      status = ...,
+      governance = School_Program__r.School__r.Governance__c,
+      status = School_Program__r.School__r.School_Status__c,
       # lettergrade = School_Name__r.Letter_Grade__c,
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
