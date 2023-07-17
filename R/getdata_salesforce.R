@@ -787,9 +787,8 @@ getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate
 
 #' @export
 getdata_facility <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
+  sf_query(
+    glue(
       "
       select
         Id,
@@ -800,7 +799,6 @@ getdata_facility <- function() {
         Parcel_Has_Structure__c,
         Longitude__c,
         Latitude__c,
-        Active_Student_Count__c,
         Program_Capacity__c,
         Census_Tract__c
       from Facility__c
@@ -809,7 +807,7 @@ getdata_facility <- function() {
     api_type = "REST",
     guess_types = FALSE
   ) %>%
-    dplyr::select(
+    select(
       id_facility = Id,
       name_facility = Name,
       address = Address__c,
@@ -818,20 +816,18 @@ getdata_facility <- function() {
       has_structure = Parcel_Has_Structure__c,
       lon = Longitude__c,
       lat = Latitude__c,
-      n_students = Active_Student_Count__c,
       program_capacity = Program_Capacity__c,
       tract = Census_Tract__c
     ) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       lon,
       lat,
-      n_students,
       program_capacity
       ),
       as.numeric
       )
     ) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       has_structure
       ),
       as.logical
