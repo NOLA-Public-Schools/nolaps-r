@@ -787,9 +787,8 @@ getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate
 
 #' @export
 getdata_facility <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
+  sf_query(
+    glue(
       "
       select
         Id,
@@ -800,7 +799,6 @@ getdata_facility <- function() {
         Parcel_Has_Structure__c,
         Longitude__c,
         Latitude__c,
-        Active_Student_Count__c,
         Program_Capacity__c,
         Census_Tract__c
       from Facility__c
@@ -809,7 +807,7 @@ getdata_facility <- function() {
     api_type = "REST",
     guess_types = FALSE
   ) %>%
-    dplyr::select(
+    select(
       id_facility = Id,
       name_facility = Name,
       address = Address__c,
@@ -818,20 +816,18 @@ getdata_facility <- function() {
       has_structure = Parcel_Has_Structure__c,
       lon = Longitude__c,
       lat = Latitude__c,
-      n_students = Active_Student_Count__c,
       program_capacity = Program_Capacity__c,
       tract = Census_Tract__c
     ) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       lon,
       lat,
-      n_students,
       program_capacity
       ),
       as.numeric
       )
     ) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       has_structure
       ),
       as.logical
@@ -871,19 +867,16 @@ getdata_feeder <- function() {
 
 #' @export
 getdata_gradecapacity <- function() {
-
-  salesforcer::sf_query(
-    glue::glue(
+  sf_query(
+    glue(
       "
       select
         Id,
-
+        School_Program__r.School__r.Name,
         School_Program__r.Name,
-
         Grade__c,
         School_Program__r.School__r.Governance__c,
         School_Program__r.School__r.School_Status__c,
-
         Available_Seats__c,
         Current_Active_Register__c,
         Current_Live_Register__c,
@@ -895,14 +888,11 @@ getdata_gradecapacity <- function() {
         Future_10_1_Target__c,
         Requested_10_1_Target__c,
         Requested_Round_2_Target__c,
-
-
         Facility__c,
         Facility__r.Name,
         Facility__r.Address__c,
         Facility__r.Catchment_Zone__c,
         Facility__r.School_Board_District__c,
-
         Sibling_Unification__c,
         Reactivations__c
       from Grade_Level__c
@@ -911,15 +901,13 @@ getdata_gradecapacity <- function() {
     api_type = "REST",
     guess_types = FALSE
   ) %>%
-    dplyr::select(
+    select(
       id_gradecapacity = Id,
-      # id_account = School_Name__c,
+      name_accountability = School_Program__r.School__r.Name,
       name_account = School_Program__r.Name,
-      # code_site = School_Name__r.School_Code_String__c,
       grade = Grade__c,
       governance = School_Program__r.School__r.Governance__c,
       status = School_Program__r.School__r.School_Status__c,
-      # lettergrade = School_Name__r.Letter_Grade__c,
       seats_available = Available_Seats__c,
       currentregister_active = Current_Active_Register__c,
       currentregister_live = Current_Live_Register__c,
@@ -931,19 +919,16 @@ getdata_gradecapacity <- function() {
       target_101_future = Future_10_1_Target__c,
       target_101_requested = Requested_10_1_Target__c,
       target_requested_round_2 = Requested_Round_2_Target__c,
-      # email_approver = School_Name__r.Designated_Content_Approver__c,
-      # email_enrollment = School_Name__r.Enrollment_POC_Email__c,
       id_facility = Facility__c,
       name_facility = Facility__r.Name,
       address = Facility__r.Address__c,
       catchment = Facility__r.Catchment_Zone__c,
       board_district = Facility__r.School_Board_District__c,
-      # zip = School_Name__r.BillingPostalCode,
       is_siblingunification = Sibling_Unification__c,
       is_reactivation = Reactivations__c
     ) %>%
     fix_grades(var = grade) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       seats_available,
       currentregister_active,
       target_101,
@@ -955,7 +940,7 @@ getdata_gradecapacity <- function() {
       as.numeric
       )
     ) %>%
-    dplyr::mutate(across(c(
+    mutate(across(c(
       is_siblingunification,
       is_reactivation
       ),
