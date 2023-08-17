@@ -210,13 +210,15 @@ getdata_accountability <- function() {
         Federal_Site_Code__c,
         Closed__c,
         Single_Site__c,
+        Operator__r.Name,
         Contract_End_Date__c,
         Total_Enrollment__c,
         Letter_Grade__c,
         School_Performance_Score__c,
         Rate_Economically_Disadvantaged__c,
         Rate_Minority__c,
-        Rate_Limited_English_Proficiency__c
+        Rate_Limited_English_Proficiency__c,
+        Rate_Disability__c
       from Accountability_Site__c
       "
     ),
@@ -229,13 +231,15 @@ getdata_accountability <- function() {
       code_site_federal = Federal_Site_Code__c,
       is_closed = Closed__c,
       is_singlesite = Single_Site__c,
+      name_operator = Operator__r.Name,
       date_contract_end = Contract_End_Date__c,
       n_total = Total_Enrollment__c,
       grade_sps_cb = Letter_Grade__c,
       index_sps_cb = School_Performance_Score__c,
       rate_disadvantage = Rate_Economically_Disadvantaged__c,
       rate_minority = Rate_Minority__c,
-      rate_limeng = Rate_Limited_English_Proficiency__c
+      rate_limeng = Rate_Limited_English_Proficiency__c,
+      rate_swd = Rate_Disability__c
     ) %>%
     mutate(across(
       c(
