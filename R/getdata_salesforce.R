@@ -717,6 +717,126 @@ getdata_appschoolranking_3year <- function(round = "Round 1", start = date_appst
 }
 
 
+#' @export
+getdata_ate_active <- function() {
+  sf_query(
+    glue(
+      "
+      Select
+        CreatedDate,
+        Active__c,
+        LASID__c,
+        OneApp_ID__c,
+        LearnerContactId,
+        LearnerAccountId,
+        Id,
+
+        Grade_Level__r.School_Program__r.School__c,
+        Grade_Level__r.School_Program__r.School__r.Name,
+        Grade_Level__r.School_Program__c,
+        Grade_Level__r.School_Program__r.Name,
+        Grade__c,
+        Grade_Level__c,
+        Grade_Level__r.School_Program__r.School__r.Governance__c,
+
+        LearnerContact.FirstName,
+        LearnerContact.LastName,
+        LearnerContact.Birthdate,
+        LearnerContact.MailingStreet,
+        LearnerContact.MailingCity,
+        LearnerContact.MailingState,
+        LearnerContact.MailingPostalCode
+
+      from AcademicTermEnrollment
+
+      where Active__c = true
+
+
+      "
+    ),
+    guess_types = FALSE
+  ) |>
+    select(
+      date_created = CreatedDate,
+      is_active = Active__c,
+      lasid = LASID__c,
+      oneappid = OneApp_ID__c,
+      id_contact = LearnerContactId,
+      id_account_person = LearnerAccountId,
+      id_ate = Id,
+
+      id_account_current = Grade_Level__r.School_Program__r.School__c,
+      name_account_current = Grade_Level__r.School_Program__r.School__r.Name,
+      id_program_current = Grade_Level__r.School_Program__c,
+      name_program_current = Grade_Level__r.School_Program__r.Name,
+      grade_current = Grade__c,
+      id_gradelevel_current = Grade_Level__c,
+      governance = Grade_Level__r.School_Program__r.School__r.Governance__c,
+
+      student_firstname = LearnerContact.FirstName,
+      student_lastname = LearnerContact.LastName,
+      student_dob = LearnerContact.Birthdate,
+      student_street = LearnerContact.MailingStreet,
+      student_city = LearnerContact.MailingCity,
+      student_state = LearnerContact.MailingState,
+      student_zip = LearnerContact.MailingPostalCode
+
+      # student_gender = SchoolForce__Gender__c,
+      # student_email = SchoolForce__Email__c,
+      # student_phone = Primary_Contact_Number__c,
+
+      # is_terminalgrade = Is_Student_In_Terminal_Grade__c,
+      # appneeded_r1 = Application_Needed__c,
+      # appsubmitted_r1 = MR_Application_Submitted__c,
+      # appsubmitted_r2 = R2_Application_Submitted__c,
+      # grade_future = Future_School_Grade__c,
+      # id_account_future = Future_School__c,
+      # name_account_future = Future_School__r.Name,
+      # code_site_future = Future_School__r.School_Code_String__c,
+      # promotion = Promotion_Decision__c,
+      # is_t9 = Rising_T9__c,
+      # year_matchletter = Placement_Letter_Year__c,
+      # lettertype = Placement_Letter_Template__c,
+      # school_street = Future_School__r.BillingStreet,
+      # school_city = Future_School__r.BillingCity,
+      # school_state = Future_School__r.BillingState,
+      # school_zip = Future_School__r.BillingPostalCode,
+      # school_phone = Future_School__r.Phone,
+      # school_registration = Future_School__r.Registration_Details__c,
+      # school_welcome = Future_School__r.School_Welcome_Message__c,
+      # id_account_expelled = Expelled_From__c,
+      # expelled_status = Expulsion_ReEntry_Status__c,
+      # expelled_date_end = Expulsion_End_Date__c,
+      # is_priority_closing = SchoolForce__School__r.Closing_School_Priority__c,
+      # grade_terminal = SchoolForce__School__r.Terminal_Grade__c
+    ) |>
+    mutate(across(c(
+      is_active,
+
+    #   is_terminalgrade,
+    #   is_t9,
+    #   is_priority_closing,
+    #   appneeded_r1,
+    #   appsubmitted_r1,
+    #   appsubmitted_r2
+
+      ),
+      as.logical
+    )) |>
+    mutate(across(c(
+      student_dob,
+    #   expelled_date_end
+      ),
+      as_date
+    )) |>
+    fix_grades(grade_current)
+
+  # %>%
+  #   fix_grades(grade_future) %>%
+  #   fix_grades(grade_terminal)
+
+}
+
 
 #' @export
 getdata_contact <- function() {
