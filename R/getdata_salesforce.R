@@ -928,7 +928,13 @@ getdata_facility <- function() {
         Longitude__c,
         Latitude__c,
         Program_Capacity__c,
+        Capacity_Lower__c,
+        Capacity_Upper__c,
+        Facility_Condition_Index__c,
+        Cost_per_Square_Foot__c,
+        Cost_Tier__c,
         Census_Tract__c
+
       from Facility__c
       "
     ),
@@ -945,12 +951,21 @@ getdata_facility <- function() {
       lon = Longitude__c,
       lat = Latitude__c,
       program_capacity = Program_Capacity__c,
+      capacity_lower = Capacity_Lower__c,
+      capacity_upper = Capacity_Upper__c,
+      condition_index = Facility_Condition_Index__c,
+      cost_squarefoot = Cost_per_Square_Foot__c,
+      cost_tier = Cost_Tier__c,
       tract = Census_Tract__c
     ) %>%
     mutate(across(c(
       lon,
       lat,
-      program_capacity
+      program_capacity,
+      capacity_lower,
+      capacity_upper,
+      condition_index,
+      cost_squarefoot,
       ),
       as.numeric
       )
@@ -1078,6 +1093,99 @@ getdata_gradecapacity <- function() {
 
 }
 
+
+#' @export
+getdata_gradelevel <- function() {
+  sf_query(
+    glue(
+      "
+      select
+        School_Program__r.School_Code_Alphanumeric__c,
+        School_Program__r.School__c,
+        School_Program__c,
+        Id,
+        School_Program__r.School__r.Name,
+        School_Program__r.Name,
+        Grade__c,
+        School_Program__r.School__r.Governance__c,
+        School_Program__r.School__r.School_Status__c,
+        Available_Seats__c,
+        Current_Active_Register__c,
+        Current_Live_Register__c,
+        Sections__c,
+        Student_Sections__c,
+        Projection_Seat_Target__c,
+        Match_Target__c,
+        Future_Match_Target__c,
+        Future_10_1_Target__c,
+        Requested_10_1_Target__c,
+        Requested_Round_2_Target__c,
+        Facility__c,
+        Facility__r.Name,
+        Facility__r.Address__c,
+        Facility__r.Catchment_Zone__c,
+        Facility__r.School_Board_District__c,
+        Facility__r.Planning_District__c,
+        Sibling_Unification__c,
+        Reactivations__c
+      from Grade_Level__c
+      "
+    ),
+    api_type = "REST",
+    guess_types = FALSE
+  ) %>%
+    select(
+      code_site = School_Program__r.School_Code_Alphanumeric__c,
+      id_account = School_Program__r.School__c,
+      id_program = School_Program__c,
+      id_gradecapacity = Id,
+      name_account = School_Program__r.School__r.Name,
+      name_program = School_Program__r.Name,
+      grade = Grade__c,
+      governance = School_Program__r.School__r.Governance__c,
+      status = School_Program__r.School__r.School_Status__c,
+      seats_available = Available_Seats__c,
+      currentregister_active = Current_Active_Register__c,
+      currentregister_live = Current_Live_Register__c,
+      n_sections = Sections__c,
+      students_per_section = Student_Sections__c,
+      target_101 = Projection_Seat_Target__c,
+      target_match = Match_Target__c,
+      target_match_future = Future_Match_Target__c,
+      target_101_future = Future_10_1_Target__c,
+      target_101_requested = Requested_10_1_Target__c,
+      target_requested_round_2 = Requested_Round_2_Target__c,
+      id_facility = Facility__c,
+      name_facility = Facility__r.Name,
+      address = Facility__r.Address__c,
+      catchment = Facility__r.Catchment_Zone__c,
+      board_district = Facility__r.School_Board_District__c,
+      planning_district = Facility__r.Planning_District__c,
+      is_siblingunification = Sibling_Unification__c,
+      is_reactivation = Reactivations__c
+    ) %>%
+    fix_grades(var = grade) %>%
+    mutate(across(c(
+      seats_available,
+      currentregister_active,
+      target_101,
+      target_101_future,
+      target_101_requested,
+      n_sections,
+      students_per_section
+    ),
+    as.numeric
+    )
+    ) %>%
+    mutate(across(c(
+      is_siblingunification,
+      is_reactivation
+    ),
+    as.logical
+    )
+    )
+
+}
 
 
 #' @export

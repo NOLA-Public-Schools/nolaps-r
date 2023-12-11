@@ -98,10 +98,10 @@ getdata_college <- function() {
 
 
 #' @export
-getdata_demographic <- function() {
+getdata_demographic <- function(src = nolaps::connection_ldoe()) {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = src,
     dbplyr::in_schema("public", "demographic")
   )
 
@@ -182,10 +182,10 @@ getdata_masterysummary <- function() {
 
 
 #' @export
-getdata_multistat <- function() {
+getdata_multistat <- function(src = nolaps::connection_ldoe()) {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = src,
     dbplyr::in_schema("public", "multistat")
   )
 
