@@ -2,10 +2,10 @@
 
 
 #' @export
-getdata_governance <- function() {
+getdata_governance <- function(src = nolaps::connection_ldoe()) {
 
   dplyr::tbl(
-    src = nolaps::connection_ldoe(),
+    src = src,
     dbplyr::in_schema('public', 'governance')
   )
 
