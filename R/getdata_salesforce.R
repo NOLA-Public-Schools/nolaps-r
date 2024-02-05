@@ -1101,6 +1101,7 @@ getdata_gradelevel <- function() {
       "
       select
         School_Program__r.School_Code_Alphanumeric__c,
+        School_Program__r.Application_Code__c,
         School_Program__r.School__c,
         School_Program__c,
         Id,
@@ -1136,6 +1137,7 @@ getdata_gradelevel <- function() {
   ) %>%
     select(
       code_site = School_Program__r.School_Code_Alphanumeric__c,
+      code_appschool = School_Program__r.Application_Code__c,
       id_account = School_Program__r.School__c,
       id_program = School_Program__c,
       id_gradecapacity = Id,
@@ -1394,6 +1396,35 @@ getdata_priority <- function() {
     ) %>%
     fix_grades(grade) %>%
     dplyr::arrange(name_account, grade)
+
+}
+
+
+
+#' @export
+getdata_program <- function() {
+
+  sf_query(
+    glue(
+      "
+      select
+        School__c,
+        School__r.Name,
+        Id,
+        Name,
+        Application_Code__c
+      from School_Program__c
+      "
+    ),
+    guess_types = FALSE
+  ) |>
+    select(
+      id_school = School__c,
+      name_school = School__r.Name,
+      id_program = Id,
+      name_program = Name,
+      code_appschool = Application_Code__c,
+    )
 
 }
 
