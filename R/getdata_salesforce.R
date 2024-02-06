@@ -1173,6 +1173,7 @@ getdata_gradelevel <- function() {
       seats_available,
       currentregister_active,
       target_101,
+      target_requested_main_round,
       target_101_future,
       target_101_requested,
       n_sections,
