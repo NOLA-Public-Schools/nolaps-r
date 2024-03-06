@@ -742,6 +742,7 @@ getdata_ate_active <- function() {
         LearnerContact.FirstName,
         LearnerContact.LastName,
         LearnerContact.Birthdate,
+        LearnerContact.GenderIdentity,
         LearnerContact.MailingStreet,
         LearnerContact.MailingCity,
         LearnerContact.MailingState,
@@ -750,8 +751,6 @@ getdata_ate_active <- function() {
       from AcademicTermEnrollment
 
       where Active__c = true
-
-
       "
     ),
     guess_types = FALSE
@@ -776,6 +775,7 @@ getdata_ate_active <- function() {
       student_firstname = LearnerContact.FirstName,
       student_lastname = LearnerContact.LastName,
       student_dob = LearnerContact.Birthdate,
+      student_gender = LearnerContact.GenderIdentity,
       student_street = LearnerContact.MailingStreet,
       student_city = LearnerContact.MailingCity,
       student_state = LearnerContact.MailingState,
