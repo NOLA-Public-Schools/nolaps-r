@@ -129,6 +129,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     priorities <- read_rds(glue("{dir_in}/priorities.rds"))
     siblings <- read_rds(glue("{dir_in}/siblings.rds"))
     students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
+    gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
 
   } else {
 
@@ -159,6 +160,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
     students_recent <- getdata_student_recent()
     students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
+
+    gradelevels <- getdata_gradelevel()
+    gradelevels %>% write_rds(glue("{dir_in}/gradelevels.rds"))
 
   }
 
