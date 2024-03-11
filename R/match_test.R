@@ -18,7 +18,7 @@ match_test <- function(
   match, dir_external, dir_out, round,
   students, apps, choices,
   choices_external = NULL, appschools, priorities, feeders, appinputs, siblings,
-  accounts
+  accounts, gradelevels
   ) {
 
   cat("\nValidating match file\n")

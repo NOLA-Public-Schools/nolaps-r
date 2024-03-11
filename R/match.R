@@ -149,7 +149,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     priorities <- getdata_priority()
     priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
-
     apps <- getdata_app(round = round)
     apps %>% write_rds(glue("{dir_in}/apps.rds"))
 
@@ -230,7 +229,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     feeders = feeders,
     appinputs = appinputs,
     siblings = siblings,
-    accounts = accounts
+    accounts = accounts,
+    gradelevels = gradelevels
   )
 
   match_placement(
