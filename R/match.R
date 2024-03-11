@@ -54,7 +54,7 @@ match_lookup_account <- function(x, appschools, accounts) {
 
 
 #' @export
-match_augment <- function(x, appschools, accounts, students) {
+match_augment <- function(x, appschools, accounts, students, gradelevels) {
 
   special <- tibble::tribble(
     ~code_appschool, ~id_account, ~choice_name,
@@ -85,9 +85,13 @@ match_augment <- function(x, appschools, accounts, students) {
       grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
     )
 
+
+
   x %>%
     dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid"))
+    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::left_join(gradelevels, by = c("CHOICE SCHOOL" = "choice_school"))
+
 
 }
 
@@ -145,7 +149,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     priorities <- getdata_priority()
     priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
-
     apps <- getdata_app(round = round)
     apps %>% write_rds(glue("{dir_in}/apps.rds"))
 
@@ -175,7 +178,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment(appschools = appschools, accounts = accounts, students = students_recent) %>%
+    match_augment(appschools = appschools, accounts = accounts, students = students_recent, gradelevels = gradelevels) %>%
     fix_grades()
 
   # choices_external <-
@@ -226,7 +229,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     feeders = feeders,
     appinputs = appinputs,
     siblings = siblings,
-    accounts = accounts
+    accounts = accounts,
+    gradelevels = gradelevels
   )
 
   match_placement(
