@@ -1130,7 +1130,8 @@ getdata_gradelevel <- function() {
         Facility__r.Planning_District__c,
         Sibling_Unification__c,
         Reactivations__c,
-        School_Program__r.Choice_Code__c
+        School_Program__r.Choice_Code__c,
+        Next_Grade_Level__c
       from Grade_Level__c
       "
     ),
@@ -1168,7 +1169,8 @@ getdata_gradelevel <- function() {
       planning_district = Facility__r.Planning_District__c,
       is_siblingunification = Sibling_Unification__c,
       is_reactivation = Reactivations__c,
-      choice_school = School_Program__r.Choice_Code__c
+      choice_school = School_Program__r.Choice_Code__c,
+      id_gradelevel_guarantee = Next_Grade_Level__c
     ) %>%
     fix_grades(var = grade) %>%
     mutate(across(c(
