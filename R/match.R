@@ -53,47 +53,7 @@ match_lookup_account <- function(x, appschools, accounts) {
 
 
 
-#' @export
-match_augment <- function(x, appschools, accounts, students, gradelevels) {
 
-  special <- tibble::tribble(
-    ~code_appschool, ~id_account, ~choice_name,
-    "4013_tulane_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_tulane_2", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_community_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_community_2", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_ed_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4012_tier_1", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
-    "4012_tier_2", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
-  )
-
-  names_matchschool <-
-    x %>%
-    match_lookup_account(appschools = appschools, accounts = accounts) %>%
-    dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::select(code_appschool, choice_name = name_account, id_account, is_highdemand) %>%
-    dplyr::distinct()
-  # %>%
-  #   dplyr::bind_rows(special)
-
-  students <-
-    students %>%
-    select(-grade_terminal) %>%
-    left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    dplyr::select(
-      oneappid, id_student,
-      grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
-    )
-
-
-
-  x %>%
-    dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(gradelevels, by = c("CHOICE SCHOOL" = "choice_school"))
-
-
-}
 
 
 
