@@ -84,52 +84,52 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   if (use_cache) {
 
-    accounts <- read_rds(glue("{dir_in}/accounts.rds"))
-    apps <- read_rds(glue("{dir_in}/apps.rds"))
-    appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
-    appschools <- read_rds(glue("{dir_in}/appschools.rds"))
-    choices <- read_rds(glue("{dir_in}/choices.rds"))
-    feeders <- read_rds(glue("{dir_in}/feeders.rds"))
-    priorities <- read_rds(glue("{dir_in}/priorities.rds"))
-    siblings <- read_rds(glue("{dir_in}/siblings.rds"))
-    students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
+    #accounts <- read_rds(glue("{dir_in}/accounts.rds"))
+    #apps <- read_rds(glue("{dir_in}/apps.rds"))
+    #appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
+    #appschools <- read_rds(glue("{dir_in}/appschools.rds"))
+    #choices <- read_rds(glue("{dir_in}/choices.rds"))
+    #feeders <- read_rds(glue("{dir_in}/feeders.rds"))
+    #priorities <- read_rds(glue("{dir_in}/priorities.rds"))
+    #siblings <- read_rds(glue("{dir_in}/siblings.rds"))
+    #students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
 
   } else {
 
-    accounts <- getdata_account()
-    accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
+    #accounts <- getdata_account()
+    #accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
 
-    appschools <- getdata_appschool()
-    appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
+    #appschools <- getdata_appschool()
+    #appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
 
-    feeders <- getdata_feeder()
-    feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
+    #feeders <- getdata_feeder()
+    #feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
 
-    priorities <- getdata_priority()
-    priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
+    #priorities <- getdata_priority()
+    #priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
-    apps <- getdata_app(round = round)
-    apps %>% write_rds(glue("{dir_in}/apps.rds"))
+    #apps <- getdata_app(round = round)
+    #apps %>% write_rds(glue("{dir_in}/apps.rds"))
 
-    appinputs <- getdata_appinput(round = round)
-    appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
+    #appinputs <- getdata_appinput(round = round)
+    #appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
 
-    choices <- getdata_appschoolranking(round = round)
-    choices %>% write_rds(glue("{dir_in}/choices.rds"))
+    #choices <- getdata_appschoolranking(round = round)
+    #choices %>% write_rds(glue("{dir_in}/choices.rds"))
 
-    siblings <- getdata_sibling()
-    siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
+    #siblings <- getdata_sibling()
+    #siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
 
-    students_recent <- getdata_student_recent()
-    students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
+    #students_recent <- getdata_student_recent()
+    #students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
 
     gradelevels <- getdata_gradelevel()
     gradelevels %>% write_rds(glue("{dir_in}/gradelevels.rds"))
 
   }
 
-  students_active <- students_recent %>% dplyr::filter(is_active)
+  #students_active <- students_recent %>% dplyr::filter(is_active)
 
   cat("\n")
 
@@ -138,7 +138,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment(appschools = appschools, accounts = accounts, students = students_recent, gradelevels = gradelevels) %>%
+    match_augment(students = NULL, gradelevels = gradelevels) %>%
     fix_grades()
 
   # choices_external <-
@@ -154,6 +154,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   #   )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
+
+  return(NULL)
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("846", "847"))
 
