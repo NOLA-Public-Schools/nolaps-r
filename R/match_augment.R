@@ -9,10 +9,10 @@
 #' @export
 match_augment <- function(x, students, gradelevels) {
 
-  students <-
-    students %>%
-    select(-grade_terminal) %>%
-    left_join(accounts, by = c("id_account_current" = "id_account")) #%>%
+  #students <-
+    #students %>%
+    #select(-grade_terminal) %>%
+    #left_join(accounts, by = c("id_account_current" = "id_account")) %>%
     #dplyr::select(
     #  oneappid, id_student,
     #  grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
