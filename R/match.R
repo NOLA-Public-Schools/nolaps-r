@@ -133,6 +133,10 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   cat("\n")
 
+  # Print the directory path
+  print(glue::glue("Directory in: {dir_in}"))
+
+
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
@@ -155,7 +159,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
 
-  return(NULL)
+  return(match)
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("846", "847"))
 

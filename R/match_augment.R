@@ -21,13 +21,14 @@ match_augment <- function(x, students, gradelevels) {
   gradelevels <-
     gradelevels %>%
     dplyr::select(
-      name_program, choice_school, id_gradelevel_guarantee, id_gradecapacity
+      grade, name_program, choice_school, id_gradelevel_guarantee, id_gradecapacity
     )
 
   x %>%
     #dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
     #dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(gradelevels, by = c("CHOICE SCHOOL" = "choice_school"))
+    dplyr::left_join(gradelevels, by = c("CHOICE SCHOOL" = "choice_school", "GRADE" = "grade"),
+                     relationship = "many-to-one")
 
 
 }
