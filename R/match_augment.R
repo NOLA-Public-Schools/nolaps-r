@@ -8,15 +8,14 @@
 # Note: previously in match.R, after match_lookup_account
 #' @export
 match_augment <- function(x, students, gradelevels) {
-
-  #students <-
-    #students %>%
-    #select(-grade_terminal) %>%
-    #left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    #dplyr::select(
-    #  oneappid, id_student,
-    #  grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
-    #)
+  # students <-
+  # students %>%
+  # select(-grade_terminal) %>%
+  # left_join(accounts, by = c("id_account_current" = "id_account")) %>%
+  # dplyr::select(
+  #  oneappid, id_student,
+  #  grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
+  # )
 
   names_lookup <-
     gradelevels %>%
@@ -32,24 +31,23 @@ match_augment <- function(x, students, gradelevels) {
 
 
   x %>%
-    #dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    #dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
+    # dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
+    # dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
     mutate(
       clean_choice_school =
         if_else(str_detect(`CHOICE SCHOOL`, "Willow|LakeForest"),
-                str_remove(`CHOICE SCHOOL`, "_.*"),
-                `CHOICE SCHOOL`
-                )
-      ) %>%
+          str_remove(`CHOICE SCHOOL`, "_.*"),
+          `CHOICE SCHOOL`
+        )
+    ) %>%
     dplyr::left_join(names_lookup,
-                     by = c("clean_choice_school" = "choice_school")
-                     ) %>%
+      by = c("clean_choice_school" = "choice_school")
+    ) %>%
     dplyr::left_join(gradelevels,
-                     by = c("clean_choice_school" = "choice_school",
-                            "GRADE" = "grade"),
-                     relationship = "many-to-one"
-                     )
-
-
-
+      by = c(
+        "clean_choice_school" = "choice_school",
+        "GRADE" = "grade"
+      ),
+      relationship = "many-to-one"
+    )
 }
