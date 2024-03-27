@@ -35,9 +35,9 @@ match_augment <- function(x, students, gradelevels) {
   x %>%
     #dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
     #dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    mutate(clean_choice_school = ifelse(grepl("Willow|LakeForest", `CHOICE SCHOOL`), gsub("_.*", "", `CHOICE SCHOOL`), `CHOICE SCHOOL`)) %>% #should this be any more specific for grade/choiceschool combo, for these schools?
-    dplyr::left_join(gradelevels, by = c("clean_choice_school" = "choice_school", "GRADE" = "grade"), #%>%
-                     relationship = "many-to-one")
+    mutate(clean_choice_school = ifelse(grepl("Willow|LakeForest", `CHOICE SCHOOL`), gsub("_.*", "", `CHOICE SCHOOL`), `CHOICE SCHOOL`)) %>%
+    dplyr::left_join(gradelevels, by = c("clean_choice_school" = "choice_school", "GRADE" = "grade"),
+                     relationship = "many-to-one") %>%
     dplyr::left_join(names_lookup, by = c("clean_choice_school" = "choice_school"))
 
 
