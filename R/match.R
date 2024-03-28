@@ -53,47 +53,7 @@ match_lookup_account <- function(x, appschools, accounts) {
 
 
 
-#' @export
-match_augment <- function(x, appschools, accounts, students, gradelevels) {
 
-  special <- tibble::tribble(
-    ~code_appschool, ~id_account, ~choice_name,
-    "4013_tulane_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_tulane_2", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_community_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_community_2", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4013_ed_1", "001d000000ALnWzAAL", "Lusher Charter School",
-    "4012_tier_1", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
-    "4012_tier_2", "001d000000ALnWyAAL", "Lake Forest Elementary Charter School",
-  )
-
-  names_matchschool <-
-    x %>%
-    match_lookup_account(appschools = appschools, accounts = accounts) %>%
-    dplyr::left_join(accounts, by = c("id_account")) %>%
-    dplyr::select(code_appschool, choice_name = name_account, id_account, is_highdemand) %>%
-    dplyr::distinct()
-  # %>%
-  #   dplyr::bind_rows(special)
-
-  students <-
-    students %>%
-    select(-grade_terminal) %>%
-    left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-    dplyr::select(
-      oneappid, id_student,
-      grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
-    )
-
-
-
-  x %>%
-    dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(gradelevels, by = c("CHOICE SCHOOL" = "choice_school"))
-
-
-}
 
 
 
@@ -124,61 +84,65 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
   if (use_cache) {
 
-    accounts <- read_rds(glue("{dir_in}/accounts.rds"))
-    apps <- read_rds(glue("{dir_in}/apps.rds"))
-    appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
-    appschools <- read_rds(glue("{dir_in}/appschools.rds"))
-    choices <- read_rds(glue("{dir_in}/choices.rds"))
-    feeders <- read_rds(glue("{dir_in}/feeders.rds"))
-    priorities <- read_rds(glue("{dir_in}/priorities.rds"))
-    siblings <- read_rds(glue("{dir_in}/siblings.rds"))
-    students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
+    #accounts <- read_rds(glue("{dir_in}/accounts.rds"))
+    #apps <- read_rds(glue("{dir_in}/apps.rds"))
+    #appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
+    #appschools <- read_rds(glue("{dir_in}/appschools.rds"))
+    #choices <- read_rds(glue("{dir_in}/choices.rds"))
+    #feeders <- read_rds(glue("{dir_in}/feeders.rds"))
+    #priorities <- read_rds(glue("{dir_in}/priorities.rds"))
+    #siblings <- read_rds(glue("{dir_in}/siblings.rds"))
+    #students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
 
   } else {
 
-    accounts <- getdata_account()
-    accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
+    #accounts <- getdata_account()
+    #accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
 
-    appschools <- getdata_appschool()
-    appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
+    #appschools <- getdata_appschool()
+    #appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
 
-    feeders <- getdata_feeder()
-    feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
+    #feeders <- getdata_feeder()
+    #feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
 
-    priorities <- getdata_priority()
-    priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
+    #priorities <- getdata_priority()
+    #priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
 
-    apps <- getdata_app(round = round)
-    apps %>% write_rds(glue("{dir_in}/apps.rds"))
+    #apps <- getdata_app(round = round)
+    #apps %>% write_rds(glue("{dir_in}/apps.rds"))
 
-    appinputs <- getdata_appinput(round = round)
-    appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
+    #appinputs <- getdata_appinput(round = round)
+    #appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
 
-    choices <- getdata_appschoolranking(round = round)
-    choices %>% write_rds(glue("{dir_in}/choices.rds"))
+    #choices <- getdata_appschoolranking(round = round)
+    #choices %>% write_rds(glue("{dir_in}/choices.rds"))
 
-    siblings <- getdata_sibling()
-    siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
+    #siblings <- getdata_sibling()
+    #siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
 
-    students_recent <- getdata_student_recent()
-    students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
+    #students_recent <- getdata_student_recent()
+    #students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
 
     gradelevels <- getdata_gradelevel()
     gradelevels %>% write_rds(glue("{dir_in}/gradelevels.rds"))
 
   }
 
-  students_active <- students_recent %>% dplyr::filter(is_active)
+  #students_active <- students_recent %>% dplyr::filter(is_active)
 
   cat("\n")
+
+  # Print the directory path
+  print(glue::glue("Directory in: {dir_in}"))
+
 
   match <-
     readr::read_csv(
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment(appschools = appschools, accounts = accounts, students = students_recent, gradelevels = gradelevels) %>%
+    match_augment(students = NULL, gradelevels = gradelevels) %>%
     fix_grades()
 
   # choices_external <-
@@ -194,6 +158,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   #   )
 
   match %>% readr::write_excel_csv(glue::glue("{dir_review}/000_match_to_review.csv"), na = "")
+
+  return(match)
 
   results <- match %>% matchcalcs_participants_all(schools_waitlist = c("846", "847"))
 
