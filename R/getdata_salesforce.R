@@ -11,7 +11,6 @@
 
 #' @export
 einstein <- function() {
-
   tibble::tribble(
     ~code_site, ~code_site_group,
     "WBA001", "Einstein",
@@ -19,14 +18,12 @@ einstein <- function() {
     "WBN001", "Einstein",
     "WBO001", "Einstein",
   )
-
 }
 
 
 
 #' @export
 mutate_code_site_group <- function(x) {
-
   x %>%
     dplyr::mutate(code_site_group = dplyr::case_when(
       stringr::str_detect(code_site, "^[:alnum:]{5,6}") ~ stringr::str_pad(
@@ -34,32 +31,27 @@ mutate_code_site_group <- function(x) {
         width = 6,
         side = "left",
         pad = "0"
-        ),
+      ),
       TRUE ~ code_site
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_soql <- function(args = commandArgs(trailingOnly = TRUE)) {
-
   soql <- args[1]
   file_out <- args[2]
 
   salesforcer::sf_query(soql, guess_types = FALSE) %>%
     readr::write_excel_csv(file_out, na = "") %>%
     print()
-
 }
 
 
 
 #' @export
 getdata_account <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -133,26 +125,24 @@ getdata_account <- function() {
       uniforms = Uniforms_Required__c,
       lettergrade = Letter_Grade__c
     ) %>%
-    dplyr::mutate(dplyr::across(c(
-      is_highdemand
+    dplyr::mutate(dplyr::across(
+      c(
+        is_highdemand
       ),
       as.logical
-      )
-    ) %>%
-    dplyr::mutate(dplyr::across(c(
-      lon, lat
+    )) %>%
+    dplyr::mutate(dplyr::across(
+      c(
+        lon, lat
       ),
       as.numeric
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_account_gradespan <- function() {
-
   getdata_account() %>%
     dplyr::select(id_account, gradespan_nextyear) %>%
     tidyr::separate_rows(gradespan_nextyear, sep = ";") %>%
@@ -164,14 +154,12 @@ getdata_account_gradespan <- function() {
       gradespan_nextyear_vector = list(gradespan_nextyear)
     ) %>%
     dplyr::ungroup()
-
 }
 
 
 
 #' @export
 getdata_account_highdemand <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -192,14 +180,12 @@ getdata_account_highdemand <- function() {
       code_site = School_Code_String__c,
       is_highdemand = High_Demand_School__c
     )
-
 }
 
 
 
 #' @export
 getdata_accountability <- function() {
-
   sf_query(
     glue(
       "
@@ -251,30 +237,132 @@ getdata_accountability <- function() {
         starts_with("rate_")
       ),
       as.numeric
-      )
-    ) %>%
+    )) %>%
     mutate(across(
       c(
         starts_with("date_")
       ),
       as_date
-      )
-    ) %>%
+    )) %>%
     mutate(across(
       c(
         starts_with("is_")
       ),
       as.logical
-      )
-    )
-
+    ))
 }
 
 
+#' @export
+getdata_contact_active <- function() {
+  sf_query(
+    glue(
+      "
+      Select
+        OneApp_ID__c,
+        LearnerContactId,
+
+        LearnerContact.FirstName,
+        LearnerContact.LastName,
+        LearnerContact.Birthdate,
+        LearnerContact.MailingStreet,
+        LearnerContact.MailingCity,
+        LearnerContact.MailingState,
+        LearnerContact.MailingPostalCode,
+
+        Active__c
+
+      from AcademicTermEnrollment
+
+      where Active__c = true
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) |>
+    select(
+      oneappid = OneApp_ID__c,
+      id_contact = LearnerContactId,
+      student_firstname = LearnerContact.FirstName,
+      student_lastname = LearnerContact.LastName,
+      student_dob = LearnerContact.Birthdate,
+      student_street = LearnerContact.MailingStreet,
+      student_city = LearnerContact.MailingCity,
+      student_state = LearnerContact.MailingState,
+      student_zip = LearnerContact.MailingPostalCode,
+      is_active = Active__c,
+    ) |>
+    mutate(across(c(student_dob), as_date)) |>
+    mutate(across(c(is_active), as.logical))
+}
+
 
 #' @export
-getdata_app <- function(round = "Round 1", start = date_appstart()) {
+getdata_contact_app <- function(date_start = date_appstart()) {
+  sf_query(
+    glue_safe(
+      "
+      select
+        Contact.OneApp_ID__c,
+        ContactId,
 
+        Contact.FirstName,
+        Contact.LastName,
+        Contact.Birthdate,
+        Contact.MailingStreet,
+        Contact.MailingCity,
+        Contact.MailingState,
+        Contact.MailingPostalCode,
+
+        Id
+
+      from IndividualApplication
+
+      where
+        Academic_Term__r.Name = '2024-2025'
+        and CreatedDate >= {date_start}
+        and Status = 'Submitted'
+        and Sum_of_Rank_Values__c > 0
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) |>
+    select(
+      oneappid = Contact.OneApp_ID__c,
+      id_contact = ContactId,
+      student_firstname = Contact.FirstName,
+      student_lastname = Contact.LastName,
+      student_dob = Contact.Birthdate,
+      student_street = Contact.MailingStreet,
+      student_city = Contact.MailingCity,
+      student_state = Contact.MailingState,
+      student_zip = Contact.MailingPostalCode,
+      id_app = Id,
+    ) |>
+    mutate(across(c(student_dob), as_date))
+}
+
+
+#' @export
+getdata_contact_match <- function() {
+  contacts_active <- getdata_contact_active()
+  contacts_app <- getdata_contact_app()
+
+  has_active <- contacts_active |> distinct(id_contact, is_active)
+  has_app <- contacts_app |> distinct(id_contact, id_app)
+
+  bind_rows(
+    select(contacts_active, !c(is_active)),
+    select(contacts_app, !c(id_app)),
+  ) |>
+    distinct() |>
+    left_join(has_active, by = join_by(id_contact)) |>
+    left_join(has_app, by = join_by(id_contact))
+}
+
+#' @export
+getdata_app_old <- function(round = "Round 1", start = date_appstart()) {
   salesforcer::sf_query(
     glue::glue_safe(
       "
@@ -388,47 +476,43 @@ getdata_app <- function(round = "Round 1", start = date_appstart()) {
     ) %>%
     fix_grades(var = grade_current) %>%
     fix_grades(var = grade_applying) %>%
-    dplyr::mutate(dplyr::across(c(
-      is_archived,
-      is_addressvalidated,
-      has_verified,
-      is_recent,
-      is_active,
-      starts_with("is_eligible_")
+    dplyr::mutate(dplyr::across(
+      c(
+        is_archived,
+        is_addressvalidated,
+        has_verified,
+        is_recent,
+        is_active,
+        starts_with("is_eligible_")
       ),
       as.logical
-      )
-    ) %>%
-    dplyr::mutate(across(c(
-      date_created,
-      date_modified
+    )) %>%
+    dplyr::mutate(across(
+      c(
+        date_created,
+        date_modified
       ),
       lubridate::ymd_hms
-      )
-    ) %>%
-    dplyr::mutate(across(c(
-      dob_app
+    )) %>%
+    dplyr::mutate(across(
+      c(
+        dob_app
       ),
       lubridate::as_date
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_app_3year <- function(round = "Round 1", start = date_appstart_3year()) {
-
-  getdata_app(round = round, start = start)
-
+  getdata_app_old(round = round, start = start)
 }
 
 
 
 #' @export
 getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
-
   sf_query(
     glue_safe(
       "
@@ -466,29 +550,27 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
       has_uno = Input_Table_UNO__c,
       has_verifiedaddress = Input_Table_Address_Verified__c
     ) %>%
-    mutate(across(c(
-      optout_family,
-      has_100fpl,
-      has_disadvantage,
-      has_french,
-      has_gt,
-      has_iep,
-      has_military,
-      has_montessori,
-      has_uno,
-      has_verifiedaddress
+    mutate(across(
+      c(
+        optout_family,
+        has_100fpl,
+        has_disadvantage,
+        has_french,
+        has_gt,
+        has_iep,
+        has_military,
+        has_montessori,
+        has_uno,
+        has_verifiedaddress
       ),
       ~ as.logical(as.numeric(.))
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_appschool <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -594,25 +676,23 @@ getdata_appschool <- function() {
       schooltype = School_Type__c,
       id_facility = Facility__c
     ) %>%
-    dplyr::mutate(dplyr::across(c(
-      is_ec,
-      is_valid,
-      is_districtschool,
-      is_currentschool,
-      is_selective,
-      is_scholarship
+    dplyr::mutate(dplyr::across(
+      c(
+        is_ec,
+        is_valid,
+        is_districtschool,
+        is_currentschool,
+        is_selective,
+        is_scholarship
       ),
       as.logical
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_appschoolranking <- function(round = "Round 1", start = date_appstart()) {
-
   salesforcer::sf_query(
     glue::glue_safe(
       "
@@ -684,36 +764,33 @@ getdata_appschoolranking <- function(round = "Round 1", start = date_appstart())
       lat_app = Application__r.Address_Latitude__c,
       latlon_appschool = Application_School__r.AddressLatitudeandLongitude__c
     ) %>%
-    dplyr::mutate(across(c(
-      is_selective,
-      is_ec,
-      is_priority_distance,
-      is_priority_zone,
-      is_verifiedsibling,
-      is_staffchild
+    dplyr::mutate(across(
+      c(
+        is_selective,
+        is_ec,
+        is_priority_distance,
+        is_priority_zone,
+        is_verifiedsibling,
+        is_staffchild
       ),
       as.logical
-      )
-    ) %>%
-    dplyr::mutate(across(c(
-      distance,
-      lon_app,
-      lat_app
+    )) %>%
+    dplyr::mutate(across(
+      c(
+        distance,
+        lon_app,
+        lat_app
       ),
       as.numeric
-      )
-    ) %>%
+    )) %>%
     fix_grades(var = grade_applying)
-
 }
 
 
 
 #' @export
 getdata_appschoolranking_3year <- function(round = "Round 1", start = date_appstart_3year()) {
-
   getdata_appschoolranking(round = round, start = start)
-
 }
 
 
@@ -763,7 +840,6 @@ getdata_ate_active <- function() {
       id_contact = LearnerContactId,
       id_account_person = LearnerAccountId,
       id_ate = Id,
-
       id_account_current = Grade_Level__r.School_Program__r.School__c,
       name_account_current = Grade_Level__r.School_Program__r.School__r.Name,
       id_program_current = Grade_Level__r.School_Program__c,
@@ -771,7 +847,6 @@ getdata_ate_active <- function() {
       grade_current = Grade__c,
       id_gradelevel_current = Grade_Level__c,
       governance = Grade_Level__r.School_Program__r.School__r.Governance__c,
-
       student_firstname = LearnerContact.FirstName,
       student_lastname = LearnerContact.LastName,
       student_dob = LearnerContact.Birthdate,
@@ -810,22 +885,23 @@ getdata_ate_active <- function() {
       # is_priority_closing = SchoolForce__School__r.Closing_School_Priority__c,
       # grade_terminal = SchoolForce__School__r.Terminal_Grade__c
     ) |>
-    mutate(across(c(
-      is_active,
+    mutate(across(
+      c(
+        is_active,
 
-    #   is_terminalgrade,
-    #   is_t9,
-    #   is_priority_closing,
-    #   appneeded_r1,
-    #   appsubmitted_r1,
-    #   appsubmitted_r2
-
+        #   is_terminalgrade,
+        #   is_t9,
+        #   is_priority_closing,
+        #   appneeded_r1,
+        #   appsubmitted_r1,
+        #   appsubmitted_r2
       ),
       as.logical
     )) |>
-    mutate(across(c(
-      student_dob,
-    #   expelled_date_end
+    mutate(across(
+      c(
+        student_dob,
+        #   expelled_date_end
       ),
       as_date
     )) |>
@@ -834,13 +910,11 @@ getdata_ate_active <- function() {
   # %>%
   #   fix_grades(grade_future) %>%
   #   fix_grades(grade_terminal)
-
 }
 
 
 #' @export
 getdata_contact <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -869,14 +943,12 @@ getdata_contact <- function() {
       date_modified = LastModifiedDate,
       contact_type = RecordType.Name
     )
-
 }
 
 
 
 #' @export
 getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate::today()) {
-
   salesforcer::sf_query(
     glue::glue_safe(
       "
@@ -908,7 +980,6 @@ getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate
       residency_status = Residency_Status__c,
       living_arrangement = Student_Parent_Current_Location_Living_A__c
     )
-
 }
 
 
@@ -958,32 +1029,30 @@ getdata_facility <- function() {
       cost_tier = Cost_Tier__c,
       tract = Census_Tract__c
     ) %>%
-    mutate(across(c(
-      lon,
-      lat,
-      program_capacity,
-      capacity_lower,
-      capacity_upper,
-      condition_index,
-      cost_squarefoot,
+    mutate(across(
+      c(
+        lon,
+        lat,
+        program_capacity,
+        capacity_lower,
+        capacity_upper,
+        condition_index,
+        cost_squarefoot,
       ),
       as.numeric
-      )
-    ) %>%
-    mutate(across(c(
-      has_structure
+    )) %>%
+    mutate(across(
+      c(
+        has_structure
       ),
       as.logical
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_feeder <- function() {
-
   sf_query(
     glue(
       "
@@ -1003,7 +1072,6 @@ getdata_feeder <- function() {
       grade_applying = Grade__c
     ) %>%
     fix_grades(grade_applying)
-
 }
 
 
@@ -1071,26 +1139,25 @@ getdata_gradecapacity <- function() {
       is_reactivation = Reactivations__c
     ) %>%
     fix_grades(var = grade) %>%
-    mutate(across(c(
-      seats_available,
-      currentregister_active,
-      target_101,
-      target_101_future,
-      target_101_requested,
-      n_sections,
-      students_per_section
+    mutate(across(
+      c(
+        seats_available,
+        currentregister_active,
+        target_101,
+        target_101_future,
+        target_101_requested,
+        n_sections,
+        students_per_section
       ),
       as.numeric
-      )
-    ) %>%
-    mutate(across(c(
-      is_siblingunification,
-      is_reactivation
+    )) %>%
+    mutate(across(
+      c(
+        is_siblingunification,
+        is_reactivation
       ),
       as.logical
-      )
-    )
-
+    ))
 }
 
 
@@ -1173,33 +1240,31 @@ getdata_gradelevel <- function() {
       id_gradelevel_guarantee = Next_Grade_Level__c
     ) %>%
     fix_grades(var = grade) %>%
-    mutate(across(c(
-      seats_available,
-      currentregister_active,
-      target_101,
-      target_requested_main_round,
-      target_101_future,
-      target_101_requested,
-      n_sections,
-      students_per_section
-    ),
-    as.numeric
-    )
-    ) %>%
-    mutate(across(c(
-      is_siblingunification,
-      is_reactivation
-    ),
-    as.logical
-    )
-    )
-
+    mutate(across(
+      c(
+        seats_available,
+        currentregister_active,
+        target_101,
+        target_requested_main_round,
+        target_101_future,
+        target_101_requested,
+        n_sections,
+        students_per_section
+      ),
+      as.numeric
+    )) %>%
+    mutate(across(
+      c(
+        is_siblingunification,
+        is_reactivation
+      ),
+      as.logical
+    ))
 }
 
 
 #' @export
 getdata_guardian <- function() {
-
   sf_query(
     glue::glue(
       "
@@ -1223,14 +1288,12 @@ getdata_guardian <- function() {
       into = c("id_contact_student", "id_contact_guardian"),
       sep = "_"
     )
-
 }
 
 
 
 #' @export
 getdata_placement <- function(years) {
-
   years <-
     stringr::str_flatten(years, "', '") %>%
     stringr::str_c("('", ., "')")
@@ -1269,21 +1332,19 @@ getdata_placement <- function(years) {
       name_account_future = Future_School_Name__r.Name,
       recordtype = RecordType.Name
     ) %>%
-    dplyr::mutate(across(c(
-      is_active
+    dplyr::mutate(across(
+      c(
+        is_active
       ),
       as.logical
-      )
-    ) %>%
+    )) %>%
     fix_grades(grade_future)
-
 }
 
 
 
 #' @export
 getdata_priority <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1358,7 +1419,6 @@ getdata_priority <- function() {
       grade = Grade__c,
       governance = Application_School__r.School__r.Governance__c,
       ec_type = Application_School__r.EC_Program_Type__r.Name,
-
       Order_100_Federal_Poverty__c,
       Order_Attending_C__c,
       Order_Attending_DF__c,
@@ -1379,7 +1439,6 @@ getdata_priority <- function() {
       Order_Transition__c,
       Order_UNO_Staff__c,
       Order_Zone__c,
-
       Percentage_100_Federal_Poverty__c,
       Percentage_Attending_C__c,
       Percentage_Attending_DF__c,
@@ -1403,14 +1462,12 @@ getdata_priority <- function() {
     ) %>%
     fix_grades(grade) %>%
     dplyr::arrange(name_account, grade)
-
 }
 
 
 
 #' @export
 getdata_program <- function() {
-
   sf_query(
     glue(
       "
@@ -1432,14 +1489,12 @@ getdata_program <- function() {
       name_program = Name,
       code_appschool = Application_Code__c,
     )
-
 }
 
 
 
 #' @export
 getdata_registration <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1457,14 +1512,12 @@ getdata_registration <- function() {
       deadline_ec = EC_MR_Registration_Deadline__c
     ) %>%
     dplyr::mutate(dplyr::across(.fns = as.character))
-
 }
 
 
 
 #' @export
 getdata_sibling <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1494,14 +1547,12 @@ getdata_sibling <- function() {
       into = c("id_contact_student", "id_contact_sibling"),
       sep = "_"
     )
-
 }
 
 
 
 #' @export
 getdata_recordtype <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1516,14 +1567,12 @@ getdata_recordtype <- function() {
       id_recordtype = Id,
       recordtype = Name
     )
-
 }
 
 
 
 #' @export
 getdata_roundrobin <- function() {
-
   sf_query(
     glue(
       "
@@ -1543,15 +1592,15 @@ getdata_roundrobin <- function() {
       match_to_10_1 = Match_to_Seat_Availability__c
     ) %>%
     mutate(
-      across(c(
-        is_exempt_roundrobin,
-        match_to_10_1
-      ),
-      as.logical
+      across(
+        c(
+          is_exempt_roundrobin,
+          match_to_10_1
+        ),
+        as.logical
       )
     ) %>%
     mutate(is_exempt_10_1 = !match_to_10_1)
-
 }
 
 
@@ -1562,7 +1611,6 @@ getdata_roundrobin <- function() {
 
 #' @export
 query_student <- function() {
-
   glue::glue(
     "
     select
@@ -1619,14 +1667,12 @@ query_student <- function() {
     from Schoolforce__Student__c
     "
   )
-
 }
 
 
 
 #' @export
 format_student <- function(x) {
-
   x %>%
     dplyr::select(
       date_created = CreatedDate,
@@ -1680,37 +1726,35 @@ format_student <- function(x) {
       is_priority_closing = SchoolForce__School__r.Closing_School_Priority__c,
       grade_terminal = SchoolForce__School__r.Terminal_Grade__c
     ) %>%
-    dplyr::mutate(across(c(
-      is_active,
-      is_recent,
-      is_terminalgrade,
-      is_t9,
-      is_priority_closing,
-      appneeded_r1,
-      appsubmitted_r1,
-      appsubmitted_r2
+    dplyr::mutate(across(
+      c(
+        is_active,
+        is_recent,
+        is_terminalgrade,
+        is_t9,
+        is_priority_closing,
+        appneeded_r1,
+        appsubmitted_r1,
+        appsubmitted_r2
       ),
       as.logical
-      )
-    ) %>%
-    dplyr::mutate(across(c(
-      student_dob,
-      expelled_date_end
+    )) %>%
+    dplyr::mutate(across(
+      c(
+        student_dob,
+        expelled_date_end
       ),
       lubridate::as_date
-      )
-    ) %>%
+    )) %>%
     fix_grades(grade_current) %>%
     fix_grades(grade_future) %>%
     fix_grades(grade_terminal)
-
 }
 
 
 
 #' @export
 getdata_student_active <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       query_student(),
@@ -1725,14 +1769,12 @@ getdata_student_active <- function() {
     guess_types = FALSE
   ) %>%
     format_student()
-
 }
 
 
 
 #' @export
 getdata_student_3years <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1755,14 +1797,12 @@ getdata_student_3years <- function() {
       id_account_current = SchoolForce__School__c,
       year_student = School_Year__c
     )
-
 }
 
 
 
 #' @export
 getdata_student_recent <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       query_student(),
@@ -1776,14 +1816,12 @@ getdata_student_recent <- function() {
     guess_types = FALSE
   ) %>%
     format_student()
-
 }
 
 
 
 #' @export
 getdata_student_year <- function(years = date_currentyear()) {
-
   years <-
     stringr::str_flatten(years, "', '") %>%
     stringr::str_c("('", ., "')")
@@ -1820,22 +1858,20 @@ getdata_student_year <- function(years = date_currentyear()) {
       name_account_current = SchoolForce__School__r.Name,
       is_active = SchoolForce__Active__c
     ) %>%
-    dplyr::mutate(across(c(
-      appsubmitted_r1,
-      appsubmitted_r2,
-      is_active
+    dplyr::mutate(across(
+      c(
+        appsubmitted_r1,
+        appsubmitted_r2,
+        is_active
       ),
       as.logical
-      )
-    )
-
+    ))
 }
 
 
 
 #' @export
 getdata_waitlist <- function() {
-
   salesforcer::sf_query(
     glue::glue(
       "
@@ -1863,7 +1899,4 @@ getdata_waitlist <- function() {
       is_archived = Archived__c
     ) %>%
     fix_grades(var = grade_applying)
-
 }
-
-
