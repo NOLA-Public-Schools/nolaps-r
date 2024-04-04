@@ -4,9 +4,7 @@
 
 #' @export
 write_school <- function(
-  val_filter, table_schools, col_filter, cols_include, names_pretty, password
-  ) {
-
+    val_filter, table_schools, col_filter, cols_include, names_pretty, password) {
   table_school <-
     table_schools %>%
     dplyr::filter({{ col_filter }} == val_filter)
@@ -19,7 +17,6 @@ write_school <- function(
     readr::write_excel_csv(path_school, na = "")
 
   if (!rlang::is_null(password)) {
-
     shell(
       glue::glue(
         'C:/"Program Files"/7-Zip/7z.exe a "{path_school}.zip" "{path_school}" -p{password}'
@@ -35,19 +32,17 @@ write_school <- function(
     # )
 
     file.remove(path_school)
-
   }
-
 }
 
 
 
 #' @export
 write_by_school <- function(
-  table_schools, col_filter, cols_include, names_pretty, password = NULL
-  ) {
-
-  schools <- table_schools %>% dplyr::pull({{ col_filter }}) %>% unique()
+    table_schools, col_filter, cols_include, names_pretty, password = NULL) {
+  schools <- table_schools %>%
+    dplyr::pull({{ col_filter }}) %>%
+    unique()
 
   purrr::walk(
     schools, ~ write_school(
@@ -59,5 +54,4 @@ write_by_school <- function(
       password = password
     )
   )
-
 }

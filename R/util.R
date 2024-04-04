@@ -3,79 +3,93 @@
 
 
 #' @export
-date_appstart <- function() {"2023-11-01T00:00:00Z"}
+date_appstart <- function() {
+  "2023-11-01T00:00:00Z"
+}
 
 
 
 #' @export
-date_appstart_3year <- function() {"2020-11-01T00:00:00Z"}
+date_appstart_3year <- function() {
+  "2020-11-01T00:00:00Z"
+}
 
 
 
 #' @export
-date_currentyear <- function() {"2022-2023"}
+date_currentyear <- function() {
+  "2022-2023"
+}
 
 
 
 #' @export
 fix_grades <- function(x, var = GRADE) {
-
   x %>%
     dplyr::mutate("{{ var }}" := stringr::str_remove_all({{ var }}, "[:space:]")) %>%
     dplyr::mutate("{{ var }}" := factor(
-      {{ var }}, levels = c(
+      {{ var }},
+      levels = c(
         "UB", "INFSPED", "INF", "1YR", "2YR", "PK3", "PK4", "PKSPED", "PK",
         "K", "1", "2", "3", "4", "5", "6", "7", "8",
         "T9",
         "9", "10", "11", "12",
         "Guarantee",
         "Other"
-        ), ordered = TRUE
-      )
-    )
-
+      ), ordered = TRUE
+    ))
 }
 
 
 
 #' @export
-grades <- function() {c(
-  "INF", "1YR", "2YR", "PK3", "PK4",
-  "K", "1", "2", "3", "4", "5", "6", "7", "8",
-  "9", "10", "11", "12"
+grades <- function() {
+  c(
+    "INF", "1YR", "2YR", "PK3", "PK4",
+    "K", "1", "2", "3", "4", "5", "6", "7", "8",
+    "9", "10", "11", "12"
   )
 }
 
 
 
 #' @export
-grades_ec <- function() {c("INF", "1YR", "2YR", "PK3", "PK4")}
+grades_ec <- function() {
+  c("INF", "1YR", "2YR", "PK3", "PK4")
+}
 
 
 
 #' @export
-grades_k8 <- function() {c("K", "1", "2", "3", "4", "5", "6", "7", "8")}
+grades_k8 <- function() {
+  c("K", "1", "2", "3", "4", "5", "6", "7", "8")
+}
 
 
 
 #' @export
-grades_hs <- function() {c("T9", "9", "10", "11", "12")}
+grades_hs <- function() {
+  c("T9", "9", "10", "11", "12")
+}
 
 
 
 #' @export
-grades_k12 <- function() {c(grades_k8(), grades_hs())}
+grades_k12 <- function() {
+  c(grades_k8(), grades_hs())
+}
 
 
 
 #' @export
-grades_inf8 <- function() {c(grades_ec(), grades_k8())}
+grades_inf8 <- function() {
+  c(grades_ec(), grades_k8())
+}
 
 
 
 #' @export
 grades_code_to_normal <- function() {
-
   tibble::tribble(
     ~grade_code, ~grade_normal,
     "15", "INFSPED",
@@ -97,14 +111,12 @@ grades_code_to_normal <- function() {
     "12", "12",
     "35", "Other"
   )
-
 }
 
 
 
 #' @export
 grades_next <- function() {
-
   tibble::tribble(
     ~grade_current, ~grade_next,
     "INF", "1YR",
@@ -126,14 +138,12 @@ grades_next <- function() {
     "11", "12",
     "12", "13"
   )
-
 }
 
 
 
 #' @export
 grades_previous <- function() {
-
   tibble::tribble(
     ~grade_current, ~grade_previous,
     "1YR", "INF",
@@ -157,14 +167,12 @@ grades_previous <- function() {
   # %>%
   #   fix_grades(grade_current) %>%
   #   fix_grades(grade_previous)
-
 }
 
 
 
 #' @export
 grades_text_numeric <- function() {
-
   tibble::tribble(
     ~grade, ~grade_numeric,
     "INF", -5,
@@ -187,14 +195,12 @@ grades_text_numeric <- function() {
     "12", 12,
     "13", 13,
   )
-
 }
 
 
 
 #' @export
 fix_names <- function(x) {
-
   x %>%
     stringr::str_replace_all(., "/", " ") %>%
     stringr::str_replace_all(., ":", " ") %>%
@@ -206,7 +212,6 @@ fix_names <- function(x) {
     stringr::str_remove(., "DO NOT PLACE - ") %>%
     stringr::str_remove(., "DO NOT PLACE ") %>%
     stringr::str_squish(.)
-
 }
 
 
@@ -245,7 +250,4 @@ fix_grades_vec <- function(x) {
       ),
       ordered = TRUE
     )
-
 }
-
-

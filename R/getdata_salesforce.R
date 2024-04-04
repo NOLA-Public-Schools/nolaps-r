@@ -8,46 +8,19 @@
 #' @importFrom magrittr %>%
 
 
-
-#' @export
-einstein <- function() {
-  tibble::tribble(
-    ~code_site, ~code_site_group,
-    "WBA001", "Einstein",
-    "WBM001", "Einstein",
-    "WBN001", "Einstein",
-    "WBO001", "Einstein",
-  )
-}
-
-
-
 #' @export
 mutate_code_site_group <- function(x) {
   x %>%
-    dplyr::mutate(code_site_group = dplyr::case_when(
-      stringr::str_detect(code_site, "^[:alnum:]{5,6}") ~ stringr::str_pad(
-        stringr::str_extract(code_site, "^[:alnum:]{5,6}"),
+    mutate(code_site_group = case_when(
+      str_detect(code_site, "^[:alnum:]{5,6}") ~ str_pad(
+        str_extract(code_site, "^[:alnum:]{5,6}"),
         width = 6,
         side = "left",
         pad = "0"
       ),
-      TRUE ~ code_site
+      .default = code_site
     ))
 }
-
-
-
-#' @export
-getdata_soql <- function(args = commandArgs(trailingOnly = TRUE)) {
-  soql <- args[1]
-  file_out <- args[2]
-
-  salesforcer::sf_query(soql, guess_types = FALSE) %>%
-    readr::write_excel_csv(file_out, na = "") %>%
-    print()
-}
-
 
 
 #' @export
