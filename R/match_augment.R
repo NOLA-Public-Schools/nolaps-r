@@ -7,7 +7,7 @@
 
 # Note: previously in match.R, after match_lookup_account
 #' @export
-match_augment <- function(x, students, gradelevels) {
+match_augment <- function(x, students, gradelevels, contactsmatch) {
   # students <-
   # students %>%
   # select(-grade_terminal) %>%
@@ -33,6 +33,7 @@ match_augment <- function(x, students, gradelevels) {
   x %>%
     # dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
     # dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
+    dplyr::left_join(contactsmatch, by = c("STUDENT ID" = "oneappid")) %>%
     mutate(
       clean_choice_school =
         if_else(str_detect(`CHOICE SCHOOL`, "Willow|LakeForest"),

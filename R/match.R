@@ -94,6 +94,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     #siblings <- read_rds(glue("{dir_in}/siblings.rds"))
     #students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
+    contactsmatch <- read_rds(glue("{dir_in}/contactsmach.rds"))
 
   } else {
 
@@ -127,6 +128,9 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     gradelevels <- getdata_gradelevel()
     gradelevels %>% write_rds(glue("{dir_in}/gradelevels.rds"))
 
+    contactsmatch <- getdata_contact_match()
+    contactsmatch %>% write_rds(glue("{dir_in}/contactsmatch.rds"))
+
   }
 
   #students_active <- students_recent %>% dplyr::filter(is_active)
@@ -142,7 +146,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment(students = NULL, gradelevels = gradelevels) %>%
+    match_augment(students = NULL, gradelevels = gradelevels, contactsmatch = contactsmatch) %>%
     fix_grades()
 
   # choices_external <-
@@ -196,7 +200,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     appinputs = appinputs,
     siblings = siblings,
     accounts = accounts,
-    gradelevels = gradelevels
+    gradelevels = gradelevels,
+    contactsmatch = contactsmatch
   )
 
   match_placement(
