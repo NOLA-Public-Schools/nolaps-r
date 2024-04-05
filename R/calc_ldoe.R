@@ -130,27 +130,3 @@ prop_graduation <- function(x, ...) {
       prop_graduated = num_graduated / denom_graduated
     )
 }
-
-
-
-# Assessment --------------------------------------------------------------
-
-
-
-
-
-
-
-#' @export
-prop_mastery <- function(x, ...) {
-  x %>%
-    dplyr::group_by(...) %>%
-    dplyr::summarize(
-      denom_basic = sum(!is.na(ach)),
-      denom_mastery = sum(!is.na(ach)),
-      num_basic = sum(ach %in% c("ADV", "EST", "EXC", "GOO", "MAS", "MST", "BAS")),
-      num_mastery = sum(ach %in% c("ADV", "EST", "EXC", "GOO", "MAS", "MST")),
-      prop_basic = num_basic / denom_basic,
-      prop_mastery = num_mastery / denom_mastery
-    )
-}

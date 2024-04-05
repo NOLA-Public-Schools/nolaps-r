@@ -1,31 +1,26 @@
-
-
 #' @export
 date_appstart <- function() {
   "2023-11-01T00:00:00Z"
 }
 
 
-
 #' @export
 date_appstart_3year <- function() {
-  "2020-11-01T00:00:00Z"
+  "2021-11-01T00:00:00Z"
 }
-
 
 
 #' @export
 date_currentyear <- function() {
-  "2022-2023"
+  "2023-2024"
 }
-
 
 
 #' @export
 fix_grades <- function(x, var = GRADE) {
-  x %>%
-    dplyr::mutate("{{ var }}" := stringr::str_remove_all({{ var }}, "[:space:]")) %>%
-    dplyr::mutate("{{ var }}" := factor(
+  x |>
+    mutate("{{ var }}" := str_remove_all({{ var }}, "[:space:]")) %>%
+    mutate("{{ var }}" := factor(
       {{ var }},
       levels = c(
         "UB", "INFSPED", "INF", "1YR", "2YR", "PK3", "PK4", "PKSPED", "PK",
@@ -39,7 +34,6 @@ fix_grades <- function(x, var = GRADE) {
 }
 
 
-
 #' @export
 grades <- function() {
   c(
@@ -50,12 +44,10 @@ grades <- function() {
 }
 
 
-
 #' @export
 grades_ec <- function() {
   c("INF", "1YR", "2YR", "PK3", "PK4")
 }
-
 
 
 #' @export
@@ -64,12 +56,10 @@ grades_k8 <- function() {
 }
 
 
-
 #' @export
 grades_hs <- function() {
   c("T9", "9", "10", "11", "12")
 }
-
 
 
 #' @export
@@ -78,12 +68,10 @@ grades_k12 <- function() {
 }
 
 
-
 #' @export
 grades_inf8 <- function() {
   c(grades_ec(), grades_k8())
 }
-
 
 
 #' @export
@@ -112,7 +100,6 @@ grades_code_to_normal <- function() {
 }
 
 
-
 #' @export
 grades_next <- function() {
   tribble(
@@ -139,7 +126,6 @@ grades_next <- function() {
 }
 
 
-
 #' @export
 grades_previous <- function() {
   tribble(
@@ -162,11 +148,7 @@ grades_previous <- function() {
     "11", "10",
     "12", "11"
   )
-  # %>%
-  #   fix_grades(grade_current) %>%
-  #   fix_grades(grade_previous)
 }
-
 
 
 #' @export
@@ -196,27 +178,25 @@ grades_text_numeric <- function() {
 }
 
 
-
 #' @export
 fix_names <- function(x) {
-  x %>%
-    stringr::str_replace_all(., "/", " ") %>%
-    stringr::str_replace_all(., ":", " ") %>%
-    stringr::str_replace_all(., "#", " ") %>%
-    stringr::str_remove(., "\\(DO NOT PLACE\\)") %>%
-    stringr::str_remove(., "DO NOT PLACE- ") %>%
-    stringr::str_remove(., "DO NOT PLACE - ") %>%
-    stringr::str_remove(., "DO NOT PLACE ") %>%
-    stringr::str_squish(.)
+  x |>
+    str_replace_all("/", " ") |>
+    str_replace_all(":", " ") |>
+    str_replace_all("#", " ") |>
+    str_remove("\\(DO NOT PLACE\\)") |>
+    str_remove("DO NOT PLACE- ") |>
+    str_remove("DO NOT PLACE - ") |>
+    str_remove("DO NOT PLACE ") |>
+    str_squish()
 }
 
 
 #' @export
 fix_grades_vec <- function(x) {
-  x %>%
-    stringr::str_remove_all(., "[:space:]") %>%
+  x |>
+    str_remove_all("[:space:]") |>
     factor(
-      .,
       levels = c(
         "UB",
         "INFSPED",
