@@ -1,4 +1,3 @@
-#' @importFrom magrittr %>%
 
 
 
@@ -18,18 +17,10 @@ write_school <- function(
 
   if (!is_null(password)) {
     shell(
-      glue::glue(
+      glue(
         'C:/"Program Files"/7-Zip/7z.exe a "{path_school}.zip" "{path_school}" -p{password}'
       )
     )
-
-    # shell(
-    #   glue::glue(
-    #     '
-    #   7z.exe a "{path_school}.zip" "{path_school}" -p{password}
-    #   '
-    #   )
-    # )
 
     file.remove(path_school)
   }

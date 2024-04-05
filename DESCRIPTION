@@ -18,10 +18,8 @@ Imports:
     forcats,
     ggplot2,
     ggrepel,
-    glue,
     keyring,
     lubridate,
-    magrittr,
     purrr,
     readr,
     readxl,
@@ -31,7 +29,5 @@ Imports:
     sf,
     stringr,
     testthat,
-    tibble,
     tidygraph,
-    tidyr,
-    tidyselect
+    tidyr

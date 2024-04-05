@@ -1,5 +1,3 @@
-#' @importFrom magrittr %>%
-
 
 
 #' @export
@@ -90,7 +88,7 @@ grades_inf8 <- function() {
 
 #' @export
 grades_code_to_normal <- function() {
-  tibble::tribble(
+  tribble(
     ~grade_code, ~grade_normal,
     "15", "INFSPED",
     "20", "PKSPED",
@@ -117,7 +115,7 @@ grades_code_to_normal <- function() {
 
 #' @export
 grades_next <- function() {
-  tibble::tribble(
+  tribble(
     ~grade_current, ~grade_next,
     "INF", "1YR",
     "1YR", "2YR",
@@ -144,7 +142,7 @@ grades_next <- function() {
 
 #' @export
 grades_previous <- function() {
-  tibble::tribble(
+  tribble(
     ~grade_current, ~grade_previous,
     "1YR", "INF",
     "2YR", "1YR",
@@ -173,7 +171,7 @@ grades_previous <- function() {
 
 #' @export
 grades_text_numeric <- function() {
-  tibble::tribble(
+  tribble(
     ~grade, ~grade_numeric,
     "INF", -5,
     "1YR", -4,

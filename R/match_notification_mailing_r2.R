@@ -1,5 +1,3 @@
-#' @import dplyr
-#' @import glue
 #' @import purrr
 #' @import readr
 #' @import stringr

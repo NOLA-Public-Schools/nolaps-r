@@ -1,6 +1,4 @@
-#' @importFrom magrittr %>%
 #' @importFrom sf st_read
-
 
 
 # Credentials -------------------------------------------------------------

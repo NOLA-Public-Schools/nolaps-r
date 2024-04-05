@@ -1,5 +1,3 @@
-#' @import dplyr
-#' @import glue
 #' @import lubridate
 #' @import purrr
 #' @import readr
@@ -243,7 +241,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
   notifications %>%
     select(-c(id_account:id_account_guaranteed)) %>%
-    write_excel_csv(glue::glue("{dir_out}/notifications.csv"), na = "")
+    write_excel_csv(glue("{dir_out}/notifications.csv"), na = "")
 
   return(NULL)
 
@@ -251,7 +249,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
 
     notifications %>%
       dplyr::filter(lettertype == x) %>%
-      readr::write_excel_csv(glue::glue(dir_out, "/all/", x, ".csv"), na = "")
+      readr::write_excel_csv(glue(dir_out, "/all/", x, ".csv"), na = "")
 
     spanish <-
       notifications %>%
@@ -259,7 +257,7 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       dplyr::filter(lettertype == x)
 
     if (nrow(spanish) > 0) {
-      readr::write_excel_csv(spanish, glue::glue(dir_out, "/spanish/", x, ".csv"), na = "")
+      readr::write_excel_csv(spanish, glue(dir_out, "/spanish/", x, ".csv"), na = "")
     }
 
     vietnamese <-
@@ -268,17 +266,17 @@ match_notification <- function(match, overmatches, dir_out, apps, accounts, apps
       dplyr::filter(lettertype == x)
 
     if (nrow(vietnamese) > 0) {
-      readr::write_excel_csv(vietnamese, glue::glue(dir_out, "/vietnamese/", x, ".csv"), na = "")
+      readr::write_excel_csv(vietnamese, glue(dir_out, "/vietnamese/", x, ".csv"), na = "")
     }
 
   }
 
-  dir.create(glue::glue("{dir_out}/notifications"))
-  dir.create(glue::glue("{dir_out}/notifications/all"))
-  dir.create(glue::glue("{dir_out}/notifications/spanish"))
-  dir.create(glue::glue("{dir_out}/notifications/vietnamese"))
+  dir.create(glue("{dir_out}/notifications"))
+  dir.create(glue("{dir_out}/notifications/all"))
+  dir.create(glue("{dir_out}/notifications/spanish"))
+  dir.create(glue("{dir_out}/notifications/vietnamese"))
 
-  purrr::walk(unique(notifications$lettertype), write_lettertypes, dir_out = glue::glue("{dir_out}/notifications"))
+  purrr::walk(unique(notifications$lettertype), write_lettertypes, dir_out = glue("{dir_out}/notifications"))
 
   invisible(notifications)
 

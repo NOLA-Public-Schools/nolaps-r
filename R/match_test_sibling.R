@@ -1,15 +1,9 @@
-#' @import dplyr
 #' @import lubridate
 #' @import purrr
 #' @import readxl
 #' @import salesforcer
 #' @import stringr
 #' @import tidyr
-
-#' @importFrom glue glue glue_safe
-#' @importFrom magrittr %>%
-#' @importFrom tibble as_tibble
-
 
 
 #' @export

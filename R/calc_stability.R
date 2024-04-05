@@ -1,10 +1,6 @@
-#' @importFrom magrittr %>%
-
-
-
 grades_numeric <- function() {
 
-  tibble::tribble(
+  tribble(
     ~grade, ~grade_numeric,
     "20", -1,
     "25", 0,
