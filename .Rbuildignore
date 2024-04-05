@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^\.httr-oauth-salesforcer$
 ^data-raw$
+^LICENSE\.md$

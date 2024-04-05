@@ -16,7 +16,7 @@ write_school <- function(
     purrr::set_names(names_pretty) %>%
     readr::write_excel_csv(path_school, na = "")
 
-  if (!rlang::is_null(password)) {
+  if (!is_null(password)) {
     shell(
       glue::glue(
         'C:/"Program Files"/7-Zip/7z.exe a "{path_school}.zip" "{path_school}" -p{password}'
