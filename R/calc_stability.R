@@ -111,6 +111,7 @@ rate_stability <- function(x, years, ..., enrollment = NULL, use_current = TRUE)
 
   }
 
+  # superseded
   purrr::map_dfr(years, rate_stability_1year, x, enrollment, ...)
 
 }

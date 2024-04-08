@@ -18,6 +18,7 @@ Imports:
     forcats,
     ggplot2,
     ggrepel,
+    glue,
     keyring,
     lubridate,
     purrr,

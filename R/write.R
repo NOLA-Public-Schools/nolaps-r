@@ -1,19 +1,16 @@
-
-
-
 #' @export
 write_school <- function(
     val_filter, table_schools, col_filter, cols_include, names_pretty, password) {
   table_school <-
     table_schools %>%
-    dplyr::filter({{ col_filter }} == val_filter)
+    filter({{ col_filter }} == val_filter)
 
   path_school <- unique(table_school$path)
 
   table_school %>%
-    dplyr::select({{ cols_include }}) %>%
-    purrr::set_names(names_pretty) %>%
-    readr::write_excel_csv(path_school, na = "")
+    select({{ cols_include }}) %>%
+    set_names(names_pretty) %>%
+    write_csv(path_school, na = "")
 
   if (!is_null(password)) {
     shell(
@@ -27,15 +24,14 @@ write_school <- function(
 }
 
 
-
 #' @export
 write_by_school <- function(
     table_schools, col_filter, cols_include, names_pretty, password = NULL) {
   schools <- table_schools %>%
-    dplyr::pull({{ col_filter }}) %>%
+    pull({{ col_filter }}) %>%
     unique()
 
-  purrr::walk(
+  walk(
     schools, ~ write_school(
       .,
       table_schools = table_schools,

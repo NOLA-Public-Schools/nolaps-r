@@ -1,6 +1,18 @@
 #' @import dplyr
+#' @import forcats
+#' @import ggplot2
+#' @import lubridate
+#' @import salesforcer
 #' @import stringr
+#'
+#' @importFrom glue glue glue_safe
+#' @importFrom ggrepel geom_text_repel
+#' @importFrom purrr set_names walk
+#' @importFrom readr read_csv write_csv
+#' @importFrom sf st_read
+#' @importFrom tidyr replace_na
 #'
 #' @importFrom stats complete.cases median
 #' @importFrom utils data
+
 NULL
