@@ -146,7 +146,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       glue::glue("{dir_in}/3_MasterMatch.csv"),
       col_types = stringr::str_c(stringr::str_dup("c", 9), stringr::str_dup("i", 1), stringr::str_dup("c", 29))
     ) %>%
-    match_augment(students = NULL, gradelevels = gradelevels, contactsmatch = contactsmatch) %>%
+    match_augment(gradelevels = gradelevels, contactsmatch = contactsmatch) %>%
     fix_grades()
 
   # choices_external <-

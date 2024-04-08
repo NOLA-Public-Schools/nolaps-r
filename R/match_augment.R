@@ -5,17 +5,9 @@
 #'
 #' @import dplyr
 
-# Note: previously in match.R, after match_lookup_account
+
 #' @export
-match_augment <- function(x, students, gradelevels, contactsmatch) {
-  # students <-
-  # students %>%
-  # select(-grade_terminal) %>%
-  # left_join(accounts, by = c("id_account_current" = "id_account")) %>%
-  # dplyr::select(
-  #  oneappid, id_student,
-  #  grade_current, school_current = name_account, grade_terminal, id_account_current, is_active
-  # )
+match_augment <- function(x, gradelevels, contactsmatch) {
 
   names_lookup <-
     gradelevels %>%
@@ -25,15 +17,14 @@ match_augment <- function(x, students, gradelevels, contactsmatch) {
 
   gradelevels <-
     gradelevels %>%
-    dplyr::select(
+    select(
       grade, choice_school, id_gradelevel_guarantee, id_gradecapacity
     )
 
 
   x %>%
-    # dplyr::left_join(names_matchschool, by = c("CHOICE SCHOOL" = "code_appschool")) %>%
-    # dplyr::left_join(students, by = c("STUDENT ID" = "oneappid")) %>%
-    dplyr::left_join(contactsmatch, by = c("STUDENT ID" = "oneappid")) %>%
+    left_join(contactsmatch, by = c("STUDENT ID" = "oneappid"),
+             relationship = "many-to-one") %>%
     mutate(
       clean_choice_school =
         if_else(str_detect(`CHOICE SCHOOL`, "Willow|LakeForest"),
@@ -41,10 +32,11 @@ match_augment <- function(x, students, gradelevels, contactsmatch) {
           `CHOICE SCHOOL`
         )
     ) %>%
-    dplyr::left_join(names_lookup,
-      by = c("clean_choice_school" = "choice_school")
+    left_join(names_lookup,
+      by = c("clean_choice_school" = "choice_school"),
+      relationship = "many-to-one"
     ) %>%
-    dplyr::left_join(gradelevels,
+    left_join(gradelevels,
       by = c(
         "clean_choice_school" = "choice_school",
         "GRADE" = "grade"
