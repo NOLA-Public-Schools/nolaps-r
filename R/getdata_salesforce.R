@@ -1,11 +1,7 @@
-#' @import dplyr
-#' @import glue
 #' @import lubridate
 #' @import salesforcer
 #' @import stringr
 #' @import tidyr
-
-#' @importFrom magrittr %>%
 
 
 #' @export
@@ -26,7 +22,7 @@ mutate_code_site_group <- function(x) {
 #' @export
 getdata_account <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -134,7 +130,7 @@ getdata_account_gradespan <- function() {
 #' @export
 getdata_account_highdemand <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -337,7 +333,7 @@ getdata_contact_match <- function() {
 #' @export
 getdata_app_old <- function(round = "Round 1", start = date_appstart()) {
   salesforcer::sf_query(
-    glue::glue_safe(
+    glue_safe(
       "
       select
         CreatedDate,
@@ -545,7 +541,7 @@ getdata_appinput <- function(round = "Round 1", start = date_appstart()) {
 #' @export
 getdata_appschool <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -667,7 +663,7 @@ getdata_appschool <- function() {
 #' @export
 getdata_appschoolranking <- function(round = "Round 1", start = date_appstart()) {
   salesforcer::sf_query(
-    glue::glue_safe(
+    glue_safe(
       "
       select
         CreatedDate,
@@ -889,7 +885,7 @@ getdata_ate_active <- function() {
 #' @export
 getdata_contact <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -923,7 +919,7 @@ getdata_contact <- function() {
 #' @export
 getdata_ec_responses <- function(date_start = "2020-11-01", date_end = lubridate::today()) {
   salesforcer::sf_query(
-    glue::glue_safe(
+    glue_safe(
       "
       select
         Student__c,
@@ -1239,7 +1235,7 @@ getdata_gradelevel <- function() {
 #' @export
 getdata_guardian <- function() {
   sf_query(
-    glue::glue(
+    glue(
       "
       select
         Student_OneApp_ID__c,
@@ -1272,7 +1268,7 @@ getdata_placement <- function(years) {
     stringr::str_c("('", ., "')")
 
   salesforcer::sf_query(
-    glue::glue_safe(
+    glue_safe(
       "
       select
         CreatedDate,
@@ -1319,7 +1315,7 @@ getdata_placement <- function(years) {
 #' @export
 getdata_priority <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -1469,7 +1465,7 @@ getdata_program <- function() {
 #' @export
 getdata_registration <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         K12_MR_Registration_Deadline__c,
@@ -1492,7 +1488,7 @@ getdata_registration <- function() {
 #' @export
 getdata_sibling <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -1527,7 +1523,7 @@ getdata_sibling <- function() {
 #' @export
 getdata_recordtype <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -1584,7 +1580,7 @@ getdata_roundrobin <- function() {
 
 #' @export
 query_student <- function() {
-  glue::glue(
+  glue(
     "
     select
       CreatedDate,
@@ -1729,7 +1725,7 @@ format_student <- function(x) {
 #' @export
 getdata_student_active <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       query_student(),
       "
       where
@@ -1749,7 +1745,7 @@ getdata_student_active <- function() {
 #' @export
 getdata_student_3years <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,
@@ -1777,7 +1773,7 @@ getdata_student_3years <- function() {
 #' @export
 getdata_student_recent <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       query_student(),
       "
       where
@@ -1800,7 +1796,7 @@ getdata_student_year <- function(years = date_currentyear()) {
     stringr::str_c("('", ., "')")
 
   salesforcer::sf_query(
-    glue::glue_safe(
+    glue_safe(
       "
       select
         School_Year__c,
@@ -1846,7 +1842,7 @@ getdata_student_year <- function(years = date_currentyear()) {
 #' @export
 getdata_waitlist <- function() {
   salesforcer::sf_query(
-    glue::glue(
+    glue(
       "
       select
         Id,

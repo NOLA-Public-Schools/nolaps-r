@@ -1,7 +1,3 @@
-#' @importFrom magrittr %>%
-
-
-
 #' @export
 matchcalcs_participants <- function(x, ...) {
 
@@ -347,7 +343,7 @@ matchcalcs_summarycols <- function(x) {
       prop_assigned,
       prop_fallback_not_ineligible,
       prop_unassigned,
-      tidyselect::everything()
+      everything()
     )
 
 }

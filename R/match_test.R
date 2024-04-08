@@ -1,4 +1,3 @@
-#' @import dplyr
 #' @import lubridate
 #' @import purrr
 #' @import readxl
@@ -6,11 +5,7 @@
 #' @import stringr
 #' @import tidyr
 
-#' @importFrom glue glue glue_safe
-#' @importFrom magrittr %>%
-#' @importFrom tibble as_tibble
 #' @importFrom tidygraph tbl_graph to_components
-
 
 
 #' @export
@@ -2304,7 +2299,7 @@ write_if_bad <- function(x, dir_out) {
   if (nrow(x) > 0) {
 
     filename <- deparse(substitute(x))
-    readr::write_excel_csv(x, glue::glue("{dir_out}/{filename}.csv"), na = "")
+    readr::write_excel_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
 
   }
 
