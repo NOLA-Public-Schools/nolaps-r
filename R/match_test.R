@@ -1,21 +1,9 @@
-#' @import lubridate
-#' @import purrr
-#' @import readxl
-#' @import salesforcer
-#' @import stringr
-#' @import tidyr
-
-#' @importFrom tidygraph tbl_graph to_components
-
-
 #' @export
 match_test <- function(
-  match, dir_external, dir_out, round,
-  students, apps, choices,
-  choices_external = NULL, appschools, priorities, feeders, appinputs, siblings,
-  accounts, gradelevels
-  ) {
-
+    match, dir_external, dir_out, round,
+    students, apps, choices,
+    choices_external = NULL, appschools, priorities, feeders, appinputs, siblings,
+    accounts, gradelevels, contactsmatch) {
   cat("\nValidating match file\n")
 
   # Data preparation
@@ -30,7 +18,8 @@ match_test <- function(
     accounts %>%
     select(id_account_current = id_account, id_account_guarantee) %>%
     left_join(
-      accounts_gradespan, by = join_by(id_account_current == id_account)
+      accounts_gradespan,
+      by = join_by(id_account_current == id_account)
     )
 
   grades_next <- grades_next() %>% filter(grade_current != "12")
@@ -59,7 +48,8 @@ match_test <- function(
     accounts %>%
     select(id_account_current = id_account, id_account_guarantee) %>%
     left_join(
-      accounts_gradespan, by = join_by(id_account_current == id_account)
+      accounts_gradespan,
+      by = join_by(id_account_current == id_account)
     )
 
   # Family link and twin data
@@ -82,9 +72,7 @@ match_test <- function(
     to_components()
 
   familify <- function(i) {
-
     as_tibble(families_comp[[i]]) %>% mutate(id_family = i)
-
   }
 
   families <-
@@ -398,7 +386,6 @@ match_test <- function(
   test_assignment(dir_out = dir_out, match = match)
 
   # end tests
-
 }
 
 
@@ -409,16 +396,14 @@ match_test <- function(
 
 #' @export
 test_participants <- function(dir_out, round, match, students_active, students_futureschool, apps_with_choices, choices_external = NULL) {
-
   cat("\nInvalid match records\n")
 
   if (round == "Round 1") {
-
     invalid_participants <-
       match %>%
       filter(
         !(`STUDENT ID` %in% apps_with_choices$oneappid) &
-        !(`STUDENT ID` %in% students_active$oneappid)
+          !(`STUDENT ID` %in% students_active$oneappid)
       ) %>%
       select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
       arrange(choice_name, `CHOICE SCHOOL`, GRADE)
@@ -429,20 +414,17 @@ test_participants <- function(dir_out, round, match, students_active, students_f
     #   ))
 
     test_text <- "All match records trace back to application with choices or active student."
-
   } else if (round == "Round 2") {
-
     invalid_participants <-
       match %>%
       filter(
         !(`STUDENT ID` %in% apps_with_choices$oneappid) &
-        !(`STUDENT ID` %in% students_futureschool$oneappid)
+          !(`STUDENT ID` %in% students_futureschool$oneappid)
       ) %>%
       select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
       arrange(choice_name, `CHOICE SCHOOL`, GRADE)
 
     test_text <- "All match records trace back to application with choices or recent student with future school."
-
   }
 
   cat(
@@ -488,7 +470,6 @@ test_participants <- function(dir_out, round, match, students_active, students_f
   cat("\nMissing roll-forwards\n")
 
   if (round == "Round 1") {
-
     missing_rollforwards <-
       students_active %>%
       filter(!is.na(id_account_current)) %>%
@@ -503,9 +484,7 @@ test_participants <- function(dir_out, round, match, students_active, students_f
       arrange(name_account_current, grade_current)
 
     test_text <- "All active students in non-terminal grade are in the match."
-
   } else if (round == "Round 2") {
-
     missing_rollforwards <-
       students_futureschool %>%
       filter(!(oneappid %in% match$`STUDENT ID`)) %>%
@@ -521,7 +500,6 @@ test_participants <- function(dir_out, round, match, students_active, students_f
     #
 
     test_text <- "All recent students with future school are in the match."
-
   }
 
   cat(
@@ -539,14 +517,12 @@ test_participants <- function(dir_out, round, match, students_active, students_f
   )
 
   write_if_bad(missing_rollforwards, dir_out)
-
 }
 
 
 
 #' @export
 test_ranks <- function(dir_out, match, apps_with_choices, choices) {
-
   cat("\nChoices and rank ordering\n")
 
   match_clean <-
@@ -554,8 +530,7 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
     filter(`STUDENT ID` %in% apps_with_choices$oneappid) %>%
     mutate(`CHOICE SCHOOL` = str_remove(
       `CHOICE SCHOOL`, "_((tulane)|(community)|(ed)|(tier))_[12]$"
-      )
-    ) %>%
+    )) %>%
     group_by(`STUDENT ID`) %>%
     arrange(`CHOICE RANK`) %>%
     select(`STUDENT ID`, `CHOICE SCHOOL`) %>%
@@ -623,14 +598,12 @@ test_ranks <- function(dir_out, match, apps_with_choices, choices) {
   )
 
   write_if_bad(invalid_ranks, dir_out)
-
 }
 
 
 
 #' @export
 test_grades <- function(dir_out, match) {
-
   cat("\nInvalid grades\n")
 
   invalid_grades <-
@@ -677,14 +650,12 @@ test_grades <- function(dir_out, match) {
 
   write_if_bad(invalid_grades, dir_out)
   write_if_bad(invalid_grades_eligible, dir_out)
-
 }
 
 
 
 #' @export
 test_retentions <- function(dir_out, match, students_active) {
-
   cat("\nRetentions\n")
 
   retained <-
@@ -699,7 +670,8 @@ test_retentions <- function(dir_out, match, students_active) {
     select(GRADE, `STUDENT ID`, id_student) %>%
     distinct() %>%
     anti_join(
-      retained, by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")
+      retained,
+      by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")
     ) %>%
     filter(!(GRADE %in% grades_ec())) %>%
     filter(GRADE != "12") %>%
@@ -726,7 +698,6 @@ test_retentions <- function(dir_out, match, students_active) {
   )
 
   write_if_bad(missing_retained, dir_out)
-
 }
 
 
@@ -737,7 +708,6 @@ test_retentions <- function(dir_out, match, students_active) {
 
 #' @export
 test_age <- function(dir_out, match, dob) {
-
   cat("\nAge\n")
 
   match <-
@@ -747,13 +717,13 @@ test_age <- function(dir_out, match, dob) {
   invalid_ages <-
     match %>%
     filter(
-      (GRADE == "INF" & student_dob <= "2022-09-30")
-      | (GRADE == "1YR" & student_dob > "2022-09-30")
-      | (GRADE == "2YR" & student_dob > "2021-09-30")
-      | (GRADE == "PK3" & student_dob > "2020-09-30")
-      | (GRADE == "PK4" & student_dob > "2019-09-30")
-      | (!(GRADE %in% grades_ec()) & student_dob > "2018-09-30")
-      | (((`CHOICE SCHOOL` %in% c("315", "702", "703")) & GRADE == "8") & student_dob > "2008-09-30")
+      (GRADE == "INF" & student_dob <= "2022-09-30") |
+        (GRADE == "1YR" & student_dob > "2022-09-30") |
+        (GRADE == "2YR" & student_dob > "2021-09-30") |
+        (GRADE == "PK3" & student_dob > "2020-09-30") |
+        (GRADE == "PK4" & student_dob > "2019-09-30") |
+        (!(GRADE %in% grades_ec()) & student_dob > "2018-09-30") |
+        (((`CHOICE SCHOOL` %in% c("315", "702", "703")) & GRADE == "8") & student_dob > "2008-09-30")
     ) %>%
     select(`ELIGIBLE?`, choice_name, GRADE, school_current, `STUDENT ID`, student_dob, id_student) %>%
     arrange(`ELIGIBLE?`, choice_name, GRADE, school_current)
@@ -779,14 +749,12 @@ test_age <- function(dir_out, match, dob) {
 
   write_if_bad(invalid_ages, dir_out)
   write_if_bad(invalid_ages_eligible, dir_out)
-
 }
 
 
 
 #' @export
 test_eligibility <- function(dir_out, match, choices, appinputs) {
-
   cat("\nEligibility\n")
 
   appinputs_iep <-
@@ -859,14 +827,14 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
     match %>%
     filter(GRADE %in% grades_ec()) %>%
     filter(
-      eligibility == "Eligible"
-      | ((eligibility != "Ineligible") & (
-        str_detect(programtype, "Tuition")
-        | (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid)
-        | (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid)
-        | (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid)
-        | (programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid)
-      ))
+      eligibility == "Eligible" |
+        ((eligibility != "Ineligible") & (
+          str_detect(programtype, "Tuition") |
+            (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid) |
+            (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid) |
+            (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid) |
+            (programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid)
+        ))
     ) %>%
     filter(`ELIGIBLE?` == "NO") %>%
     filter(!(`STUDENT ID` %in% invalid_grades))
@@ -902,21 +870,19 @@ test_eligibility <- function(dir_out, match, choices, appinputs) {
   write_if_bad(invalid_eligibility_k12, dir_out)
 
   write_if_bad(missing_eligibility_ec, dir_out)
-
 }
 
 
 
 #' @export
 test_expulsion <- function(dir_out, match, students) {
-
   cat("\nExpulsions\n")
 
   prohibited <-
     students %>%
     filter(
-      (expelled_status == "Re-entry Prohibited")
-      | ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
+      (expelled_status == "Re-entry Prohibited") |
+        ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
     ) %>%
     mutate(is_expelled = TRUE) %>%
     select(oneappid, id_account_expelled, is_expelled)
@@ -933,7 +899,6 @@ test_expulsion <- function(dir_out, match, students) {
   )
 
   write_if_bad(invalid_return_prohibited, dir_out)
-
 }
 
 
@@ -944,7 +909,6 @@ test_expulsion <- function(dir_out, match, students) {
 
 #' @export
 test_family <- function(dir_out, siblings, match, students_with_family, appinputs) {
-
   cat("\nFamily link\n")
 
   optouts <-
@@ -1020,14 +984,12 @@ test_family <- function(dir_out, siblings, match, students_with_family, appinput
   write_if_bad(invalid_family, dir_out)
   write_if_bad(missing_family, dir_out)
   write_if_bad(missing_subfamily, dir_out)
-
 }
 
 
 
 #' @export
 test_twin <- function(dir_out, siblings, match, students_with_family) {
-
   cat("\nTwin\n")
 
   invalid_twin <-
@@ -1060,7 +1022,6 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
   write_if_bad(invalid_twin, dir_out)
   write_if_bad(missing_twin, dir_out)
-
 }
 
 
@@ -1073,21 +1034,18 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
 #' @export
 test_guarantee <- function(
-    dir_out, round, match_priorities, students_active, students_futureschool, dob, choices_external = NULL
-    ) {
-
+    dir_out, round, match_priorities, students_active, students_futureschool, dob, choices_external = NULL) {
   cat("\nGuarantee\n")
 
   if (round == "Round 1") {
-
     underage <-
       students_active %>%
       filter(
-        (grade_current == "INF" & student_dob > "2022-09-30")
-        | (grade_current == "1YR" & student_dob > "2021-09-30")
-        | (grade_current == "2YR" & student_dob > "2020-09-30")
-        | (grade_current == "PK3" & student_dob > "2019-09-30")
-        | (grade_current == "PK4" & student_dob > "2018-09-30")
+        (grade_current == "INF" & student_dob > "2022-09-30") |
+          (grade_current == "1YR" & student_dob > "2021-09-30") |
+          (grade_current == "2YR" & student_dob > "2020-09-30") |
+          (grade_current == "PK3" & student_dob > "2019-09-30") |
+          (grade_current == "PK4" & student_dob > "2018-09-30")
       ) %>%
       transmute(
         oneappid,
@@ -1098,8 +1056,8 @@ test_guarantee <- function(
     prohibited <-
       students_active %>%
       filter(
-        (expelled_status == "Re-entry Prohibited")
-        | ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
+        (expelled_status == "Re-entry Prohibited") |
+          ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
       ) %>%
       mutate(is_expelled = TRUE) %>%
       select(oneappid, id_account_expelled, is_expelled)
@@ -1108,7 +1066,8 @@ test_guarantee <- function(
       match_priorities %>%
       select(`STUDENT ID`, id_account) %>%
       left_join(
-        prohibited, by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")
+        prohibited,
+        by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")
       ) %>%
       filter(is_expelled)
 
@@ -1126,8 +1085,7 @@ test_guarantee <- function(
           !is_terminalgrade &
           !is.na(id_account_guarantee) ~ id_account_guarantee,
         !can_roll ~ NA_character_
-        )
-      ) %>%
+      )) %>%
       mutate(
         grade_next = if_else(
           promotion == "Retained",
@@ -1195,17 +1153,15 @@ test_guarantee <- function(
       # filter(!(oneappid %in% choices_external$`Student ID`)) %>%
       filter(governance != "Scholarship") %>%
       arrange(name_account_current, grade_current, grade_applying, guarantee)
-
   } else if (round == "Round 2") {
-
     underage <-
       students_futureschool %>%
       filter(
         (grade_future == "1YR" & student_dob > "2022-09-30") |
-        (grade_future == "2YR" & student_dob > "2021-09-30") |
-        (grade_future == "PK3" & student_dob > "2020-09-30") |
-        (grade_future == "PK4" & student_dob > "2019-09-30") |
-        (grade_future == "K" & student_dob > "2018-09-30")
+          (grade_future == "2YR" & student_dob > "2021-09-30") |
+          (grade_future == "PK3" & student_dob > "2020-09-30") |
+          (grade_future == "PK4" & student_dob > "2019-09-30") |
+          (grade_future == "K" & student_dob > "2018-09-30")
       ) %>%
       transmute(
         id_account_guarantee = id_account_current,
@@ -1218,8 +1174,8 @@ test_guarantee <- function(
     return_prohibited <-
       students_futureschool %>%
       filter(
-        (expelled_status == "Re-entry Prohibited")
-        | ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2023-10-01"))
+        (expelled_status == "Re-entry Prohibited") |
+          ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2023-10-01"))
       ) %>%
       mutate(is_expelled = TRUE) %>%
       select(oneappid, id_account_expelled)
@@ -1272,7 +1228,6 @@ test_guarantee <- function(
         )
       ) %>%
       arrange(name_account_future, grade_future)
-
   }
 
   cat(
@@ -1302,14 +1257,12 @@ test_guarantee <- function(
 
   write_if_bad(invalid_guarantee, dir_out)
   write_if_bad(missing_guarantee, dir_out)
-
 }
 
 
 
 #' @export
 test_closing <- function(dir_out, priorities, match_priorities, students_active, students_app) {
-
   cat("\nClosing school\n")
 
   offers <-
@@ -1340,7 +1293,8 @@ test_closing <- function(dir_out, priorities, match_priorities, students_active,
       by = c("STUDENT ID" = "oneappid")
     ) %>%
     semi_join(
-      offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
+      offers,
+      by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
     ) %>%
     filter(is.na(`Closing Public School`)) %>%
     filter(is.na(Ineligible)) %>%
@@ -1381,14 +1335,12 @@ test_closing <- function(dir_out, priorities, match_priorities, students_active,
 
   write_if_bad(invalid_closing, dir_out)
   write_if_bad(missing_closing, dir_out)
-
 }
 
 
 
 #' @export
 test_feeder <- function(dir_out, feeders, match_priorities, students_active, choices) {
-
   cat("\nFeeder\n")
 
   shouldhave <-
@@ -1458,7 +1410,6 @@ test_feeder <- function(dir_out, feeders, match_priorities, students_active, cho
 
   write_if_bad(invalid_feeder, dir_out)
   write_if_bad(missing_feeder, dir_out)
-
 }
 
 
@@ -1469,7 +1420,6 @@ test_feeder <- function(dir_out, feeders, match_priorities, students_active, cho
 
 #' @export
 test_100fpl <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\n100% FPL\n")
 
   offers <-
@@ -1528,14 +1478,12 @@ test_100fpl <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_100fpl, dir_out)
   write_if_bad(missing_100fpl, dir_out)
-
 }
 
 
 
 #' @export
 test_disadvantage <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nEconomic disadvantage\n")
 
   offers <-
@@ -1592,14 +1540,12 @@ test_disadvantage <- function(dir_out, priorities, appinputs, match_priorities) 
 
   write_if_bad(invalid_disadvantage, dir_out)
   write_if_bad(missing_disadvantage, dir_out)
-
 }
 
 
 
 #' @export
 test_french <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nFrench\n")
 
   offers <-
@@ -1658,14 +1604,12 @@ test_french <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_french, dir_out)
   write_if_bad(missing_french, dir_out)
-
 }
 
 
 
 #' @export
 test_iep <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nIEP\n")
 
   offers <-
@@ -1722,14 +1666,12 @@ test_iep <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_iep, dir_out)
   write_if_bad(missing_iep, dir_out)
-
 }
 
 
 
 #' @export
 test_montessori <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nMontessori\n")
 
   offers <-
@@ -1788,14 +1730,12 @@ test_montessori <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_montessori, dir_out)
   write_if_bad(missing_montessori, dir_out)
-
 }
 
 
 
 #' @export
 test_military <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nMilitary\n")
 
   offers <-
@@ -1854,14 +1794,12 @@ test_military <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_military, dir_out)
   write_if_bad(missing_military, dir_out)
-
 }
 
 
 
 #' @export
 test_uno <- function(dir_out, priorities, appinputs, match_priorities) {
-
   cat("\nUNO\n")
 
   offers <-
@@ -1920,14 +1858,12 @@ test_uno <- function(dir_out, priorities, appinputs, match_priorities) {
 
   write_if_bad(invalid_uno, dir_out)
   write_if_bad(missing_uno, dir_out)
-
 }
 
 
 
 #' @export
 test_distance <- function(dir_out, match_priorities, priorities) {
-
   cat("\nDistance\n")
 
   offers <-
@@ -1980,14 +1916,12 @@ test_distance <- function(dir_out, match_priorities, priorities) {
 
   write_if_bad(invalid_distance, dir_out)
   write_if_bad(missing_distance, dir_out)
-
 }
 
 
 
 #' @export
 test_zone <- function(dir_out, match_priorities) {
-
   cat("\nZone\n")
 
   invalid_zone <-
@@ -2034,14 +1968,12 @@ test_zone <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_zone, dir_out)
   write_if_bad(missing_zone, dir_out)
-
 }
 
 
 
 #' @export
 test_sibling_verified <- function(dir_out, match_priorities) {
-
   cat("\nVerified sibling\n")
 
   invalid_sibling_verified <-
@@ -2093,14 +2025,12 @@ test_sibling_verified <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_sibling_verified, dir_out)
   write_if_bad(missing_sibling_verified, dir_out)
-
 }
 
 
 
 #' @export
 test_staffchild <- function(dir_out, match_priorities) {
-
   cat("\nStaff child\n")
 
   invalid_staffchild <-
@@ -2149,14 +2079,12 @@ test_staffchild <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_staffchild, dir_out)
   write_if_bad(missing_staffchild, dir_out)
-
 }
 
 
 
 #' @export
 test_sibling_staffchild <- function(dir_out, match_priorities) {
-
   cat("\nSibling or staff child\n")
 
   invalid_sibling_staffchild <-
@@ -2208,7 +2136,6 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
 
   write_if_bad(invalid_sibling_staffchild, dir_out)
   write_if_bad(missing_sibling_staffchild, dir_out)
-
 }
 
 
@@ -2219,7 +2146,6 @@ test_sibling_staffchild <- function(dir_out, match_priorities) {
 
 #' @export
 test_assignment <- function(dir_out, match) {
-
   cat("\nAssignment status\n")
 
   assignments_all <-
@@ -2269,7 +2195,6 @@ test_assignment <- function(dir_out, match) {
   write_if_bad(assignments_all, dir_out)
   write_if_bad(noassignments, dir_out)
   write_if_bad(allineligible, dir_out)
-
 }
 
 
@@ -2280,29 +2205,22 @@ test_assignment <- function(dir_out, match) {
 
 #' @export
 test_helper <- function(bad_table, test_text) {
-
   testthat::with_reporter(
-    "stop", {
+    "stop",
+    {
       testthat::test_that(test_text, {
         testthat::expect_equal(nrow(bad_table), 0)
       })
     }
   )
-
 }
 
 
 
 #' @export
 write_if_bad <- function(x, dir_out) {
-
   if (nrow(x) > 0) {
-
     filename <- deparse(substitute(x))
     readr::write_excel_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
-
   }
-
 }
-
-
