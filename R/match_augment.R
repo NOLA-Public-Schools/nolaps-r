@@ -1,3 +1,10 @@
+#' Augment lottery records with grade level and contact information
+#'
+#' @param x tibble of lottery records
+#'
+#' @param gradelevels tibble of Grade Level records
+#' @param contactsmatch tibble of Contact records
+#'
 #' @export
 match_augment <- function(x, gradelevels, contactsmatch) {
   names_lookup <-
