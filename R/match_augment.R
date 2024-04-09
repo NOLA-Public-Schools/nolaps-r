@@ -1,4 +1,4 @@
-#' Augment lottery records with grade level and contact information
+#' Augment lottery records with Grade Level and Contact information
 #'
 #' @param x tibble of lottery records
 #'
@@ -9,20 +9,17 @@
 match_augment <- function(x, gradelevels, contactsmatch) {
   names_lookup <-
     gradelevels |>
-    select("name_program", "choice_school") |>
+    select("choice_school", "name_program") |>
     distinct()
 
   gradelevels <-
     gradelevels |>
     select(
-      "grade", "choice_school", "id_gradelevel_guarantee", "id_gradecapacity"
+      "grade", "choice_school",
+      "id_gradelevel" = "id_gradecapacity"
     )
 
   x |>
-    left_join(contactsmatch,
-      by = c("STUDENT ID" = "oneappid"),
-      relationship = "many-to-one"
-    ) |>
     mutate(
       clean_choice_school =
         if_else(str_detect(.data$`CHOICE SCHOOL`, "Willow|LakeForest"),
@@ -39,6 +36,10 @@ match_augment <- function(x, gradelevels, contactsmatch) {
         "clean_choice_school" = "choice_school",
         "GRADE" = "grade"
       ),
+      relationship = "many-to-one"
+    ) |>
+    left_join(contactsmatch,
+      by = c("STUDENT ID" = "oneappid"),
       relationship = "many-to-one"
     )
 }

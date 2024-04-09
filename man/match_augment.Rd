@@ -2,7 +2,7 @@
 % Please edit documentation in R/match_augment.R
 \name{match_augment}
 \alias{match_augment}
-\title{Augment lottery records with grade level and contact information}
+\title{Augment lottery records with Grade Level and Contact information}
 \usage{
 match_augment(x, gradelevels, contactsmatch)
 }
@@ -14,5 +14,5 @@ match_augment(x, gradelevels, contactsmatch)
 \item{contactsmatch}{tibble of Contact records}
 }
 \description{
-Augment lottery records with grade level and contact information
+Augment lottery records with Grade Level and Contact information
 }
