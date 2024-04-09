@@ -92,7 +92,7 @@ matchcalc_fallback_ineligible <- function(x) {
 
 
 #' @export
-matchcalc_unassigned_waiting <- function(x) {
+matchcalc_unassign_waiting <- function(x) {
   x |>
     filter(
       is.na(.data$rank_accepted),
@@ -102,7 +102,7 @@ matchcalc_unassigned_waiting <- function(x) {
 
 
 #' @export
-matchcalc_unassigned_full <- function(x) {
+matchcalc_unassign_full <- function(x) {
   x |>
     filter(
       is.na(.data$rank_accepted),

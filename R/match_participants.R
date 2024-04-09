@@ -1,10 +1,8 @@
-#' @export
 match_parts <- function(x, ...) {
   x |> distinct(.data$`STUDENT ID`, .data$GRADE, ...)
 }
 
 
-#' @export
 match_parts_accepted <- function(x, ...) {
   x |>
     filter(.data$`ASSIGNMENT STATUS` == "Accepted") |>
@@ -16,7 +14,6 @@ match_parts_accepted <- function(x, ...) {
 }
 
 
-#' @export
 match_parts_guaranteed <- function(x, ...) {
   x |>
     filter(.data$`GUARANTEED?` == "YES") |>
@@ -28,13 +25,11 @@ match_parts_guaranteed <- function(x, ...) {
 }
 
 
-#' @export
 match_parts_n_choices <- function(x, ...) {
   x |> count(.data$`STUDENT ID`, ..., name = "n_choices")
 }
 
 
-#' @export
 match_parts_n_eligibleprocd <- function(x, ...) {
   x |>
     filter(
@@ -45,7 +40,6 @@ match_parts_n_eligibleprocd <- function(x, ...) {
 }
 
 
-#' @export
 match_parts_n_ineligible <- function(x, ...) {
   x |>
     filter(.data$`ASSIGNMENT STATUS` == "Ineligible") |>
@@ -53,7 +47,6 @@ match_parts_n_ineligible <- function(x, ...) {
 }
 
 
-#' @export
 match_parts_n_full <- function(x, schools_waitlist, ...) {
   x |>
     filter(.data$`ASSIGNMENT STATUS` %in% c(
@@ -66,7 +59,6 @@ match_parts_n_full <- function(x, schools_waitlist, ...) {
 }
 
 
-#' @export
 match_parts_n_waiting <- function(x, schools_waitlist, ...) {
   x |>
     filter(.data$`ASSIGNMENT STATUS` %in% c(
@@ -81,7 +73,6 @@ match_parts_n_waiting <- function(x, schools_waitlist, ...) {
 }
 
 
-#' @export
 match_parts_sibling <- function(x, ...) {
   x |>
     filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
@@ -89,7 +80,6 @@ match_parts_sibling <- function(x, ...) {
 }
 
 
-#' @export
 match_parts_all <- function(x, schools_waitlist, ...) {
   x |>
     match_parts(...) |>

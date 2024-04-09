@@ -76,7 +76,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     contactsmatch |> write_csv(glue("{dir_in}/contactsmatch.csv"), na = "")
   }
 
-  # students_active <- students_recent %>% dplyr::filter(is_active)
+  contactsmatch |>
+    count(oneappid, sort = TRUE) |>
+    filter(n > 1) |>
+    write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
+    print()
 
   cat("\n")
 
@@ -85,8 +89,8 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       glue("{dir_in}/3_MasterMatch.csv"),
       col_types = str_c(str_dup("c", 9), str_dup("i", 1), str_dup("c", 29))
     ) |>
-    # match_augment(gradelevels = gradelevels, contactsmatch = contactsmatch) |>
-    fix_grades()
+    fix_grades() |>
+    match_augment(gradelevels = gradelevels, contactsmatch = contactsmatch)
 
   # choices_external <-
   #   readr::read_csv(
@@ -100,21 +104,21 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   #     col_types = "text"
   #   )
 
-  match |> write_csv(glue("{dir_review}/000_match_to_review.csv"), na = "")
+  match |> write_csv(glue("{dir_review}/000_match.csv"), na = "")
 
   match |>
     match_parts_all(
       schools_waitlist = c("846", "847", "4012", "4013")
     ) |>
-    write_csv(glue("{dir_review}/results_by_student.csv"), na = "")
-
-  return(NULL)
+    write_csv(glue("{dir_review}/match_participants_all.csv"), na = "")
 
   match |>
-    matchcalcs_summarystats_full(
-      schools_waitlist = c("846", "847", "4012", "4013")
+    matchcalc_summarystats(
+      GRADE, schools_waitlist = c("846", "847", "4012", "4013")
     ) |>
     write_csv(glue("{dir_review}/summarystats.csv"), na = "")
+
+  return(NULL)
 
   match_test(
     match = match,
