@@ -1,20 +1,13 @@
+#' Process match file
+#'
+#' @param dir_in character
+#' @param dir_out character
+#' @param use_cache logical
+#'
 #' @export
-match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
-  dir_in <- str_remove(args[str_detect(args, "--in=")], "--in=")
-  dir_out <- str_remove(args[str_detect(args, "--out=")], "--out=")
-  round <- str_remove(args[str_detect(args, "--round=")], "--round=")
-  use_cache <- FALSE
-
-  if (length(args[str_detect(args, "--cache=")] == 1)) {
-    if (str_remove(args[str_detect(args, "--cache=")], "--cache=") == "true") {
-      use_cache <- TRUE
-    }
-  }
-
-  dir_external <- glue("{dir_in}/external")
-
+match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
-
+  dir_external <- glue("{dir_in}/external")
   dir_review <- glue("{dir_out}/validation")
 
   if (!dir.exists(dir_business)) {
@@ -31,7 +24,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     # apps <- read_rds(glue("{dir_in}/apps.rds"))
     # appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
     # appschools <- read_rds(glue("{dir_in}/appschools.rds"))
-    # choices <- read_rds(glue("{dir_in}/choices.rds"))
     # feeders <- read_rds(glue("{dir_in}/feeders.rds"))
     # priorities <- read_rds(glue("{dir_in}/priorities.rds"))
     # siblings <- read_rds(glue("{dir_in}/siblings.rds"))
@@ -39,6 +31,7 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
 
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
+    choices <- read_rds(glue("{dir_in}/choices.rds"))
   } else {
     # accounts <- getdata_account()
     # accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
@@ -58,9 +51,6 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     # appinputs <- getdata_appinput(round = round)
     # appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
 
-    # choices <- getdata_appschoolranking(round = round)
-    # choices %>% write_rds(glue("{dir_in}/choices.rds"))
-
     # siblings <- getdata_sibling()
     # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
 
@@ -74,15 +64,35 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     contactsmatch <- getdata_contact_match()
     contactsmatch |> write_rds(glue("{dir_in}/contactsmatch.rds"))
     contactsmatch |> write_csv(glue("{dir_in}/contactsmatch.csv"), na = "")
+
+    choices <- getdata_appschoolranking()
+    choices |> write_rds(glue("{dir_in}/choices.rds"))
+    choices |> write_csv(glue("{dir_in}/choices.csv"), na = "")
   }
 
-  contactsmatch |>
-    count(oneappid, sort = TRUE) |>
-    filter(n > 1) |>
-    write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
-    print()
+  # contactsmatch |>
+  #   count(oneappid, sort = TRUE) |>
+  #   filter(n > 1) |>
+  #   write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
+  #   print()
+  #
+  # cat("\n")
 
-  cat("\n")
+  schools_waitlist <- c(
+    "WAZ001_FAUFrenchLS",
+    "WAZ001_FAUFrenchUS",
+    "WAZ001_MAUMontessoriLSLA4",
+    "WAZ001_MAUMontessoriUS",
+    "WBE001Willow",
+    "WBE001Willow_community_1",
+    "WBE001Willow_community_2",
+    "WBE001Willow_ed_1",
+    "WBE001Willow_tulane_1",
+    "WBE001Willow_tulane_2",
+    "WBH001LakeForest",
+    "WBH001LakeForest_tier_1",
+    "WBH001LakeForest_tier_2"
+  )
 
   match <-
     read_csv(
@@ -90,7 +100,11 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
       col_types = str_c(str_dup("c", 9), str_dup("i", 1), str_dup("c", 29))
     ) |>
     fix_grades() |>
-    match_augment(gradelevels = gradelevels, contactsmatch = contactsmatch)
+    match_augment(
+      gradelevels = gradelevels,
+      contactsmatch = contactsmatch,
+      choices = choices
+    )
 
   # choices_external <-
   #   readr::read_csv(
@@ -104,39 +118,40 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
   #     col_types = "text"
   #   )
 
+  cat("\nGenerating match review file.\n")
+
   match |> write_csv(glue("{dir_review}/000_match.csv"), na = "")
+
+  cat("\nGenerating participant outcomes.\n")
 
   match |>
     match_parts_all(
-      schools_waitlist = c("846", "847", "4012", "4013")
+      schools_waitlist = schools_waitlist
     ) |>
-    write_csv(glue("{dir_review}/match_participants_all.csv"), na = "")
+    write_csv(glue("{dir_review}/participants.csv"), na = "")
+
+  cat("\nGenerating summary stats.\n")
 
   match |>
     matchcalc_summarystats(
-      GRADE, schools_waitlist = c("846", "847", "4012", "4013")
+      schools_waitlist = schools_waitlist,
+      GRADE
     ) |>
     write_csv(glue("{dir_review}/summarystats.csv"), na = "")
 
+  match_test(
+    dir_review = dir_review,
+    match = match,
+    gradelevels = gradelevels,
+    contactsmatch = contactsmatch,
+    choices = choices
+  )
+
   return(NULL)
 
-  match_test(
+  match_briefing(
     match = match,
-    dir_external = dir_external,
-    dir_out = dir_review,
-    round = round,
-    students = students_recent,
-    apps = apps,
-    choices = choices,
-    # choices_external = choices_external,
-    appschools = appschools,
-    priorities = priorities,
-    feeders = feeders,
-    appinputs = appinputs,
-    siblings = siblings,
-    accounts = accounts,
-    gradelevels = gradelevels,
-    contactsmatch = contactsmatch
+    dir_out = dir_business
   )
 
   match_placement(
@@ -146,23 +161,16 @@ match_process <- function(args = commandArgs(trailingOnly = TRUE)) {
     students_recent = students_recent,
     appschools = appschools
   )
-  #
-  # match_notification(
-  #   match = match,
-  #   overmatches = overmatches,
-  #   dir_out = dir_business,
-  #   apps = apps,
-  #   accounts = accounts,
-  #   appschools = appschools,
-  #   students_recent = students_recent
-  # )
-  #
-  match_briefing(
+
+  match_notification(
     match = match,
-    dir_out = dir_business
+    overmatches = overmatches,
+    dir_out = dir_business,
+    apps = apps,
+    accounts = accounts,
+    appschools = appschools,
+    students_recent = students_recent
   )
-
-
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }

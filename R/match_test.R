@@ -1,10 +1,22 @@
 #' @export
-match_test <- function(
-    match, dir_external, dir_out, round,
-    students, apps, choices,
-    choices_external = NULL, appschools, priorities, feeders, appinputs, siblings,
-    accounts, gradelevels, contactsmatch) {
+match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
   cat("\nValidating match file\n")
+
+  students_active <- contactsmatch |> filter(.data$is_active)
+
+  match_test_guarantee(
+    dir_review = dir_review,
+    match = match,
+    students_active = students_active
+  )
+
+  match_test_choices(
+    dir_review = dir_review,
+    match = match,
+    choices = choices
+  )
+
+  return(NULL)
 
   # Data preparation
 
@@ -216,17 +228,7 @@ match_test <- function(
 
   # Current-school priorities
 
-  # Guarantee
 
-  test_guarantee(
-    dir_out = dir_out,
-    round = round,
-    match_priorities = match_priorities,
-    students_active = students_active,
-    students_futureschool = students_futureschool,
-    dob = dob,
-    choices_external = choices_external
-  )
 
   # Closing school
 
@@ -518,88 +520,6 @@ test_participants <- function(dir_out, round, match, students_active, students_f
 
   write_if_bad(missing_rollforwards, dir_out)
 }
-
-
-
-#' @export
-test_ranks <- function(dir_out, match, apps_with_choices, choices) {
-  cat("\nChoices and rank ordering\n")
-
-  match_clean <-
-    match %>%
-    filter(`STUDENT ID` %in% apps_with_choices$oneappid) %>%
-    mutate(`CHOICE SCHOOL` = str_remove(
-      `CHOICE SCHOOL`, "_((tulane)|(community)|(ed)|(tier))_[12]$"
-    )) %>%
-    group_by(`STUDENT ID`) %>%
-    arrange(`CHOICE RANK`) %>%
-    select(`STUDENT ID`, `CHOICE SCHOOL`) %>%
-    ungroup() %>%
-    distinct() %>%
-    group_by(`STUDENT ID`) %>%
-    mutate(rank = 1:n())
-
-  choices <-
-    choices %>%
-    mutate(rank = as.numeric(str_remove(rank, "Rank ")))
-
-  invalid_choices <-
-    match_clean %>%
-    anti_join(choices, by = c(
-      "STUDENT ID" = "oneappid",
-      "CHOICE SCHOOL" = "code_appschool",
-      "rank"
-    )) %>%
-    left_join(match, by = c("STUDENT ID", "CHOICE SCHOOL")) %>%
-    filter(`GUARANTEED?` != "YES")
-
-  missing_choices <-
-    choices %>%
-    anti_join(match_clean, by = c(
-      "oneappid" = "STUDENT ID",
-      "code_appschool" = "CHOICE SCHOOL",
-      "rank"
-    ))
-
-  test_helper(
-    invalid_choices,
-    "Every match record traces back to application or guarantee school."
-  )
-
-  write_if_bad(invalid_choices, dir_out)
-
-  test_helper(
-    missing_choices,
-    "Every application choice is reflected in the match."
-  )
-
-  write_if_bad(missing_choices, dir_out)
-
-
-
-  cat("\nInvalid rank numbers\n")
-
-  invalid_ranks <-
-    match %>%
-    filter(`CHOICE RANK` > 20)
-
-  cat(
-    glue(
-      "
-      {nrow(invalid_ranks)} records with invalid ranks
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    invalid_ranks,
-    "No match record has a rank larger than 20."
-  )
-
-  write_if_bad(invalid_ranks, dir_out)
-}
-
 
 
 #' @export
@@ -1029,237 +949,6 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 # Priority tests ----------------------------------------------------------
 
 # Current-school priorities -----------------------------------------------
-
-
-
-#' @export
-test_guarantee <- function(
-    dir_out, round, match_priorities, students_active, students_futureschool, dob, choices_external = NULL) {
-  cat("\nGuarantee\n")
-
-  if (round == "Round 1") {
-    underage <-
-      students_active %>%
-      filter(
-        (grade_current == "INF" & student_dob > "2022-09-30") |
-          (grade_current == "1YR" & student_dob > "2021-09-30") |
-          (grade_current == "2YR" & student_dob > "2020-09-30") |
-          (grade_current == "PK3" & student_dob > "2019-09-30") |
-          (grade_current == "PK4" & student_dob > "2018-09-30")
-      ) %>%
-      transmute(
-        oneappid,
-        name_account_current, grade_current,
-        grade_applying = grade_current, guarantee = id_account_current
-      )
-
-    prohibited <-
-      students_active %>%
-      filter(
-        (expelled_status == "Re-entry Prohibited") |
-          ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
-      ) %>%
-      mutate(is_expelled = TRUE) %>%
-      select(oneappid, id_account_expelled, is_expelled)
-
-    return_prohibited <-
-      match_priorities %>%
-      select(`STUDENT ID`, id_account) %>%
-      left_join(
-        prohibited,
-        by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")
-      ) %>%
-      filter(is_expelled)
-
-    shouldhave <-
-      students_active %>%
-      rowwise() %>%
-      mutate(can_roll = (grade_next %in% gradespan_nextyear_vector)) %>%
-      ungroup() %>%
-      mutate(guarantee = case_when(
-        can_roll ~ id_account_current,
-        !can_roll &
-          grade_current == "12" &
-          promotion == "Retained" ~ id_account_current,
-        !can_roll &
-          !is_terminalgrade &
-          !is.na(id_account_guarantee) ~ id_account_guarantee,
-        !can_roll ~ NA_character_
-      )) %>%
-      mutate(
-        grade_next = if_else(
-          promotion == "Retained",
-          grade_current,
-          grade_next
-        )
-      ) %>%
-      mutate(
-        grade_next = if_else(
-          id_account_current == "001d000000ALnWRAA1" & grade_current == "PK3" & student_dob <= "2018-09-30",
-          "K",
-          grade_next
-        )
-      ) %>%
-      filter((grade_current != "12" | promotion == "Retained")) %>%
-      select(
-        oneappid,
-        name_account_current, grade_current,
-        grade_applying = grade_next, guarantee,
-        governance
-      ) %>%
-      filter(!(oneappid %in% underage$oneappid)) %>%
-      bind_rows(underage) %>%
-      filter(!is.na(guarantee))
-
-    invalid_guarantee <-
-      match_priorities %>%
-      anti_join(
-        shouldhave,
-        by = c(
-          "id_account" = "guarantee",
-          "GRADE" = "grade_applying",
-          "STUDENT ID" = "oneappid"
-        )
-      ) %>%
-      filter(!is.na(Guaranteed))
-    # %>%
-    #   anti_join(choices_external, by = join_by(
-    #     `STUDENT ID` == `Student ID`,
-    #     `CHOICE SCHOOL` == `School Code`
-    #   ))
-
-    have <-
-      match_priorities %>%
-      filter(!is.na(Guaranteed))
-
-    missing_guarantee <-
-      shouldhave %>%
-      anti_join(
-        have,
-        by = c(
-          "guarantee" = "id_account",
-          "grade_applying" = "GRADE",
-          "oneappid" = "STUDENT ID"
-        )
-      ) %>%
-      anti_join(
-        return_prohibited,
-        by = c(
-          "guarantee" = "id_account",
-          "oneappid" = "STUDENT ID"
-        )
-      ) %>%
-      filter(!(grade_applying %in% grades_ec())) %>%
-      # filter(!(oneappid %in% choices_external$`Student ID`)) %>%
-      filter(governance != "Scholarship") %>%
-      arrange(name_account_current, grade_current, grade_applying, guarantee)
-  } else if (round == "Round 2") {
-    underage <-
-      students_futureschool %>%
-      filter(
-        (grade_future == "1YR" & student_dob > "2022-09-30") |
-          (grade_future == "2YR" & student_dob > "2021-09-30") |
-          (grade_future == "PK3" & student_dob > "2020-09-30") |
-          (grade_future == "PK4" & student_dob > "2019-09-30") |
-          (grade_future == "K" & student_dob > "2018-09-30")
-      ) %>%
-      transmute(
-        id_account_guarantee = id_account_current,
-        name_account_future = name_account_current,
-        grade_future = grade_current,
-        oneappid,
-        id_student
-      )
-
-    return_prohibited <-
-      students_futureschool %>%
-      filter(
-        (expelled_status == "Re-entry Prohibited") |
-          ((expelled_status == "Re-entry Allowed") & (expelled_date_end > "2023-10-01"))
-      ) %>%
-      mutate(is_expelled = TRUE) %>%
-      select(oneappid, id_account_expelled)
-
-    shouldhave <-
-      students_futureschool %>%
-      select(
-        id_account_guarantee = id_account_future,
-        name_account_future,
-        grade_future,
-        oneappid,
-        id_student
-      ) %>%
-      filter(!(oneappid %in% underage$oneappid)) %>%
-      bind_rows(underage) %>%
-      filter(grade_future %in% grades_ec())
-
-    invalid_guarantee <-
-      match_priorities %>%
-      anti_join(
-        shouldhave,
-        by = c(
-          "id_account" = "id_account_guarantee",
-          "GRADE" = "grade_future",
-          "STUDENT ID" = "oneappid"
-        )
-      ) %>%
-      filter(!is.na(Guaranteed)) %>%
-      arrange(choice_name, GRADE)
-
-    have <-
-      match_priorities %>%
-      filter(!is.na(Guaranteed))
-
-    missing_guarantee <-
-      shouldhave %>%
-      anti_join(
-        have,
-        by = c(
-          "id_account_guarantee" = "id_account",
-          "grade_future" = "GRADE",
-          "oneappid" = "STUDENT ID"
-        )
-      ) %>%
-      anti_join(
-        return_prohibited,
-        by = c(
-          "id_account_guarantee" = "id_account_expelled",
-          "oneappid"
-        )
-      ) %>%
-      arrange(name_account_future, grade_future)
-  }
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      \n
-      "
-    )
-  )
-
-  print(
-    count(have, GRADE)
-  )
-
-  cat("\n")
-
-  test_helper(
-    invalid_guarantee,
-    "No student has an invalid guarantee."
-  )
-
-  test_helper(
-    missing_guarantee,
-    "No student has a missing guarantee."
-  )
-
-  write_if_bad(invalid_guarantee, dir_out)
-  write_if_bad(missing_guarantee, dir_out)
-}
-
-
 
 #' @export
 test_closing <- function(dir_out, priorities, match_priorities, students_active, students_app) {

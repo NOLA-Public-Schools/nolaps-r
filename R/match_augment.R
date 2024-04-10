@@ -1,12 +1,13 @@
-#' Augment lottery records with Grade Level and Contact information
+#' Augment match records with additional information
 #'
-#' @param x tibble of lottery records
+#' @param m tibble of match records
 #'
-#' @param gradelevels tibble of Grade Level records
-#' @param contactsmatch tibble of Contact records
+#' @param gradelevels tibble of Grade Levels
+#' @param contactsmatch tibble of Contacts
+#' @param choices tibble of Application School Rankings
 #'
 #' @export
-match_augment <- function(x, gradelevels, contactsmatch) {
+match_augment <- function(m, gradelevels, contactsmatch, choices) {
   names_lookup <-
     gradelevels |>
     select("choice_school", "name_program") |>
@@ -14,32 +15,37 @@ match_augment <- function(x, gradelevels, contactsmatch) {
 
   gradelevels <-
     gradelevels |>
-    select(
-      "grade", "choice_school",
-      "id_gradelevel" = "id_gradecapacity"
-    )
+    select("choice_school", "grade", "id_gradelevel")
 
-  x |>
+  choices <-
+    choices |>
+    select("id_contact", "id_gradelevel", "id_appschoolranking")
+
+  m |>
     mutate(
-      clean_choice_school =
+      choice_school_clean =
         if_else(str_detect(.data$`CHOICE SCHOOL`, "Willow|LakeForest"),
           str_remove(.data$`CHOICE SCHOOL`, "_.*"),
           .data$`CHOICE SCHOOL`
         )
     ) |>
     left_join(names_lookup,
-      by = c("clean_choice_school" = "choice_school"),
+      by = c("choice_school_clean" = "choice_school"),
       relationship = "many-to-one"
     ) |>
     left_join(gradelevels,
       by = c(
-        "clean_choice_school" = "choice_school",
+        "choice_school_clean" = "choice_school",
         "GRADE" = "grade"
       ),
       relationship = "many-to-one"
     ) |>
     left_join(contactsmatch,
       by = c("STUDENT ID" = "oneappid"),
+      relationship = "many-to-one"
+    ) |>
+    left_join(choices,
+      by = c("id_contact", "id_gradelevel"),
       relationship = "many-to-one"
     )
 }

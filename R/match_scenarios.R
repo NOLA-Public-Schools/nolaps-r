@@ -1,4 +1,3 @@
-#' @export
 matchcalc_gtee1_only <- function(x) {
   x |>
     filter(
@@ -9,7 +8,6 @@ matchcalc_gtee1_only <- function(x) {
 }
 
 
-#' @export
 matchcalc_gtee1_haschoices <- function(x) {
   x |>
     filter(
@@ -20,8 +18,7 @@ matchcalc_gtee1_haschoices <- function(x) {
 }
 
 
-#' @export
-matchcalc_accepted_belowgtee <- function(x) {
+matchcalc_accept_belowgtee <- function(x) {
   x |>
     filter(
       !is.na(.data$rank_accepted),
@@ -31,8 +28,7 @@ matchcalc_accepted_belowgtee <- function(x) {
 }
 
 
-#' @export
-matchcalc_acceptednew_hasgtee <- function(x) {
+matchcalc_acceptnew_hasgtee <- function(x) {
   x |>
     filter(
       !is.na(.data$rank_accepted),
@@ -42,8 +38,7 @@ matchcalc_acceptednew_hasgtee <- function(x) {
 }
 
 
-#' @export
-matchcalc_acceptednew_nogtee <- function(x) {
+matchcalc_acceptnew_nogtee <- function(x) {
   x |>
     filter(
       !is.na(.data$rank_accepted),
@@ -52,7 +47,6 @@ matchcalc_acceptednew_nogtee <- function(x) {
 }
 
 
-#' @export
 matchcalc_fallback_waiting <- function(x) {
   x |>
     filter(
@@ -64,7 +58,6 @@ matchcalc_fallback_waiting <- function(x) {
 }
 
 
-#' @export
 matchcalc_fallback_full <- function(x) {
   x |>
     filter(
@@ -77,8 +70,7 @@ matchcalc_fallback_full <- function(x) {
 }
 
 
-#' @export
-matchcalc_fallback_ineligible <- function(x) {
+matchcalc_fallback_inelig <- function(x) {
   x |>
     filter(.data$n_choices > 1) |>
     filter(
@@ -91,7 +83,6 @@ matchcalc_fallback_ineligible <- function(x) {
 }
 
 
-#' @export
 matchcalc_unassign_waiting <- function(x) {
   x |>
     filter(
@@ -101,7 +92,6 @@ matchcalc_unassign_waiting <- function(x) {
 }
 
 
-#' @export
 matchcalc_unassign_full <- function(x) {
   x |>
     filter(
@@ -112,8 +102,7 @@ matchcalc_unassign_full <- function(x) {
 }
 
 
-#' @export
-matchcalc_unassign_ineligible <- function(x) {
+matchcalc_unassign_inelig <- function(x) {
   x |>
     filter(
       is.na(.data$rank_accepted),
