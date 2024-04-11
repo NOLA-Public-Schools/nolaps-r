@@ -15,6 +15,11 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
     choices = choices
   )
 
+  match_test_age(
+    dir_review = dir_review,
+    match = match
+  )
+
   match_test_guarantee(
     dir_review = dir_review,
     match = match,
@@ -120,14 +125,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
   # )
 
   # Eligibility tests
-
-  # Age
-
-  test_age(
-    dir_out = dir_out,
-    match = match,
-    dob = dob
-  )
 
   # Eligibility
 
@@ -386,54 +383,6 @@ test_retentions <- function(dir_out, match, students_active) {
 
 
 # Eligibility tests -------------------------------------------------------
-
-
-
-#' @export
-test_age <- function(dir_out, match, dob) {
-  cat("\nAge\n")
-
-  match <-
-    match %>%
-    left_join(dob, by = c("STUDENT ID" = "oneappid"))
-
-  invalid_ages <-
-    match %>%
-    filter(
-      (GRADE == "INF" & student_dob <= "2022-09-30") |
-        (GRADE == "1YR" & student_dob > "2022-09-30") |
-        (GRADE == "2YR" & student_dob > "2021-09-30") |
-        (GRADE == "PK3" & student_dob > "2020-09-30") |
-        (GRADE == "PK4" & student_dob > "2019-09-30") |
-        (!(GRADE %in% grades_ec()) & student_dob > "2018-09-30") |
-        (((`CHOICE SCHOOL` %in% c("315", "702", "703")) & GRADE == "8") & student_dob > "2008-09-30")
-    ) %>%
-    select(`ELIGIBLE?`, choice_name, GRADE, school_current, `STUDENT ID`, student_dob, id_student) %>%
-    arrange(`ELIGIBLE?`, choice_name, GRADE, school_current)
-
-  invalid_ages_eligible <-
-    invalid_ages %>%
-    filter(`ELIGIBLE?` == "YES")
-
-  cat(
-    glue(
-      "
-      {nrow(invalid_ages)} records with invalid ages
-      {nrow(invalid_ages_eligible)} eligible records with invalid ages
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    invalid_ages_eligible,
-    "No student missing an age cutoff is marked eligible."
-  )
-
-  write_if_bad(invalid_ages, dir_out)
-  write_if_bad(invalid_ages_eligible, dir_out)
-}
-
 
 
 #' @export
