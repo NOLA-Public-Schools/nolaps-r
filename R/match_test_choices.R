@@ -1,5 +1,5 @@
 match_test_choices <- function(dir_review, match, choices) {
-  cat("\nChoices and rank ordering\n")
+  cat("\nTest: Choices and Rank Ordering\n")
 
   shouldhave <-
     choices |>
@@ -30,7 +30,13 @@ match_test_choices <- function(dir_review, match, choices) {
       "rank"
     )) |>
     left_join(match, by = c("id_contact", "id_gradelevel")) |>
-    filter(.data$`GUARANTEED?` != "YES")
+    filter(.data$`GUARANTEED?` != "YES") |>
+    select(
+      "id_contact", "id_gradelevel", "rank",
+      "id_app", "id_appschoolranking",
+      "name_program", "GRADE", "STUDENT ID"
+    ) |>
+    arrange(.data$name_program, .data$GRADE, .data$`STUDENT ID`)
 
   missing_choices <-
     shouldhave |>
@@ -51,4 +57,16 @@ match_test_choices <- function(dir_review, match, choices) {
     "Every application choice is reflected in the match."
   )
   write_if_bad(missing_choices, dir_review)
+
+  invalid_ranks <-
+    match |>
+    group_by(.data$id_contact) |>
+    summarize(n_ranks = n(), max_ranks = max(.data$`CHOICE RANK`)) |>
+    filter(.data$max_ranks != .data$n_ranks)
+
+  test_helper(
+    invalid_ranks,
+    "Largest rank number is equal to the number of choices."
+  )
+  write_if_bad(invalid_ranks, dir_review)
 }

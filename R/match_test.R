@@ -4,10 +4,9 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
 
   students_active <- contactsmatch |> filter(.data$is_active)
 
-  match_test_guarantee(
+  match_test_grades(
     dir_review = dir_review,
-    match = match,
-    students_active = students_active
+    match = match
   )
 
   match_test_choices(
@@ -16,35 +15,17 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
     choices = choices
   )
 
+  match_test_guarantee(
+    dir_review = dir_review,
+    match = match,
+    students_active = students_active
+  )
+
   return(NULL)
 
+
+
   # Data preparation
-
-  apps_with_choices <- apps %>% filter(id_app %in% choices$id_app)
-
-  students_app <- apps_with_choices$id_student
-
-  accounts_gradespan <- getdata_account_gradespan()
-
-  accounts_guarantee <-
-    accounts %>%
-    select(id_account_current = id_account, id_account_guarantee) %>%
-    left_join(
-      accounts_gradespan,
-      by = join_by(id_account_current == id_account)
-    )
-
-  grades_next <- grades_next() %>% filter(grade_current != "12")
-
-  students_active <-
-    students %>%
-    filter(is_active) %>%
-    left_join(accounts_guarantee, by = join_by(id_account_current)) %>%
-    left_join(grades_next, by = join_by(grade_current))
-
-  students_futureschool <-
-    students %>%
-    filter(!is.na(id_account_future))
 
   match_priorities <-
     match %>%
@@ -52,16 +33,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
     left_join(
       choices,
       by = c("id_account", "STUDENT ID" = "oneappid")
-    )
-
-  accounts_gradespan <- getdata_account_gradespan()
-
-  accounts_guarantee <-
-    accounts %>%
-    select(id_account_current = id_account, id_account_guarantee) %>%
-    left_join(
-      accounts_gradespan,
-      by = join_by(id_account_current == id_account)
     )
 
   # Family link and twin data
@@ -139,34 +110,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
   # Begin tests
 
   ###
-
-  # Basic data quality tests
-
-  test_participants(
-    dir_out = dir_out,
-    round = round,
-    match = match,
-    apps_with_choices = apps_with_choices,
-    students_active = students_active,
-    students_futureschool = students_futureschool,
-    choices_external = choices_external
-  )
-
-  # Invalid choices and rank numbering
-
-  test_ranks(
-    dir_out = dir_out,
-    match = match,
-    apps_with_choices = apps_with_choices,
-    choices = choices
-  )
-
-  # Invalid grades
-
-  test_grades(
-    dir_out = dir_out,
-    match = match
-  )
 
   # Retentions
 
@@ -391,187 +334,7 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
 }
 
 
-
 # Basic data quality tests ------------------------------------------------
-
-
-
-#' @export
-test_participants <- function(dir_out, round, match, students_active, students_futureschool, apps_with_choices, choices_external = NULL) {
-  cat("\nInvalid match records\n")
-
-  if (round == "Round 1") {
-    invalid_participants <-
-      match %>%
-      filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid) &
-          !(`STUDENT ID` %in% students_active$oneappid)
-      ) %>%
-      select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
-      arrange(choice_name, `CHOICE SCHOOL`, GRADE)
-    # %>%
-    #   anti_join(choices_external, by = join_by(
-    #     `STUDENT ID` == `Student ID`,
-    #     `CHOICE SCHOOL` == `School Code`
-    #   ))
-
-    test_text <- "All match records trace back to application with choices or active student."
-  } else if (round == "Round 2") {
-    invalid_participants <-
-      match %>%
-      filter(
-        !(`STUDENT ID` %in% apps_with_choices$oneappid) &
-          !(`STUDENT ID` %in% students_futureschool$oneappid)
-      ) %>%
-      select(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_student) %>%
-      arrange(choice_name, `CHOICE SCHOOL`, GRADE)
-
-    test_text <- "All match records trace back to application with choices or recent student with future school."
-  }
-
-  cat(
-    glue(
-      "
-      {nrow(invalid_participants)} records with invalid participants
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    invalid_participants,
-    test_text
-  )
-
-  write_if_bad(invalid_participants, dir_out)
-
-
-  cat("\nMissing applications\n")
-
-  missing_apps <-
-    apps_with_choices %>%
-    filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-    select(id_app, id_student, oneappid)
-
-  cat(
-    glue(
-      "
-      {nrow(missing_apps)} missing applications
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    missing_apps,
-    "All applications with a choice are in the match."
-  )
-
-  write_if_bad(missing_apps, dir_out)
-
-  cat("\nMissing roll-forwards\n")
-
-  if (round == "Round 1") {
-    missing_rollforwards <-
-      students_active %>%
-      filter(!is.na(id_account_current)) %>%
-      filter(is_terminalgrade == FALSE) %>%
-      filter(
-        grade_current != 12
-      ) %>%
-      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      filter(!(grade_current %in% c("INF", "1YR", "2YR", "PK3"))) %>%
-      filter(student_dob <= "2018-09-30") %>%
-      select(name_account_current, grade_current, oneappid, id_student) %>%
-      arrange(name_account_current, grade_current)
-
-    test_text <- "All active students in non-terminal grade are in the match."
-  } else if (round == "Round 2") {
-    missing_rollforwards <-
-      students_futureschool %>%
-      filter(!(oneappid %in% match$`STUDENT ID`)) %>%
-      select(name_account_future, grade_future, oneappid, id_student) %>%
-      arrange(name_account_future, grade_future)
-
-    # EC Round 2
-
-    missing_rollforwards <-
-      missing_rollforwards %>%
-      filter(grade_future %in% grades_ec())
-
-    #
-
-    test_text <- "All recent students with future school are in the match."
-  }
-
-  cat(
-    glue(
-      "
-      {nrow(missing_rollforwards)} missing roll-forwards
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    missing_rollforwards,
-    test_text
-  )
-
-  write_if_bad(missing_rollforwards, dir_out)
-}
-
-
-#' @export
-test_grades <- function(dir_out, match) {
-  cat("\nInvalid grades\n")
-
-  invalid_grades <-
-    match %>%
-    left_join(
-      getdata_account_gradespan(),
-      by = c("id_account")
-    ) %>%
-    rowwise() %>%
-    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
-    ungroup() %>%
-    filter(
-      !(`CHOICE SCHOOL` %in% c(
-        "4013_tulane_1",
-        "4013_tulane_2",
-        "4013_community_1",
-        "4013_community_2",
-        "4013_ed_1",
-        "4012_tier_1",
-        "4012_tier_2"
-      ))
-    ) %>%
-    select(`ELIGIBLE?`, choice_name, GRADE, `STUDENT ID`, id_student, id_account) %>%
-    arrange(`ELIGIBLE?`, choice_name, GRADE)
-
-  invalid_grades_eligible <-
-    invalid_grades %>%
-    filter(`ELIGIBLE?` == "YES")
-
-  cat(
-    glue(
-      "
-      {nrow(invalid_grades)} records with invalid grades
-      {nrow(invalid_grades_eligible)} eligible records with invalid grades
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    invalid_grades_eligible,
-    "No eligible match record involves a grade that will not exist next year."
-  )
-
-  write_if_bad(invalid_grades, dir_out)
-  write_if_bad(invalid_grades_eligible, dir_out)
-}
-
 
 
 #' @export
