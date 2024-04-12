@@ -3,8 +3,7 @@ match_test_grades <- function(dir_review, match) {
 
   invalid_grades <-
     match |>
-    filter(is.na(.data$id_gradelevel)) |>
-    arrange(.data$name_program, .data$GRADE, .data$`STUDENT ID`)
+    filter(is.na(.data$id_gradelevel))
 
   invalid_grades_eligible <-
     invalid_grades %>%

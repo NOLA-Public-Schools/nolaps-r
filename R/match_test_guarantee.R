@@ -1,5 +1,5 @@
 match_test_guarantee <- function(dir_review, match, students_active) {
-  cat("\n", "Test: Guarantees", "\n")
+  cat("\nTest: Guarantees\n")
 
   # TODO
   # too young for next grade
@@ -13,10 +13,7 @@ match_test_guarantee <- function(dir_review, match, students_active) {
   have <-
     match |>
     filter(.data$`GUARANTEED?` == "YES") |>
-    select(
-      "id_contact", "id_gradelevel_guarantee" = "id_gradelevel",
-      "name_program", "GRADE", "STUDENT ID"
-    )
+    select("id_contact", "id_gradelevel_guarantee" = "id_gradelevel", "GRADE")
 
   invalid_guarantee <-
     have |>
@@ -26,8 +23,7 @@ match_test_guarantee <- function(dir_review, match, students_active) {
         "id_contact",
         "id_gradelevel_guarantee"
       )
-    ) |>
-    arrange(.data$name_program, .data$GRADE, .data$`STUDENT ID`)
+    )
 
   missing_guarantee <-
     shouldhave |>
@@ -39,11 +35,9 @@ match_test_guarantee <- function(dir_review, match, students_active) {
       )
     )
 
-  cat("\n", glue("{nrow(distinct(have, id_contact))} students"), "\n\n")
+  cat(glue("\n{nrow(distinct(have, id_contact))} students\n\n"))
 
   print(count(have, .data$GRADE))
-
-  cat("\n")
 
   test_helper(
     invalid_guarantee,

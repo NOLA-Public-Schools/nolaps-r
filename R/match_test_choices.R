@@ -33,10 +33,8 @@ match_test_choices <- function(dir_review, match, choices) {
     filter(.data$`GUARANTEED?` != "YES") |>
     select(
       "id_contact", "id_gradelevel", "rank",
-      "id_app", "id_appschoolranking",
-      "name_program", "GRADE", "STUDENT ID"
-    ) |>
-    arrange(.data$name_program, .data$GRADE, .data$`STUDENT ID`)
+      "id_app", "id_appschoolranking"
+    )
 
   missing_choices <-
     shouldhave |>

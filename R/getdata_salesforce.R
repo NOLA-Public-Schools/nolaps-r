@@ -146,6 +146,7 @@ getdata_contact_active <- function() {
 
         Active__c,
 
+        Grade_Level__c,
         Grade_Level__r.Next_Grade_Level__c
 
       from AcademicTermEnrollment
@@ -167,6 +168,7 @@ getdata_contact_active <- function() {
       student_state = LearnerContact.MailingState,
       student_zip = LearnerContact.MailingPostalCode,
       is_active = Active__c,
+      id_gradelevel_current = Grade_Level__c,
       id_gradelevel_guarantee = Grade_Level__r.Next_Grade_Level__c
     ) |>
     mutate(across(c(.data$student_dob), as_date)) |>
@@ -232,8 +234,14 @@ getdata_contact_match <- function() {
     distinct(id_contact, id_app)
 
   bind_rows(
-    select(contacts_active, !c(is_active, id_gradelevel_guarantee)),
-    select(contacts_app, !c(id_app)),
+    select(
+      contacts_active,
+      !c(is_active, id_gradelevel_current, id_gradelevel_guarantee)
+    ),
+    select(
+      contacts_app,
+      !c(id_app)
+    ),
   ) |>
     distinct() |>
     left_join(has_active, by = join_by(id_contact)) |>
@@ -344,7 +352,9 @@ getdata_gradelevel <- function() {
         Sibling_Unification__c,
         Reactivations__c,
         School_Program__r.Choice_Code__c,
-        Next_Grade_Level__c
+        Next_Grade_Level__c,
+
+        Order_Closing_Public__c
       from Grade_Level__c
       "
     ),
@@ -383,7 +393,8 @@ getdata_gradelevel <- function() {
       is_siblingunification = Sibling_Unification__c,
       is_reactivation = Reactivations__c,
       choice_school = School_Program__r.Choice_Code__c,
-      id_gradelevel_guarantee = Next_Grade_Level__c
+      id_gradelevel_guarantee = Next_Grade_Level__c,
+      order_closing = Order_Closing_Public__c
     ) %>%
     fix_grades(var = grade) %>%
     mutate(across(
@@ -432,4 +443,38 @@ getdata_program <- function() {
       name_program = Name,
       code_appschool = Application_Code__c,
     )
+}
+
+
+#' @export
+getdata_ep_choice <- function(date_start = date_appstart()) {
+  fields_select <- tribble(
+    ~name_new, ~name_old,
+    "id_appschoolranking", "Application_School_Ranking__c",
+    "id_gradelevel", "Application_School_Ranking__r.Grade_Level__c",
+    "id_ep_choice", "Id",
+    "name_ep", "Eligibility_Priority__r.Name",
+    "status", "Overall_Status__c"
+  )
+  fields_select_collapse <- fields_select$name_old |> str_flatten(collapse = ", ")
+
+  sf_query(
+    glue_safe(
+      "
+      select {fields_select_collapse}
+
+      from Student_Eligibility_Priority__c
+
+      where
+        Application_School_Ranking__r.Application__r.Academic_Term__r.Name = '2024-2025'
+        and Application_School_Ranking__r.Application__r.CreatedDate >= {date_start}
+        and Application_School_Ranking__r.Application__r.Status = 'Submitted'
+        and Application_School_Ranking__r.Numerical_Rank__c > 0
+      "
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) |>
+    select(fields_select$name_old) |>
+    setNames(fields_select$name_new)
 }

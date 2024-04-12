@@ -1,5 +1,5 @@
 #' @export
-match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
+match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, eps) {
   cat("\nValidating match file\n")
 
   students_active <- contactsmatch |> filter(.data$is_active)
@@ -24,6 +24,14 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
     dir_review = dir_review,
     match = match,
     students_active = students_active
+  )
+
+  match_test_closing(
+    dir_review = dir_review,
+    match = match,
+    gradelevels = gradelevels,
+    choices = choices,
+    eps = eps
   )
 
   return(NULL)
@@ -167,18 +175,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices) {
   # Priorities
 
   # Current-school priorities
-
-
-
-  # Closing school
-
-  # test_closing(
-  #   dir_out = dir_out,
-  #   priorities = priorities,
-  #   match_priorities = match_priorities,
-  #   students_active = students_active,
-  #   students_app = students_app
-  # )
 
   # Feeder
 
@@ -661,83 +657,6 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 # Priority tests ----------------------------------------------------------
 
 # Current-school priorities -----------------------------------------------
-
-#' @export
-test_closing <- function(dir_out, priorities, match_priorities, students_active, students_app) {
-  cat("\nClosing school\n")
-
-  offers <-
-    priorities %>%
-    filter(!is.na(Order_Closing_Public__c)) %>%
-    select(code_appschool, grade)
-
-  shouldhave <-
-    students_active %>%
-    filter(is_priority_closing) %>%
-    filter(id_student %in% students_app) %>%
-    filter(grade_current != grade_terminal) %>%
-    filter(!(grade_current %in% grades_ec())) %>%
-    select(oneappid)
-
-  invalid_closing <-
-    match_priorities %>%
-    anti_join(
-      shouldhave,
-      by = c("STUDENT ID" = "oneappid")
-    ) %>%
-    filter(!is.na(`Closing Public School`))
-
-  missing_closing <-
-    match_priorities %>%
-    semi_join(
-      shouldhave,
-      by = c("STUDENT ID" = "oneappid")
-    ) %>%
-    semi_join(
-      offers,
-      by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade")
-    ) %>%
-    filter(is.na(`Closing Public School`)) %>%
-    filter(is.na(Ineligible)) %>%
-    filter(!(`CHOICE SCHOOL` %in% c(
-      "4012",
-      "4012_tier_1",
-      "4012_tier_2"
-    )))
-
-  have <-
-    match_priorities %>%
-    filter(!is.na(`Closing Public School`))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      \n
-      "
-    )
-  )
-
-  print(
-    count(distinct(have, `STUDENT ID`, GRADE), GRADE)
-  )
-
-  cat("\n")
-
-  test_helper(
-    invalid_closing,
-    "No student has an invalid closing school priority."
-  )
-
-  test_helper(
-    missing_closing,
-    "No student has a missing closing school priority."
-  )
-
-  write_if_bad(invalid_closing, dir_out)
-  write_if_bad(missing_closing, dir_out)
-}
-
 
 
 #' @export
@@ -1599,29 +1518,24 @@ test_assignment <- function(dir_out, match) {
 }
 
 
-
-# Utility functions -------------------------------------------------------
-
+# Utils -------------------------------------------------------------------
 
 
-#' @export
-test_helper <- function(bad_table, test_text) {
+test_helper <- function(bad, test_text) {
   testthat::with_reporter(
     "stop",
     {
       testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(bad_table), 0)
+        testthat::expect_equal(nrow(bad), 0)
       })
     }
   )
 }
 
 
-
-#' @export
 write_if_bad <- function(x, dir_out) {
   if (nrow(x) > 0) {
     filename <- deparse(substitute(x))
-    readr::write_excel_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
+    write_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
   }
 }

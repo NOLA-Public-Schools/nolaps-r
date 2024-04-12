@@ -32,6 +32,7 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
+    eps <- read_rds(glue("{dir_in}/eps.rds"))
   } else {
     # accounts <- getdata_account()
     # accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
@@ -68,15 +69,36 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     choices <- getdata_appschoolranking()
     choices |> write_rds(glue("{dir_in}/choices.rds"))
     choices |> write_csv(glue("{dir_in}/choices.csv"), na = "")
+
+    eps <- getdata_ep_choice()
+    eps |> write_rds(glue("{dir_in}/eps.rds"))
+    eps |> write_csv(glue("{dir_in}/eps.csv"), na = "")
   }
 
-  # contactsmatch |>
-  #   count(oneappid, sort = TRUE) |>
-  #   filter(n > 1) |>
-  #   write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
-  #   print()
-  #
-  # cat("\n")
+  contactsmatch |>
+    count(oneappid, sort = TRUE) |>
+    filter(n > 1) |>
+    write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
+    print()
+
+  gradelevels |>
+    count(choice_school, grade, sort = TRUE) |>
+    filter(n > 1) |>
+    write_csv(glue("{dir_review}/dupe_gradelevels.csv"), na = "") |>
+    print()
+
+  gradelevels |>
+    distinct(choice_school, name_program) |>
+    count(choice_school, sort = TRUE) |>
+    filter(n > 1) |>
+    write_csv(glue("{dir_review}/dupe_programnames.csv"), na = "") |>
+    print()
+
+  choices |>
+    count(id_contact, id_gradelevel, sort = TRUE) |>
+    filter(n > 1) |>
+    write_csv(glue("{dir_review}/dupe_choices.csv"), na = "") |>
+    print()
 
   schools_waitlist <- c(
     "WAZ001_FAUFrenchLS",
@@ -93,6 +115,8 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     "WBH001LakeForest_tier_1",
     "WBH001LakeForest_tier_2"
   )
+
+  cat("\nGenerating match review file.\n")
 
   match <-
     read_csv(
@@ -118,8 +142,6 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   #     col_types = "text"
   #   )
 
-  cat("\nGenerating match review file.\n")
-
   match |> write_csv(glue("{dir_review}/000_match.csv"), na = "")
 
   cat("\nGenerating participant outcomes.\n")
@@ -144,7 +166,8 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     match = match,
     gradelevels = gradelevels,
     contactsmatch = contactsmatch,
-    choices = choices
+    choices = choices,
+    eps = eps
   )
 
   return(NULL)
