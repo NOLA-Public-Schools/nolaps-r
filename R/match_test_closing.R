@@ -1,7 +1,7 @@
-match_test_closing <- function(dir_review, match, gradelevels, choices, eps) {
+match_test_closing <- function(dir_review, match, gradelevels, eps) {
   cat("\nTest: Closing School\n")
 
-  offers <-
+  offers_priority <-
     gradelevels |>
     filter(!is.na(.data$order_closing)) |>
     select("id_gradelevel")
@@ -10,7 +10,7 @@ match_test_closing <- function(dir_review, match, gradelevels, choices, eps) {
     eps |>
     filter(.data$name_ep == "Closing School Priority") |>
     filter(.data$status == "Approved") |>
-    filter(.data$id_gradelevel %in% offers$grade_level) |>
+    filter(.data$id_gradelevel %in% offers_priority$id_gradelevel) |>
     select("id_appschoolranking")
 
   have <-
@@ -19,10 +19,7 @@ match_test_closing <- function(dir_review, match, gradelevels, choices, eps) {
 
   invalid_closing <-
     have |>
-    anti_join(
-      shouldhave,
-      by = c("id_contact")
-    )
+    filter(!(.data$id_appschoolranking %in% shouldhave$id_appschoolranking))
 
   missing_closing <-
     match |>
@@ -30,6 +27,7 @@ match_test_closing <- function(dir_review, match, gradelevels, choices, eps) {
       !str_detect(.data$`QUALIFIED PRIORITIES`, "Closing Public School")
     ) |>
     filter(.data$`ELIGIBLE?` == "YES") |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Priority Score")) |>
     filter(.data$id_appschoolranking %in% shouldhave$id_appschoolranking)
 
   cat(

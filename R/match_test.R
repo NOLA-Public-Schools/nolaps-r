@@ -30,7 +30,13 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, e
     dir_review = dir_review,
     match = match,
     gradelevels = gradelevels,
-    choices = choices,
+    eps = eps
+  )
+
+  match_test_sibling(
+    dir_review = dir_review,
+    match = match,
+    gradelevels = gradelevels,
     eps = eps
   )
 

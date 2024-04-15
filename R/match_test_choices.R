@@ -14,6 +14,7 @@ match_test_choices <- function(dir_review, match, choices) {
 
   have <-
     match |>
+    filter(!is.na(.data$id_gradelevel)) |>
     group_by(.data$id_contact) |>
     arrange(.data$id_contact, .data$`CHOICE RANK`) |>
     ungroup() |>

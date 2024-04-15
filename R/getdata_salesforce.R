@@ -147,6 +147,8 @@ getdata_contact_active <- function() {
         Active__c,
 
         Grade_Level__c,
+        Grade_Level__r.School_Program__r.Name,
+        Grade_Level__r.Grade__c,
         Grade_Level__r.Next_Grade_Level__c
 
       from AcademicTermEnrollment
@@ -169,10 +171,13 @@ getdata_contact_active <- function() {
       student_zip = LearnerContact.MailingPostalCode,
       is_active = Active__c,
       id_gradelevel_current = Grade_Level__c,
+      name_program_current = Grade_Level__r.School_Program__r.Name,
+      grade_current = Grade_Level__r.Grade__c,
       id_gradelevel_guarantee = Grade_Level__r.Next_Grade_Level__c
     ) |>
     mutate(across(c(.data$student_dob), as_date)) |>
-    mutate(across(c(.data$is_active), as.logical))
+    mutate(across(c(.data$is_active), as.logical)) |>
+    fix_grades(var = grade_current)
 }
 
 
@@ -228,24 +233,36 @@ getdata_contact_match <- function() {
   contacts_active <- getdata_contact_active()
   contacts_app <- getdata_contact_app()
 
-  has_active <- contacts_active |>
-    distinct(id_contact, is_active, id_gradelevel_guarantee)
-  has_app <- contacts_app |>
-    distinct(id_contact, id_app)
+  fields_active <- contacts_active |>
+    select(
+      id_contact, is_active,
+      id_gradelevel_current, name_program_current, grade_current,
+      id_gradelevel_guarantee
+    )
+  fields_app <- contacts_app |>
+    select(
+      id_contact, id_app
+    )
 
   bind_rows(
     select(
       contacts_active,
-      !c(is_active, id_gradelevel_current, id_gradelevel_guarantee)
+      c(
+        "oneappid", "id_contact",
+        "student_firstname", "student_lastname", "student_dob"
+      )
     ),
     select(
       contacts_app,
-      !c(id_app)
+      c(
+        "oneappid", "id_contact",
+        "student_firstname", "student_lastname", "student_dob"
+      )
     ),
   ) |>
     distinct() |>
-    left_join(has_active, by = join_by(id_contact)) |>
-    left_join(has_app, by = join_by(id_contact))
+    left_join(fields_active, by = join_by(id_contact)) |>
+    left_join(fields_app, by = join_by(id_contact))
 }
 
 
@@ -354,7 +371,8 @@ getdata_gradelevel <- function() {
         School_Program__r.Choice_Code__c,
         Next_Grade_Level__c,
 
-        Order_Closing_Public__c
+        Order_Closing_Public__c,
+        Order_Sibling__c
       from Grade_Level__c
       "
     ),
@@ -394,7 +412,8 @@ getdata_gradelevel <- function() {
       is_reactivation = Reactivations__c,
       choice_school = School_Program__r.Choice_Code__c,
       id_gradelevel_guarantee = Next_Grade_Level__c,
-      order_closing = Order_Closing_Public__c
+      order_closing = Order_Closing_Public__c,
+      order_sibling = Order_Sibling__c
     ) %>%
     fix_grades(var = grade) %>%
     mutate(across(
