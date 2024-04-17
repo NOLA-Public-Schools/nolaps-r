@@ -1,10 +1,16 @@
 #' @export
-match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, eps) {
+match_test <- function(
+    dir_review, match, gradelevels, contactsmatch, choices, eps_gradelevel, eps_choice) {
   cat("\nValidating match file\n")
 
   students_active <- contactsmatch |> filter(.data$is_active)
 
   match_test_grades(
+    dir_review = dir_review,
+    match = match
+  )
+
+  match_test_age(
     dir_review = dir_review,
     match = match
   )
@@ -15,44 +21,23 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, e
     choices = choices
   )
 
-  match_test_age(
-    dir_review = dir_review,
-    match = match
-  )
-
   match_test_guarantee(
     dir_review = dir_review,
     match = match,
     students_active = students_active
   )
 
-  match_test_closing(
+  match_test_priorities(
     dir_review = dir_review,
     match = match,
     gradelevels = gradelevels,
-    eps = eps
-  )
-
-  match_test_sibling(
-    dir_review = dir_review,
-    match = match,
-    gradelevels = gradelevels,
-    eps = eps
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
   )
 
   return(NULL)
 
 
-
-  # Data preparation
-
-  match_priorities <-
-    match %>%
-    matchcalcs_priorityoutcomes() %>%
-    left_join(
-      choices,
-      by = c("id_account", "STUDENT ID" = "oneappid")
-    )
 
   # Family link and twin data
 
@@ -194,15 +179,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, e
 
   # Application priorities
 
-  # 100% FPL
-
-  test_100fpl(
-    dir_out = dir_out,
-    priorities = priorities,
-    appinputs = appinputs,
-    match_priorities = match_priorities
-  )
-
   # Economic disadvantage
 
   # test_disadvantage(
@@ -254,72 +230,6 @@ match_test <- function(dir_review, match, gradelevels, contactsmatch, choices, e
   #   dir_out = dir_out,
   #   priorities = priorities,
   #   appinputs = appinputs,
-  #   match_priorities = match_priorities
-  # )
-
-  # Choice-specific priorities
-
-  # Distance
-
-  test_distance(
-    dir_out = dir_out,
-    priorities = priorities,
-    match_priorities = match_priorities
-  )
-
-  # Zone
-
-  test_zone(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
-
-  # Non-verified siblings
-
-  # test_sibling_account(
-  #   dir_out = dir_out,
-  #   round = round,
-  #   match_priorities = match_priorities,
-  #   students_recent = students,
-  #   siblings = siblings,
-  #   appschoolrankings = choices,
-  #   appschools = appschools,
-  #   apps = apps_with_choices,
-  #   accounts = accounts,
-  #   accounts_gradespan = accounts_gradespan
-  # )
-
-  test_sibling(
-    dir_out = dir_out,
-    round = round,
-    match_priorities = match_priorities,
-    students_recent = students,
-    siblings = siblings,
-    appschoolrankings = choices,
-    appschools = appschools,
-    apps = apps_with_choices,
-    accounts = accounts,
-    priorities = priorities
-  )
-
-  # Verified sibling
-
-  # test_sibling_verified(
-  #   dir_out = dir_out,
-  #   match_priorities = match_priorities
-  # )
-
-  # Staff child
-
-  test_staffchild(
-    dir_out = dir_out,
-    match_priorities = match_priorities
-  )
-
-  # Sibling or staff child
-
-  # test_sibling_staffchild(
-  #   dir_out = dir_out,
   #   match_priorities = match_priorities
   # )
 
@@ -1185,285 +1095,6 @@ test_uno <- function(dir_out, priorities, appinputs, match_priorities) {
   write_if_bad(invalid_uno, dir_out)
   write_if_bad(missing_uno, dir_out)
 }
-
-
-
-#' @export
-test_distance <- function(dir_out, match_priorities, priorities) {
-  cat("\nDistance\n")
-
-  offers <-
-    priorities %>%
-    filter(!is.na(Order_Distance__c)) %>%
-    select(code_appschool, grade)
-
-  invalid_distance <-
-    match_priorities %>%
-    filter(!is_priority_distance) %>%
-    filter(!is.na(`Child of Student`))
-
-  missing_distance <-
-    match_priorities %>%
-    filter(is_priority_distance) %>%
-    filter(is.na(`Child of Student`)) %>%
-    filter(is.na(Ineligible)) %>%
-    semi_join(offers, by = c("CHOICE SCHOOL" = "code_appschool", "GRADE" = "grade"))
-
-  have <-
-    match_priorities %>%
-    filter(!is.na(`Child of Student`))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      \n
-      "
-    )
-  )
-
-  have %>%
-    count(choice_name, GRADE) %>%
-    slice_sample(n = nrow(.)) %>%
-    print()
-
-  cat("\n")
-
-  test_helper(
-    invalid_distance,
-    "No student has an invalid distance priority."
-  )
-
-  test_helper(
-    missing_distance,
-    "No student has a missing distance priority."
-  )
-
-  write_if_bad(invalid_distance, dir_out)
-  write_if_bad(missing_distance, dir_out)
-}
-
-
-
-#' @export
-test_zone <- function(dir_out, match_priorities) {
-  cat("\nZone\n")
-
-  invalid_zone <-
-    match_priorities %>%
-    filter(!is_priority_zone) %>%
-    filter(!is.na(Geography))
-
-  missing_zone <-
-    match_priorities %>%
-    filter(is_priority_zone) %>%
-    filter(is.na(Geography)) %>%
-    filter(is.na(Ineligible))
-
-  have <-
-    match_priorities %>%
-    filter(!is.na(Geography))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      \n
-      "
-    )
-  )
-
-  have %>%
-    count(choice_name, GRADE) %>%
-    slice_sample(n = nrow(.)) %>%
-    print()
-
-  cat("\n")
-
-  test_helper(
-    invalid_zone,
-    "No student has an invalid zone priority."
-  )
-
-  test_helper(
-    missing_zone,
-    "No student has a missing zone priority."
-  )
-
-  write_if_bad(invalid_zone, dir_out)
-  write_if_bad(missing_zone, dir_out)
-}
-
-
-
-#' @export
-test_sibling_verified <- function(dir_out, match_priorities) {
-  cat("\nVerified sibling\n")
-
-  invalid_sibling_verified <-
-    match_priorities %>%
-    # filter(is_highdemand) %>%
-    filter(!is_verifiedsibling) %>%
-    filter(!is.na(Sibling))
-
-  missing_sibling_verified <-
-    match_priorities %>%
-    # filter(is_highdemand) %>%
-    filter(is_verifiedsibling) %>%
-    filter(is.na(Sibling)) %>%
-    filter(is.na(Ineligible))
-  # %>%
-  #   filter(is.na(`School Specific 1`))
-
-  have <-
-    match_priorities %>%
-    filter(is_verifiedsibling) %>%
-    filter(!is.na(Sibling))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      \n
-      "
-    )
-  )
-
-  have %>%
-    count(choice_name, GRADE) %>%
-    slice_sample(n = nrow(.)) %>%
-    print()
-
-  cat("\n")
-
-  test_helper(
-    invalid_sibling_verified,
-    "No student has an invalid sibling priority (high-demand only)."
-  )
-
-  test_helper(
-    missing_sibling_verified,
-    "No student has a missing sibling priority (high-demand only)."
-  )
-
-  write_if_bad(invalid_sibling_verified, dir_out)
-  write_if_bad(missing_sibling_verified, dir_out)
-}
-
-
-
-#' @export
-test_staffchild <- function(dir_out, match_priorities) {
-  cat("\nStaff child\n")
-
-  invalid_staffchild <-
-    match_priorities %>%
-    filter(!is_staffchild) %>%
-    filter(!is.na(`Staff Child`))
-
-  missing_staffchild <-
-    match_priorities %>%
-    filter(is_staffchild) %>%
-    filter(!(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847"))) %>%
-    filter(GRADE %in% grades_ec()) %>%
-    filter(is.na(`Staff Child`)) %>%
-    filter(is.na(Ineligible))
-
-  have <-
-    match_priorities %>%
-    filter(!is.na(`Staff Child`))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      \n
-      "
-    )
-  )
-
-  have %>%
-    count(choice_name, GRADE) %>%
-    slice_sample(n = nrow(.)) %>%
-    print()
-
-  cat("\n")
-
-  test_helper(
-    invalid_staffchild,
-    "No student has an invalid staff child priority."
-  )
-
-  test_helper(
-    missing_staffchild,
-    "No student has a missing staff child priority."
-  )
-
-  write_if_bad(invalid_staffchild, dir_out)
-  write_if_bad(missing_staffchild, dir_out)
-}
-
-
-
-#' @export
-test_sibling_staffchild <- function(dir_out, match_priorities) {
-  cat("\nSibling or staff child\n")
-
-  invalid_sibling_staffchild <-
-    match_priorities %>%
-    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
-    filter(!is_verifiedsibling & !is_staffchild) %>%
-    filter(!is.na(`School Specific 1`))
-
-  missing_sibling_staffchild <-
-    match_priorities %>%
-    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
-    filter(GRADE %in% grades_ec()) %>%
-    filter(is_verifiedsibling | is_staffchild) %>%
-    filter(is.na(`School Specific 1`)) %>%
-    filter(is.na(Ineligible))
-
-  have <-
-    match_priorities %>%
-    filter(`CHOICE SCHOOL` %in% c("796", "797", "798", "846", "847")) %>%
-    filter(GRADE %in% grades_ec()) %>%
-    filter(!is.na(`School Specific 1`))
-
-  cat(
-    glue(
-      "
-      {nrow(distinct(have, `STUDENT ID`))} students
-      {nrow(distinct(have, `CHOICE SCHOOL`))} schools
-      \n
-      "
-    )
-  )
-
-  have %>%
-    count(choice_name, GRADE) %>%
-    slice_sample(n = nrow(.)) %>%
-    print()
-
-  cat("\n")
-
-  test_helper(
-    invalid_sibling_staffchild,
-    "No student has an invalid sibling or staff child priority."
-  )
-
-  test_helper(
-    missing_sibling_staffchild,
-    "No student has a missing sibling or staff child priority."
-  )
-
-  write_if_bad(invalid_sibling_staffchild, dir_out)
-  write_if_bad(missing_sibling_staffchild, dir_out)
-}
-
 
 
 # Assignment tests --------------------------------------------------------

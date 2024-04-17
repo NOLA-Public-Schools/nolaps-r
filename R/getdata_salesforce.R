@@ -372,7 +372,10 @@ getdata_gradelevel <- function() {
         Next_Grade_Level__c,
 
         Order_Closing_Public__c,
-        Order_Sibling__c
+        Order_Sibling__c,
+        Order_Distance__c,
+        Order_Zone__c
+
       from Grade_Level__c
       "
     ),
@@ -413,7 +416,9 @@ getdata_gradelevel <- function() {
       choice_school = School_Program__r.Choice_Code__c,
       id_gradelevel_guarantee = Next_Grade_Level__c,
       order_closing = Order_Closing_Public__c,
-      order_sibling = Order_Sibling__c
+      order_sibling = Order_Sibling__c,
+      order_distance = Order_Distance__c,
+      order_zone = Order_Zone__c
     ) %>%
     fix_grades(var = grade) %>%
     mutate(across(
@@ -496,4 +501,51 @@ getdata_ep_choice <- function(date_start = date_appstart()) {
   ) |>
     select(fields_select$name_old) |>
     setNames(fields_select$name_new)
+}
+
+
+#' @export
+getdata_ep_gradelevel <- function() {
+  fields <- tribble(
+    ~name_new, ~name_soql,
+    "id_gradelevel", "Grade_Level__c",
+    "id_ep_gradelevel", "Id",
+    "name_ep", "Eligibility_Priority__r.Name",
+    "rank_priority", "Rank__c",
+    "perc_priority", "Percentage__c",
+  )
+
+  fields_select <- str_flatten(fields$name_soql, collapse = ", ")
+  object_from <- "School_Eligibility_Priority__c"
+  clause_where <- ""
+
+  sf_query(
+    soql_template(
+      fields_select,
+      object_from,
+      clause_where
+    ),
+    api_type = "Bulk 2.0",
+    guess_types = FALSE
+  ) |>
+    select(fields$name_soql) |>
+    setNames(fields$name_new) |>
+    filter(!is.na(.data$rank_priority)) |>
+    mutate(across(c(rank_priority, perc_priority), as.numeric)) |>
+    group_by(.data$id_gradelevel) |>
+    arrange(.data$id_gradelevel, .data$rank_priority) |>
+    ungroup()
+}
+
+
+soql_template <- function(fields_select, object_from, clause_where) {
+  glue_safe(
+    "
+    select  {fields_select}
+
+    from    {object_from}
+
+    {clause_where}
+    "
+  )
 }

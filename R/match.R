@@ -7,7 +7,6 @@
 #' @export
 match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
-  dir_external <- glue("{dir_in}/external")
   dir_review <- glue("{dir_out}/validation")
 
   if (!dir.exists(dir_business)) {
@@ -20,31 +19,21 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   cat("\nLoading data. Please wait.\n")
 
   if (use_cache) {
-    # accounts <- read_rds(glue("{dir_in}/accounts.rds"))
     # apps <- read_rds(glue("{dir_in}/apps.rds"))
     # appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
-    # appschools <- read_rds(glue("{dir_in}/appschools.rds"))
     # feeders <- read_rds(glue("{dir_in}/feeders.rds"))
-    # priorities <- read_rds(glue("{dir_in}/priorities.rds"))
     # siblings <- read_rds(glue("{dir_in}/siblings.rds"))
-    # students_recent <- read_rds(glue("{dir_in}/students_recent.rds"))
 
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
-    eps <- read_rds(glue("{dir_in}/eps.rds"))
+    eps_gradelevel <- read_rds(glue("{dir_in}/eps_gradelevel.rds"))
+    eps_choice <- read_rds(glue("{dir_in}/eps_choice.rds"))
   } else {
-    # accounts <- getdata_account()
-    # accounts %>% write_rds(glue("{dir_in}/accounts.rds"))
-
-    # appschools <- getdata_appschool()
-    # appschools %>% write_rds(glue("{dir_in}/appschools.rds"))
-
     # feeders <- getdata_feeder()
     # feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
 
-    # priorities <- getdata_priority()
-    # priorities %>% write_rds(glue("{dir_in}/priorities.rds"))
+
 
     # apps <- getdata_app(round = round)
     # apps %>% write_rds(glue("{dir_in}/apps.rds"))
@@ -54,9 +43,6 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
 
     # siblings <- getdata_sibling()
     # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
-
-    # students_recent <- getdata_student_recent()
-    # students_recent %>% write_rds(glue("{dir_in}/students_recent.rds"))
 
     gradelevels <- getdata_gradelevel()
     gradelevels |> write_rds(glue("{dir_in}/gradelevels.rds"))
@@ -70,9 +56,13 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     choices |> write_rds(glue("{dir_in}/choices.rds"))
     choices |> write_csv(glue("{dir_in}/choices.csv"), na = "")
 
-    eps <- getdata_ep_choice()
-    eps |> write_rds(glue("{dir_in}/eps.rds"))
-    eps |> write_csv(glue("{dir_in}/eps.csv"), na = "")
+    eps_gradelevel <- getdata_ep_gradelevel()
+    eps_gradelevel |> write_rds(glue("{dir_in}/eps_gradelevel.rds"))
+    eps_gradelevel |> write_csv(glue("{dir_in}/eps_gradelevel.csv"), na = "")
+
+    eps_choice <- getdata_ep_choice()
+    eps_choice |> write_rds(glue("{dir_in}/eps_choice.rds"))
+    eps_choice |> write_csv(glue("{dir_in}/eps_choice.csv"), na = "")
   }
 
   contactsmatch |>
@@ -155,11 +145,20 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   cat("\nGenerating summary stats.\n")
 
   match |>
-    matchcalc_summarystats(
+    match_summary_student(
       schools_waitlist = schools_waitlist,
       GRADE
     ) |>
-    write_csv(glue("{dir_review}/summarystats.csv"), na = "")
+    write_csv(glue("{dir_review}/summarystats_grade.csv"), na = "")
+
+  match |>
+    match_summary_program(
+      schools_waitlist = schools_waitlist,
+      `CHOICE SCHOOL`, GRADE
+    ) |>
+    write_csv(glue("{dir_review}/summarystats_program_grade.csv"), na = "")
+
+  ###
 
   match_test(
     dir_review = dir_review,
@@ -167,7 +166,8 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     gradelevels = gradelevels,
     contactsmatch = contactsmatch,
     choices = choices,
-    eps = eps
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
   )
 
   return(NULL)

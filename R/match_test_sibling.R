@@ -1,13 +1,13 @@
-match_test_sibling <- function(dir_review, match, gradelevels, eps) {
+match_test_sibling <- function(dir_review, match, gradelevels, eps_gradelevel, eps_choice) {
   cat("\nTest: Sibling\n")
 
   offers_priority <-
-    gradelevels |>
-    filter(!is.na(.data$order_sibling)) |>
+    eps_gradelevel |>
+    filter(.data$name_ep == "Sibling Priority") |>
     select("id_gradelevel")
 
   shouldhave <-
-    eps |>
+    eps_choice |>
     filter(.data$name_ep == "Sibling Priority") |>
     filter(.data$status == "Approved") |>
     filter(.data$id_gradelevel %in% offers_priority$id_gradelevel) |>

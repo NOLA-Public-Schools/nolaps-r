@@ -18,7 +18,9 @@ match_test_age <- function(dir_review, match) {
         (.data$GRADE == "PK3" & .data$student_dob > "2021-09-30") |
         (.data$GRADE == "PK4" & .data$student_dob > "2020-09-30") |
         (!(.data$GRADE %in% grades_ec()) & .data$student_dob > "2019-09-30")
-    )
+    ) |>
+    select("GRADE", "student_dob", "id_contact", "ELIGIBLE?") |>
+    arrange(.data$GRADE, .data$student_dob)
 
   invalid_ages_eligible <-
     invalid_ages |>

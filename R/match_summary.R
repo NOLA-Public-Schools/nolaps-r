@@ -6,9 +6,9 @@
 #' @param ... additional student-level grouping variables, like grade
 #'
 #' @export
-matchcalc_summarystats <- function(m, schools_waitlist, ...) {
+match_summary_student <- function(m, schools_waitlist, ...) {
   m |>
-    matchcalc_summarycounts(schools_waitlist, ...) |>
+    match_summary_counts(schools_waitlist, ...) |>
     arrange(...) |>
     mutate(
       n_seekingnew_elig =
@@ -30,7 +30,39 @@ matchcalc_summarystats <- function(m, schools_waitlist, ...) {
 }
 
 
-matchcalc_summarycounts <- function(m, schools_waitlist, ...) {
+#' @export
+match_summary_program <- function(m, schools_waitlist, ...) {
+  m |>
+    group_by(...) |>
+    summarize(
+      target = unique(.data$`NUMBER OF SEATS OFFERED`),
+      n_gtee1 = sum(.data$`GUARANTEED?` == "YES" & .data$`CHOICE RANK` == 1, na.rm = TRUE),
+      n_accept = sum(.data$`ASSIGNMENT STATUS` == "Accepted" & is.na(.data$`GUARANTEED?`), na.rm = TRUE),
+      n_fallback = sum(.data$`ASSIGNMENT STATUS` == "Accepted" & .data$`GUARANTEED?` == "YES" & .data$`CHOICE RANK` != 1, na.rm = TRUE),
+      n_unassign_waiting = sum(str_detect(.data$`ASSIGNMENT STATUS`, "Waiting List") & (.data$`CHOICE SCHOOL` %in% schools_waitlist | .data$GRADE %in% grades_ec()), na.rm = TRUE),
+      n_unassign_full = sum(str_detect(.data$`ASSIGNMENT STATUS`, "Waiting List") & !(.data$`CHOICE SCHOOL` %in% schools_waitlist) & !(.data$GRADE %in% grades_ec()), na.rm = TRUE),
+      n_inelig = sum(.data$`ASSIGNMENT STATUS` == "Ineligible", na.rm = TRUE),
+      n_notprocd = sum(.data$`ASSIGNMENT STATUS` == "Not Processed", na.rm = TRUE)
+    ) |>
+    mutate(
+      n_seekingnew_elig = .data$n_accept + .data$n_fallback + .data$n_unassign_waiting + .data$n_unassign_full,
+      n_acceptnew = .data$n_accept,
+      n_fallbacknew = .data$n_fallback,
+      n_unassignnew = .data$n_unassign_waiting + .data$n_unassign_full,
+      .before = .data$n_gtee1
+    ) |>
+    mutate(
+      rate_acceptnew = .data$n_acceptnew / .data$n_seekingnew_elig,
+      rate_fallbacknew = .data$n_fallbacknew / .data$n_seekingnew_elig,
+      rate_unassignnew = .data$n_unassignnew / .data$n_seekingnew_elig,
+      .before = .data$n_gtee1
+    ) |>
+    mutate(across(starts_with("rate_"), \(x) round(x, 3))) |>
+    arrange(...)
+}
+
+
+match_summary_counts <- function(m, schools_waitlist, ...) {
   p <-
     m |>
     match_parts_all(schools_waitlist, ...)
