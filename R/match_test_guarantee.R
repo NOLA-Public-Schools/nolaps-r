@@ -13,7 +13,11 @@ match_test_guarantee <- function(dir_review, match, students_active) {
   have <-
     match |>
     filter(.data$`GUARANTEED?` == "YES") |>
-    select("id_contact", "id_gradelevel_guarantee" = "id_gradelevel", "GRADE")
+    select(
+      "id_contact", "id_gradelevel_guarantee" = "id_gradelevel",
+      "name_program", "GRADE", "student_dob"
+    ) |>
+    arrange(.data$name_program, .data$GRADE, .data$student_dob)
 
   invalid_guarantee <-
     have |>

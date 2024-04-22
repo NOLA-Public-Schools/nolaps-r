@@ -1,7 +1,3 @@
-#' @import readr
-#' @import stringr
-
-
 #' @export
 match_briefing <- function(match, dir_out) {
 

@@ -4,9 +4,11 @@
 \alias{match_process}
 \title{Process match file}
 \usage{
-match_process(dir_in = "in", dir_out = "out", use_cache = FALSE)
+match_process(run, dir_in = "in", dir_out = "out", use_cache = FALSE)
 }
 \arguments{
+\item{run}{integer}
+
 \item{dir_in}{character}
 
 \item{dir_out}{character}

@@ -1,5 +1,4 @@
-match_test_closing <- function(
-    dir_review, match, gradelevels, eps_gradelevel, eps_choice) {
+match_test_closing <- function(dir_review, match, eps_gradelevel, eps_choice) {
   cat("\nTest: Closing School\n")
 
   offers_priority <-
@@ -41,7 +40,16 @@ match_test_closing <- function(
     )
   )
 
-  print(count(distinct(have, .data$`STUDENT ID`, .data$GRADE), .data$GRADE))
+  print(
+    count(
+      distinct(
+        have,
+        .data$name_program_current, .data$grade_current, .data$GRADE,
+        .data$`STUDENT ID`
+      ),
+      .data$name_program_current, .data$grade_current, .data$GRADE
+    )
+  )
 
   test_helper(
     invalid_closing,

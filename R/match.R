@@ -1,11 +1,14 @@
 #' Process match file
 #'
+#' @param run integer
 #' @param dir_in character
 #' @param dir_out character
 #' @param use_cache logical
 #'
 #' @export
-match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
+match_process <- function(
+    run, dir_in = "in", dir_out = "out", use_cache = FALSE
+    ) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
@@ -19,9 +22,6 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
   cat("\nLoading data. Please wait.\n")
 
   if (use_cache) {
-    # apps <- read_rds(glue("{dir_in}/apps.rds"))
-    # appinputs <- read_rds(glue("{dir_in}/appinputs.rds"))
-    # feeders <- read_rds(glue("{dir_in}/feeders.rds"))
     # siblings <- read_rds(glue("{dir_in}/siblings.rds"))
 
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
@@ -30,16 +30,6 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
     eps_gradelevel <- read_rds(glue("{dir_in}/eps_gradelevel.rds"))
     eps_choice <- read_rds(glue("{dir_in}/eps_choice.rds"))
   } else {
-    # feeders <- getdata_feeder()
-    # feeders %>% write_rds(glue("{dir_in}/feeders.rds"))
-
-
-
-    # apps <- getdata_app(round = round)
-    # apps %>% write_rds(glue("{dir_in}/apps.rds"))
-
-    # appinputs <- getdata_appinput(round = round)
-    # appinputs %>% write_rds(glue("{dir_in}/appinputs.rds"))
 
     # siblings <- getdata_sibling()
     # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
@@ -120,19 +110,14 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
       choices = choices
     )
 
-  # choices_external <-
-  #   readr::read_csv(
-  #     glue("{dir_in}/additional-student-preference-priority-rows.csv"),
-  #     col_types = stringr::str_c(stringr::str_dup("c", 14))
-  #   )
-  #
   # overmatches <-
   #   readxl::read_excel(
   #     glue("{dir_external}/sibling-overmatches.xlsx"),
   #     col_types = "text"
   #   )
 
-  match |> write_csv(glue("{dir_review}/000_match.csv"), na = "")
+  match |> write_csv(glue("{dir_review}/000_match_{run}.csv"), na = "")
+  match |> write_rds(glue("{dir_review}/000_match_{run}.rds"))
 
   cat("\nGenerating participant outcomes.\n")
 
@@ -157,8 +142,6 @@ match_process <- function(dir_in = "in", dir_out = "out", use_cache = FALSE) {
       `CHOICE SCHOOL`, GRADE
     ) |>
     write_csv(glue("{dir_review}/summarystats_program_grade.csv"), na = "")
-
-  ###
 
   match_test(
     dir_review = dir_review,

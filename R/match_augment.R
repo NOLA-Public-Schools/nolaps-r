@@ -15,7 +15,7 @@ match_augment <- function(m, gradelevels, contactsmatch, choices) {
 
   gradelevels <-
     gradelevels |>
-    select("choice_school", "grade", "id_gradelevel")
+    select("choice_school", "grade", "id_program", "id_gradelevel")
 
   choices <-
     choices |>
