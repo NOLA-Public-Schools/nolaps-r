@@ -7,8 +7,7 @@
 #'
 #' @export
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = FALSE
-    ) {
+    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
@@ -30,7 +29,6 @@ match_process <- function(
     eps_gradelevel <- read_rds(glue("{dir_in}/eps_gradelevel.rds"))
     eps_choice <- read_rds(glue("{dir_in}/eps_choice.rds"))
   } else {
-
     # siblings <- getdata_sibling()
     # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
 
@@ -56,26 +54,26 @@ match_process <- function(
   }
 
   contactsmatch |>
-    count(oneappid, sort = TRUE) |>
+    count(.data$oneappid, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
     print()
 
   gradelevels |>
-    count(choice_school, grade, sort = TRUE) |>
+    count(.data$choice_school, .data$grade, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_gradelevels.csv"), na = "") |>
     print()
 
   gradelevels |>
-    distinct(choice_school, name_program) |>
-    count(choice_school, sort = TRUE) |>
+    distinct(.data$choice_school, .data$name_program) |>
+    count(.data$choice_school, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_programnames.csv"), na = "") |>
     print()
 
   choices |>
-    count(id_contact, id_gradelevel, sort = TRUE) |>
+    count(.data$id_contact, .data$id_gradelevel, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_choices.csv"), na = "") |>
     print()
@@ -153,6 +151,8 @@ match_process <- function(
     eps_choice = eps_choice
   )
 
+  cat(glue("\n\nFinished at {Sys.time()}\n\n"))
+
   return(NULL)
 
   match_briefing(
@@ -177,6 +177,4 @@ match_process <- function(
     appschools = appschools,
     students_recent = students_recent
   )
-
-  cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }

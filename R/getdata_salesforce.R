@@ -8,7 +8,10 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
         Application__c,
         Id,
         Grade_Level__c,
-        Numerical_Rank__c
+        Numerical_Rank__c,
+        EC_Program_Type__c,
+        Has_Eligibility_Requirements__c,
+        Eligibility_Display__c
 
       from Application_School_Ranking__c
 
@@ -28,9 +31,13 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
       id_app = Application__c,
       id_appschoolranking = Id,
       id_gradelevel = Grade_Level__c,
-      rank = Numerical_Rank__c
+      rank = Numerical_Rank__c,
+      type_program_ec = EC_Program_Type__c,
+      needs_eligibility_k12 = Has_Eligibility_Requirements__c,
+      eligibility_k12 = Eligibility_Display__c
     ) |>
     mutate(across(c(rank), as.numeric)) |>
+    mutate(across(c(needs_eligibility_k12), as.logical)) |>
     group_by(id_app) |>
     arrange(rank) |>
     ungroup()
@@ -149,7 +156,8 @@ getdata_contact_active <- function() {
         Grade_Level__c,
         Grade_Level__r.School_Program__r.Name,
         Grade_Level__r.Grade__c,
-        Grade_Level__r.Next_Grade_Level__c
+        Grade_Level__r.Next_Grade_Level__c,
+        Promotion_Decision__c
 
       from AcademicTermEnrollment
 
@@ -173,7 +181,8 @@ getdata_contact_active <- function() {
       id_gradelevel_current = Grade_Level__c,
       name_program_current = Grade_Level__r.School_Program__r.Name,
       grade_current = Grade_Level__r.Grade__c,
-      id_gradelevel_guarantee = Grade_Level__r.Next_Grade_Level__c
+      id_gradelevel_guarantee = Grade_Level__r.Next_Grade_Level__c,
+      promotion = Promotion_Decision__c
     ) |>
     mutate(across(c(.data$student_dob), as_date)) |>
     mutate(across(c(.data$is_active), as.logical)) |>
@@ -237,7 +246,7 @@ getdata_contact_match <- function() {
     select(
       id_contact, is_active,
       id_gradelevel_current, name_program_current, grade_current,
-      id_gradelevel_guarantee
+      id_gradelevel_guarantee, promotion
     )
   fields_app <- contacts_app |>
     select(

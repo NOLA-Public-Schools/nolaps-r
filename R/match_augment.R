@@ -19,7 +19,9 @@ match_augment <- function(m, gradelevels, contactsmatch, choices) {
 
   choices <-
     choices |>
-    select("id_contact", "id_gradelevel", "id_appschoolranking")
+    select(
+      "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec"
+    )
 
   m |>
     mutate(

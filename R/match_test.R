@@ -22,6 +22,12 @@ match_test <- function(
     choices = choices
   )
 
+  match_test_eligibility(
+    dir_review = dir_review,
+    match = match,
+    choices = choices
+  )
+
   match_test_guarantee(
     dir_review = dir_review,
     match = match,
