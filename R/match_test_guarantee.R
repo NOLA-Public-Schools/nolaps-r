@@ -1,8 +1,9 @@
 match_test_guarantee <- function(dir_review, match, students_active) {
   cat("\nTest: Guarantees\n")
 
-  # TODO
-  # return prohibited due to expulsion
+  prohibited <-
+    match |>
+    filter(.data$is_prohibited)
 
   shouldhave <-
     students_active |>
@@ -11,6 +12,10 @@ match_test_guarantee <- function(dir_review, match, students_active) {
       .data$id_gradelevel_guarantee
     )) |>
     filter(!is.na(.data$id_gradelevel_guarantee)) |>
+    anti_join(
+      prohibited,
+      by = c("id_contact", "id_gradelevel_guarantee" = "id_gradelevel")
+    ) |>
     select(
       "id_contact", "id_gradelevel_guarantee",
       "student_dob", "promotion"
@@ -20,8 +25,7 @@ match_test_guarantee <- function(dir_review, match, students_active) {
     match |>
     filter(.data$`GUARANTEED?` == "YES") |>
     select(
-      "id_contact",
-      "id_gradelevel_guarantee" = "id_gradelevel",
+      "id_contact", "id_gradelevel_guarantee" = "id_gradelevel",
       "student_dob", "promotion",
       "name_program", "GRADE"
     ) |>

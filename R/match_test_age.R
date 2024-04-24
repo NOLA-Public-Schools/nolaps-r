@@ -1,24 +1,9 @@
 match_test_age <- function(dir_review, match) {
   cat("\nTest: Age\n")
 
-  schools_net <- c(
-    "360001NETCC",
-    "360002NETGentilly",
-    "360003NETEast"
-  )
-
   invalid_ages <-
     match |>
-    filter(
-      (((.data$`CHOICE SCHOOL` %in% schools_net) & .data$GRADE == "8") &
-        (.data$student_dob > "2009-09-30")) |
-        (.data$GRADE == "INF" & .data$student_dob <= "2023-09-30") |
-        (.data$GRADE == "1YR" & .data$student_dob > "2023-09-30") |
-        (.data$GRADE == "2YR" & .data$student_dob > "2022-09-30") |
-        (.data$GRADE == "PK3" & .data$student_dob > "2021-09-30") |
-        (.data$GRADE == "PK4" & .data$student_dob > "2020-09-30") |
-        (!(.data$GRADE %in% grades_ec()) & .data$student_dob > "2019-09-30")
-    ) |>
+    filter(.data$is_underage) |>
     select("GRADE", "student_dob", "id_contact", "ELIGIBLE?") |>
     arrange(.data$GRADE, .data$student_dob)
 

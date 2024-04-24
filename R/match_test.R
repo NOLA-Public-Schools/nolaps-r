@@ -22,7 +22,7 @@ match_test <- function(
     choices = choices
   )
 
-  match_test_eligibility(
+  match_test_eligibility_k12(
     dir_review = dir_review,
     match = match,
     choices = choices
@@ -116,18 +116,6 @@ match_test <- function(
     mutate(is_family = TRUE) %>%
     select(oneappid, id_family, is_twin, is_family)
 
-  # Begin tests
-
-  ###
-
-  # Retentions
-
-  # test_retentions(
-  #   dir_out = dir_out,
-  #   match = match,
-  #   students_active = students_active
-  # )
-
   # Eligibility tests
 
   # Eligibility
@@ -137,14 +125,6 @@ match_test <- function(
     match = match,
     choices = choices,
     appinputs = appinputs
-  )
-
-  # Expulsions
-
-  test_expulsion(
-    dir_out = dir_out,
-    match = match,
-    students = students_active
   )
 
   # Family tests
@@ -170,215 +150,9 @@ match_test <- function(
 }
 
 
-# Basic data quality tests ------------------------------------------------
-
-
-#' @export
-test_retentions <- function(dir_out, match, students_active) {
-  cat("\nRetentions\n")
-
-  retained <-
-    students_active %>%
-    filter(promotion == "Retained") %>%
-    filter(!(grade_current == "8" & is_t9)) %>%
-    select(id_student, oneappid, grade_current)
-
-  invalid_retained <-
-    match %>%
-    filter(is_active & (GRADE == grade_current)) %>%
-    select(GRADE, `STUDENT ID`, id_student) %>%
-    distinct() %>%
-    anti_join(
-      retained,
-      by = c("STUDENT ID" = "oneappid", "GRADE" = "grade_current")
-    ) %>%
-    filter(!(GRADE %in% grades_ec())) %>%
-    filter(GRADE != "12") %>%
-    arrange(GRADE)
-
-  test_helper(
-    invalid_retained,
-    "All students applying to current grade in match are marked as retained."
-  )
-
-  write_if_bad(invalid_retained, dir_out)
-
-  missing_retained <-
-    retained %>%
-    anti_join(
-      match,
-      by = c("oneappid" = "STUDENT ID", "grade_current" = "GRADE")
-    ) %>%
-    filter(!(grade_current %in% grades_ec()))
-
-  test_helper(
-    missing_retained,
-    "All retained students except for T9 are in the match for their current grade."
-  )
-
-  write_if_bad(missing_retained, dir_out)
-}
-
-
-
-# Eligibility tests -------------------------------------------------------
-
-
-#' @export
-test_eligibility <- function(dir_out, match, choices, appinputs) {
-  cat("\nEligibility\n")
-
-  appinputs_iep <-
-    appinputs %>%
-    filter(has_iep)
-
-  appinputs_gt <-
-    appinputs %>%
-    filter(has_gt)
-
-  match <-
-    match %>%
-    # mutate(`CHOICE SCHOOL` = str_remove(
-    #   `CHOICE SCHOOL`, "_((tulane)|(community)|(ed)|(tier))_[12]$"
-    #   )
-    # ) %>%
-    left_join(
-      choices,
-      by = c("STUDENT ID" = "oneappid", "CHOICE SCHOOL" = "code_appschool")
-    ) %>%
-    select(
-      `ELIGIBLE?`, `GUARANTEED?`,
-      id_account.x, choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`, id_appschoolranking,
-      eligibility, eligibility_decision, programtype, is_selective, questions_selective
-    ) %>%
-    distinct() %>%
-    arrange(`ELIGIBLE?`, choice_name, GRADE)
-
-  invalid_eligibility_ec <-
-    match %>%
-    filter(GRADE %in% grades_ec()) %>%
-    filter(
-      eligibility != "Eligible"
-      # & !(str_detect(programtype, "Tuition") & eligibility != "Ineligible")
-      # & !(programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      # & !(programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      # & !(programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid & eligibility != "Ineligible")
-      # & !(programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid & eligibility != "Ineligible")
-    ) %>%
-    filter(`ELIGIBLE?` == "YES") %>%
-    filter(is.na(`GUARANTEED?`))
-
-  invalid_eligibility_k12 <-
-    match %>%
-    filter(!(GRADE %in% grades_ec())) %>%
-    filter(eligibility_decision != "Eligible") %>%
-    filter(is_selective & !(questions_selective %in% c(
-      "Verified Sibling",
-      "Financial Eligibility;Verified Sibling"
-    ))) %>%
-    filter(`ELIGIBLE?` == "YES") %>%
-    filter(is.na(`GUARANTEED?`))
-
-  #
-
-  invalid_grades <-
-    match %>%
-    left_join(
-      getdata_account_gradespan(),
-      by = join_by(id_account.x == id_account)
-    ) %>%
-    rowwise() %>%
-    filter(!(GRADE %in% gradespan_nextyear_vector)) %>%
-    ungroup() %>%
-    pull(`STUDENT ID`)
-
-  #
-
-  missing_eligibility_ec <-
-    match %>%
-    filter(GRADE %in% grades_ec()) %>%
-    filter(
-      eligibility == "Eligible" |
-        ((eligibility != "Ineligible") & (
-          str_detect(programtype, "Tuition") |
-            (programtype == "EC Special Needs" & `STUDENT ID` %in% appinputs_iep$oneappid) |
-            (programtype == "LA4 & 8(g) OPSB" & `STUDENT ID` %in% appinputs_iep$oneappid) |
-            (programtype == "PK4 - Type II" & `STUDENT ID` %in% appinputs_iep$oneappid) |
-            (programtype == "PK GT" & `STUDENT ID` %in% appinputs_gt$oneappid)
-        ))
-    ) %>%
-    filter(`ELIGIBLE?` == "NO") %>%
-    filter(!(`STUDENT ID` %in% invalid_grades))
-
-  cat(
-    glue(
-      "
-      {nrow(invalid_eligibility_ec)} records with invalid EC eligibility
-      {nrow(invalid_eligibility_k12)} records with invalid K-12 eligibility
-
-      {nrow(missing_eligibility_ec)} records with missing EC eligibility
-      \n
-      "
-    )
-  )
-
-  test_helper(
-    invalid_eligibility_ec,
-    "No ineligible EC applicants are marked eligible in the match."
-  )
-
-  test_helper(
-    invalid_eligibility_k12,
-    "No ineligible K-12 applicants are marked eligible in the match."
-  )
-
-  test_helper(
-    missing_eligibility_ec,
-    "No eligible EC applicants are marked ineligible in the match."
-  )
-
-  write_if_bad(invalid_eligibility_ec, dir_out)
-  write_if_bad(invalid_eligibility_k12, dir_out)
-
-  write_if_bad(missing_eligibility_ec, dir_out)
-}
-
-
-
-#' @export
-test_expulsion <- function(dir_out, match, students) {
-  cat("\nExpulsions\n")
-
-  prohibited <-
-    students %>%
-    filter(
-      (expelled_status == "Re-entry Prohibited") |
-        ((expelled_status == "Re-entry Allowed") & (expelled_date_end >= "2023-10-01"))
-    ) %>%
-    mutate(is_expelled = TRUE) %>%
-    select(oneappid, id_account_expelled, is_expelled)
-
-  invalid_return_prohibited <-
-    match %>%
-    left_join(prohibited, by = c("STUDENT ID" = "oneappid", "id_account" = "id_account_expelled")) %>%
-    filter(is_expelled) %>%
-    filter(`ELIGIBLE?` == "YES")
-
-  test_helper(
-    invalid_return_prohibited,
-    "No prohibited student is marked eligible in the match."
-  )
-
-  write_if_bad(invalid_return_prohibited, dir_out)
-}
-
-
-
 # Family tests ------------------------------------------------------------
 
 
-
-#' @export
 test_family <- function(dir_out, siblings, match, students_with_family, appinputs) {
   cat("\nFamily link\n")
 
@@ -458,8 +232,6 @@ test_family <- function(dir_out, siblings, match, students_with_family, appinput
 }
 
 
-
-#' @export
 test_twin <- function(dir_out, siblings, match, students_with_family) {
   cat("\nTwin\n")
 

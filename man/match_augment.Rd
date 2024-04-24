@@ -4,16 +4,18 @@
 \alias{match_augment}
 \title{Augment match records with additional information}
 \usage{
-match_augment(m, gradelevels, contactsmatch, choices)
+match_augment(m, gradelevels, contactsmatch, choices, expulsions)
 }
 \arguments{
 \item{m}{tibble of match records}
 
-\item{gradelevels}{tibble of Grade Levels}
+\item{gradelevels}{tibble of grade levels}
 
-\item{contactsmatch}{tibble of Contacts}
+\item{contactsmatch}{tibble of contacts}
 
-\item{choices}{tibble of Application School Rankings}
+\item{choices}{tibble of application school rankings}
+
+\item{expulsions}{tibble of expulsions}
 }
 \description{
 Augment match records with additional information

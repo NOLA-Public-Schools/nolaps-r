@@ -17,6 +17,18 @@ date_currentyear <- function() {
 
 
 #' @export
+term_current <- function() {
+  "2023-2024"
+}
+
+
+#' @export
+term_next <- function() {
+  "2024-2025"
+}
+
+
+#' @export
 fix_grades <- function(x, var = GRADE) {
   x |>
     mutate("{{ var }}" := str_remove_all({{ var }}, "[:space:]")) %>%

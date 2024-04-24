@@ -2,12 +2,13 @@
 #'
 #' @param m tibble of match records
 #'
-#' @param gradelevels tibble of Grade Levels
-#' @param contactsmatch tibble of Contacts
-#' @param choices tibble of Application School Rankings
+#' @param gradelevels tibble of grade levels
+#' @param contactsmatch tibble of contacts
+#' @param choices tibble of application school rankings
+#' @param expulsions tibble of expulsions
 #'
 #' @export
-match_augment <- function(m, gradelevels, contactsmatch, choices) {
+match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
   names_lookup <-
     gradelevels |>
     select("choice_school", "name_program") |>
@@ -23,6 +24,19 @@ match_augment <- function(m, gradelevels, contactsmatch, choices) {
       "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec"
     )
 
+  expulsions <-
+    expulsions |>
+    distinct(.data$id_contact, .data$id_program_expelledfrom) |>
+    mutate(is_prohibited = TRUE)
+
+  schools_net <- function() {
+    c(
+      "360001NETCC",
+      "360002NETGentilly",
+      "360003NETEast"
+    )
+  }
+
   m |>
     mutate(
       choice_school_clean =
@@ -31,23 +45,41 @@ match_augment <- function(m, gradelevels, contactsmatch, choices) {
           .data$`CHOICE SCHOOL`
         )
     ) |>
-    left_join(names_lookup,
+    left_join(
+      names_lookup,
       by = c("choice_school_clean" = "choice_school"),
       relationship = "many-to-one"
     ) |>
-    left_join(gradelevels,
-      by = c(
-        "choice_school_clean" = "choice_school",
-        "GRADE" = "grade"
-      ),
+    left_join(
+      gradelevels,
+      by = c("choice_school_clean" = "choice_school", "GRADE" = "grade"),
       relationship = "many-to-one"
     ) |>
-    left_join(contactsmatch,
+    left_join(
+      contactsmatch,
       by = c("STUDENT ID" = "oneappid"),
       relationship = "many-to-one"
     ) |>
-    left_join(choices,
+    mutate(is_underage = case_when(
+      .data$`CHOICE SCHOOL` %in% schools_net() & .data$GRADE == "8" &
+        .data$student_dob > "2009-09-30" ~ TRUE,
+      .data$GRADE == "INF" & .data$student_dob <= "2023-09-30" ~ TRUE,
+      .data$GRADE == "1YR" & .data$student_dob > "2023-09-30" ~ TRUE,
+      .data$GRADE == "2YR" & .data$student_dob > "2022-09-30" ~ TRUE,
+      .data$GRADE == "PK3" & .data$student_dob > "2021-09-30" ~ TRUE,
+      .data$GRADE == "PK4" & .data$student_dob > "2020-09-30" ~ TRUE,
+      .data$GRADE %in% grades_k12() & .data$student_dob > "2019-09-30" ~ TRUE,
+      .default = FALSE
+    )) |>
+    left_join(
+      choices,
       by = c("id_contact", "id_gradelevel"),
       relationship = "many-to-one"
-    )
+    ) |>
+    left_join(
+      expulsions,
+      by = c("id_contact", "id_program" = "id_program_expelledfrom"),
+      relationship = "many-to-one"
+    ) |>
+    mutate(is_prohibited = !is.na(.data$is_prohibited))
 }

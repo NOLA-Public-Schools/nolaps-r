@@ -12,6 +12,8 @@
 #' @importFrom glue       glue glue_safe
 #' @importFrom readr      read_csv write_csv read_rds write_rds
 #' @importFrom sf         st_read
+#' @importFrom stats      median setNames
 #' @importFrom tidygraph  tbl_graph to_components
+#' @importFrom utils      data
 
 NULL

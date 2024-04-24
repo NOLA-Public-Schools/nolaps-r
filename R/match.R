@@ -28,6 +28,7 @@ match_process <- function(
     choices <- read_rds(glue("{dir_in}/choices.rds"))
     eps_gradelevel <- read_rds(glue("{dir_in}/eps_gradelevel.rds"))
     eps_choice <- read_rds(glue("{dir_in}/eps_choice.rds"))
+    expulsions <- read_rds(glue("{dir_in}/expulsions.rds"))
   } else {
     # siblings <- getdata_sibling()
     # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
@@ -51,6 +52,10 @@ match_process <- function(
     eps_choice <- getdata_ep_choice()
     eps_choice |> write_rds(glue("{dir_in}/eps_choice.rds"))
     eps_choice |> write_csv(glue("{dir_in}/eps_choice.csv"), na = "")
+
+    expulsions <- getdata_expulsion()
+    expulsions |> write_rds(glue("{dir_in}/expulsions.rds"))
+    expulsions |> write_csv(glue("{dir_in}/expulsions.csv"), na = "")
   }
 
   contactsmatch |>
@@ -105,7 +110,8 @@ match_process <- function(
     match_augment(
       gradelevels = gradelevels,
       contactsmatch = contactsmatch,
-      choices = choices
+      choices = choices,
+      expulsions
     )
 
   # overmatches <-

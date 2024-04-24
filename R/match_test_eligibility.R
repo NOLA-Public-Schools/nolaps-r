@@ -1,11 +1,16 @@
-match_test_eligibility <- function(dir_review, match, choices) {
+match_test_eligibility_k12 <- function(dir_review, match, choices) {
   cat("\nTest: Eligibility\n")
+
+  prohibited <-
+    match |>
+    filter(.data$is_prohibited)
 
   shouldhave <-
     choices |>
     filter(
       .data$eligibility_k12 == "Eligible" | !.data$needs_eligibility_k12
     ) |>
+    anti_join(prohibited, by = c("id_contact", "id_gradelevel")) |>
     select("id_appschoolranking")
 
   have <-
@@ -28,12 +33,16 @@ match_test_eligibility <- function(dir_review, match, choices) {
     filter(.data$GRADE %in% grades_k12()) |>
     filter(.data$`ASSIGNMENT STATUS` == "Ineligible") |>
     filter(.data$id_appschoolranking %in% shouldhave$id_appschoolranking) |>
+    filter(!.data$is_prohibited) |>
+    filter(!.data$is_underage) |>
     filter(!str_detect(
       .data$`CHOICE SCHOOL`,
       "_tulane_[12]|_community_[12]|_ed_1"
     ))
 
-  print(count(donthave, .data$name_program, .data$GRADE))
+  print(
+    count(donthave, .data$name_program, .data$GRADE) |> slice_sample(n = 10)
+  )
 
   test_helper(
     invalid_eligibility_k12,
