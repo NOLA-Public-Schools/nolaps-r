@@ -1,13 +1,3 @@
-#' @import lubridate
-#' @import purrr
-#' @import readxl
-#' @import salesforcer
-#' @import stringr
-#' @import tidyr
-
-
-
-#' @export
 match_notification_salesforce <- function(notifications, dir_out, students_recent) {
 
   cat("\nGenerating Salesforce letters\n")
@@ -37,5 +27,3 @@ match_notification_salesforce <- function(notifications, dir_out, students_recen
   invisible(letters_salesforce)
 
 }
-
-

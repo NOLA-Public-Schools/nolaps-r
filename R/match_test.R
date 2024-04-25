@@ -2,7 +2,7 @@
 match_test <- function(
     dir_review, match,
     gradelevels, contactsmatch, choices, eps_gradelevel, eps_choice) {
-  cat("\nValidating match file\n")
+  cat("\nValidating match file.\n")
 
   students_active <- contactsmatch |> filter(.data$is_active)
 

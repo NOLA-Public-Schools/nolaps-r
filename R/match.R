@@ -164,14 +164,26 @@ match_process <- function(
     ) |>
     write_csv(glue("{dir_review}/summarystats_program_grade.csv"), na = "")
 
-  match_test(
-    dir_review = dir_review,
+  # match_test(
+  #   dir_review = dir_review,
+  #   match = match,
+  #   gradelevels = gradelevels,
+  #   contactsmatch = contactsmatch,
+  #   choices = choices,
+  #   eps_gradelevel = eps_gradelevel,
+  #   eps_choice = eps_choice
+  # )
+
+  match_placement(
+    dir_business = dir_business,
     match = match,
-    gradelevels = gradelevels,
-    contactsmatch = contactsmatch,
-    choices = choices,
-    eps_gradelevel = eps_gradelevel,
-    eps_choice = eps_choice
+    overmatches = NULL
+  )
+
+  match_notification(
+    dir_business = dir_business,
+    match = match,
+    overmatches = NULL
   )
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
@@ -181,23 +193,5 @@ match_process <- function(
   match_briefing(
     match = match,
     dir_out = dir_business
-  )
-
-  match_placement(
-    match = match,
-    overmatches = NULL,
-    dir_out = dir_business,
-    students_recent = students_recent,
-    appschools = appschools
-  )
-
-  match_notification(
-    match = match,
-    overmatches = overmatches,
-    dir_out = dir_business,
-    apps = apps,
-    accounts = accounts,
-    appschools = appschools,
-    students_recent = students_recent
   )
 }
