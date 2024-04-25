@@ -1,3 +1,41 @@
+#' K12 programs with waitlists
+#'
+#' @return character vector
+#'
+#' @export
+schools_waitlist <- function() {
+  c(
+    "WAZ001_FAUFrenchLS",
+    "WAZ001_FAUFrenchUS",
+    "WAZ001_MAUMontessoriLSLA4",
+    "WAZ001_MAUMontessoriUS",
+    "WBE001Willow",
+    "WBE001Willow_community_1",
+    "WBE001Willow_community_2",
+    "WBE001Willow_ed_1",
+    "WBE001Willow_tulane_1",
+    "WBE001Willow_tulane_2",
+    "WBH001LakeForest",
+    "WBH001LakeForest_tier_1",
+    "WBH001LakeForest_tier_2"
+  )
+}
+
+
+#' Programs requiring 8th grade applicants to be at least 15 by 9/30
+#'
+#' @return character vector
+#'
+#' @export
+schools_net <- function() {
+  c(
+    "360001NETCC",
+    "360002NETGentilly",
+    "360003NETEast"
+  )
+}
+
+
 #' Process match file
 #'
 #' @param run integer
@@ -21,8 +59,6 @@ match_process <- function(
   cat("\nLoading data. Please wait.\n")
 
   if (use_cache) {
-    # siblings <- read_rds(glue("{dir_in}/siblings.rds"))
-
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
@@ -30,9 +66,6 @@ match_process <- function(
     eps_choice <- read_rds(glue("{dir_in}/eps_choice.rds"))
     expulsions <- read_rds(glue("{dir_in}/expulsions.rds"))
   } else {
-    # siblings <- getdata_sibling()
-    # siblings %>% write_rds(glue("{dir_in}/siblings.rds"))
-
     gradelevels <- getdata_gradelevel()
     gradelevels |> write_rds(glue("{dir_in}/gradelevels.rds"))
     gradelevels |> write_csv(glue("{dir_in}/gradelevels.csv"), na = "")
@@ -83,22 +116,6 @@ match_process <- function(
     write_csv(glue("{dir_review}/dupe_choices.csv"), na = "") |>
     print()
 
-  schools_waitlist <- c(
-    "WAZ001_FAUFrenchLS",
-    "WAZ001_FAUFrenchUS",
-    "WAZ001_MAUMontessoriLSLA4",
-    "WAZ001_MAUMontessoriUS",
-    "WBE001Willow",
-    "WBE001Willow_community_1",
-    "WBE001Willow_community_2",
-    "WBE001Willow_ed_1",
-    "WBE001Willow_tulane_1",
-    "WBE001Willow_tulane_2",
-    "WBH001LakeForest",
-    "WBH001LakeForest_tier_1",
-    "WBH001LakeForest_tier_2"
-  )
-
   cat("\nGenerating match review file.\n")
 
   match <-
@@ -127,7 +144,7 @@ match_process <- function(
 
   match |>
     match_parts_all(
-      schools_waitlist = schools_waitlist
+      schools_waitlist = schools_waitlist()
     ) |>
     write_csv(glue("{dir_review}/participants.csv"), na = "")
 
@@ -135,14 +152,14 @@ match_process <- function(
 
   match |>
     match_summary_student(
-      schools_waitlist = schools_waitlist,
+      schools_waitlist = schools_waitlist(),
       GRADE
     ) |>
     write_csv(glue("{dir_review}/summarystats_grade.csv"), na = "")
 
   match |>
     match_summary_program(
-      schools_waitlist = schools_waitlist,
+      schools_waitlist = schools_waitlist(),
       `CHOICE SCHOOL`, GRADE
     ) |>
     write_csv(glue("{dir_review}/summarystats_program_grade.csv"), na = "")

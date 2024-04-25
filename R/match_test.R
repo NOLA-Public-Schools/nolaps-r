@@ -28,6 +28,12 @@ match_test <- function(
     choices = choices
   )
 
+  match_test_eligibility_ec(
+    dir_review = dir_review,
+    match = match,
+    choices = choices
+  )
+
   match_test_guarantee(
     dir_review = dir_review,
     match = match,
@@ -115,17 +121,6 @@ match_test <- function(
     replace_na(list(is_twin = FALSE)) %>%
     mutate(is_family = TRUE) %>%
     select(oneappid, id_family, is_twin, is_family)
-
-  # Eligibility tests
-
-  # Eligibility
-
-  test_eligibility(
-    dir_out = dir_out,
-    match = match,
-    choices = choices,
-    appinputs = appinputs
-  )
 
   # Family tests
 
