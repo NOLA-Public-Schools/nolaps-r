@@ -1,41 +1,3 @@
-#' K12 programs with waitlists
-#'
-#' @return character vector
-#'
-#' @export
-schools_waitlist <- function() {
-  c(
-    "WAZ001_FAUFrenchLS",
-    "WAZ001_FAUFrenchUS",
-    "WAZ001_MAUMontessoriLSLA4",
-    "WAZ001_MAUMontessoriUS",
-    "WBE001Willow",
-    "WBE001Willow_community_1",
-    "WBE001Willow_community_2",
-    "WBE001Willow_ed_1",
-    "WBE001Willow_tulane_1",
-    "WBE001Willow_tulane_2",
-    "WBH001LakeForest",
-    "WBH001LakeForest_tier_1",
-    "WBH001LakeForest_tier_2"
-  )
-}
-
-
-#' Programs requiring 8th grade applicants to be at least 15 by 9/30
-#'
-#' @return character vector
-#'
-#' @export
-schools_net <- function() {
-  c(
-    "360001NETCC",
-    "360002NETGentilly",
-    "360003NETEast"
-  )
-}
-
-
 #' Process match file
 #'
 #' @param run integer
@@ -131,6 +93,9 @@ match_process <- function(
       expulsions
     )
 
+  match_detiered <- match_detier(match)
+  match_detiered |> write_csv(glue("{dir_business}/match_detier.csv"), na = "")
+
   # overmatches <-
   #   readxl::read_excel(
   #     glue("{dir_external}/sibling-overmatches.xlsx"),
@@ -144,7 +109,8 @@ match_process <- function(
 
   match |>
     match_parts_all(
-      schools_waitlist = schools_waitlist()
+      schools_waitlist = schools_waitlist(),
+      GRADE
     ) |>
     write_csv(glue("{dir_review}/participants.csv"), na = "")
 
@@ -164,25 +130,35 @@ match_process <- function(
     ) |>
     write_csv(glue("{dir_review}/summarystats_program_grade.csv"), na = "")
 
-  # match_test(
-  #   dir_review = dir_review,
-  #   match = match,
-  #   gradelevels = gradelevels,
-  #   contactsmatch = contactsmatch,
-  #   choices = choices,
-  #   eps_gradelevel = eps_gradelevel,
-  #   eps_choice = eps_choice
-  # )
+  match_detiered |>
+    match_summary_program(
+      schools_waitlist = schools_waitlist(),
+      `CHOICE SCHOOL`, GRADE
+    ) |>
+    write_csv(
+      glue("{dir_review}/summarystats_program_grade_detiered.csv"),
+      na = ""
+    )
+
+  match_test(
+    dir_review = dir_review,
+    match = match,
+    gradelevels = gradelevels,
+    contactsmatch = contactsmatch,
+    choices = choices,
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
+  )
 
   match_placement(
-    dir_business = dir_business,
-    match = match,
+    dir_business,
+    match,
     overmatches = NULL
   )
 
   match_notification(
-    dir_business = dir_business,
-    match = match,
+    dir_business,
+    match,
     overmatches = NULL
   )
 

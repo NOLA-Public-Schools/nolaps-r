@@ -6,13 +6,13 @@
 #' instead of multiple tiers
 #'
 #' @export
-match_detier <- function(dir_business, match) {
+match_detier <- function(match) {
   special_all <-
     match |>
-    filter(str_detect(.data$`CHOICE SCHOOL`, "Lake Forest|Willow")) |>
+    filter(str_detect(.data$`CHOICE SCHOOL`, "LakeForest|Willow")) |>
+    mutate(`CHOICE SCHOOL` = .data$choice_school_clean) |>
     group_by(
-      .data$`STUDENT ID`,
-      .data$choice_school_clean, .data$name_program, .data$GRADE
+      .data$`STUDENT ID`, .data$`CHOICE SCHOOL`, .data$name_program, .data$GRADE
     ) |>
     summarize(
       `CHOICE RANK` = min(.data$`CHOICE RANK`),
@@ -31,29 +31,31 @@ match_detier <- function(dir_business, match) {
 
   special_waiting <-
     special_all |>
-    filter(!(.data$`STUDENT ID` %in% special_accepted$`STUDENT ID`)) |>
+    anti_join(special_accepted, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
     filter(.data$n_waiting >= 1) |>
     mutate(`ASSIGNMENT STATUS` = "Waiting List")
 
   special_ineligible <-
     special_all |>
-    filter(!(.data$`STUDENT ID` %in% special_accepted$`STUDENT ID`)) |>
-    filter(!(.data$`STUDENT ID` %in% special_waiting$`STUDENT ID`)) |>
+    anti_join(special_accepted, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
+    anti_join(special_waiting, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
     filter(.data$n_ineligible >= 1) |>
     mutate(`ASSIGNMENT STATUS` = "Ineligible")
 
   special_notprocessed <-
     special_all |>
-    filter(!(.data$`STUDENT ID` %in% special_accepted$`STUDENT ID`)) |>
-    filter(!(.data$`STUDENT ID` %in% special_waiting$`STUDENT ID`)) |>
-    filter(!(.data$`STUDENT ID` %in% special_ineligible$`STUDENT ID`)) |>
+    anti_join(special_accepted, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
+    anti_join(special_waiting, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
+    anti_join(special_ineligible, by = c("CHOICE SCHOOL", "STUDENT ID")) |>
     mutate(`ASSIGNMENT STATUS` = "Not Processed")
 
   match |>
-    filter(!str_detect(.data$`CHOICE SCHOOL`, "Lake Forest|Willow")) |>
+    filter(!str_detect(.data$`CHOICE SCHOOL`, "LakeForest|Willow")) |>
     bind_rows(special_accepted) |>
     bind_rows(special_waiting) |>
     bind_rows(special_ineligible) |>
     bind_rows(special_notprocessed) |>
-    write_csv(glue("{dir_business}/match_detier.csv"), na = "")
+    group_by(.data$`STUDENT ID`) |>
+    arrange(.data$`CHOICE RANK`) |>
+    ungroup()
 }

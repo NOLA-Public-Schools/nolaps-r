@@ -1,6 +1,3 @@
-# Match rates -------------------------------------------------------------
-
-
 #' @export
 matchcalc_seekingnew <- function(x, schools_waitlist, ...) {
   x |>
@@ -110,40 +107,5 @@ matchcalc_results_seekingnew_unassigned <- function(
     mutate(
       rate_k9 = n_seekingnew_unassigned_k9 / n_seekingnew_unassigned,
       rate_3orless = n_seekingnew_unassigned_3orless / n_seekingnew_unassigned
-    )
-}
-
-
-
-# Priority summaries ------------------------------------------------------
-
-
-
-#' @export
-matchcalc_priorityoutcomes <- function(x) {
-  x |>
-    select(
-      id_student, choice_name, is_highdemand,
-      `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`, `ASSIGNMENT PRIORITY`, id_account
-    ) |>
-    mutate(across(`QUALIFIED PRIORITIES`, ~ stringr::str_remove(., "/$"))) |>
-    tidyr::separate_rows(`QUALIFIED PRIORITIES`, sep = "/") |>
-    mutate(has = 1) |>
-    tidyr::pivot_wider(names_from = `QUALIFIED PRIORITIES`, values_from = has) |>
-    select(-`NA`) |>
-    fix_grades() |>
-    arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
-}
-
-
-
-#' @export
-matchcalc_priorityoutcomes_summary <- function(x, ...) {
-  x |>
-    matchcalc_priorityoutcomes() |>
-    group_by(...) |>
-    summarize(
-      n_applicants = n(),
-      across(c(Guaranteed:Ineligible), list(count = ~ sum(.x, na.rm = TRUE), rate = ~ sum(.x, na.rm = TRUE) / n_applicants))
     )
 }

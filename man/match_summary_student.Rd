@@ -2,7 +2,7 @@
 % Please edit documentation in R/match_summary.R
 \name{match_summary_student}
 \alias{match_summary_student}
-\title{Summarize student-level match outcomes}
+\title{Summarize student match outcomes}
 \usage{
 match_summary_student(m, schools_waitlist, ...)
 }
@@ -14,5 +14,5 @@ match_summary_student(m, schools_waitlist, ...)
 \item{...}{additional student-level grouping variables, like grade}
 }
 \description{
-Summarize student-level match outcomes
+Summarize student match outcomes
 }

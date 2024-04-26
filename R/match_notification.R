@@ -1,81 +1,68 @@
-#' @export
-match_notification_waitlists <- function(match, schools_waitlist = c("846", "847", "4012", "4013")) {
-  match %>%
-    filter(!(GRADE %in% grades_ec())) %>%
-    filter(`CHOICE SCHOOL` %in% schools_waitlist) %>%
-    filter(`ASSIGNMENT STATUS` %in% c(
-      "Waiting List",
-      "Waiting List - Family Link Rejection"
-    )) %>%
-    select(`STUDENT ID`, `CHOICE RANK`, waitlist_school = choice_name, waitlist_rank = `WAITLIST RANK`) %>%
-    group_by(`STUDENT ID`) %>%
-    arrange(`CHOICE RANK`) %>%
-    mutate(waitlist_slot = 1:n()) %>%
-    ungroup() %>%
-    select(-`CHOICE RANK`) %>%
-    pivot_wider(
-      names_from = waitlist_slot,
-      values_from = c(waitlist_school, waitlist_rank)
-    )
-}
-
-
+#' Generate upload template for match types
+#'
+#' @param dir_business character
+#' @param match tibble of match records
+#' @param overmatches tibble of siblings assigned over capacity
+#'
 #' @export
 match_notification <- function(dir_business, match, overmatches) {
-  match <- match_detier(dir_business, match)
+  cat("\nGenerating match type categories.\n")
 
-  participants <-
+  contacts <- match |> distinct(.data$`STUDENT ID`, .data$id_contact)
+  match <- match_detier(match)
+
+  p <-
     match |>
-    match_parts_all(schools_waitlist = schools_waitlist(), GRADE)
+    match_parts_all(schools_waitlist = schools_waitlist(), .data$GRADE)
 
   acceptednew <-
-    participants |>
+    p |>
     filter(
-      (`STUDENT ID` %in% matchcalc_acceptnew_hasgtee(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_acceptnew_nogtee(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_accept_belowgtee(participants)$`STUDENT ID`)
+      (.data$`STUDENT ID` %in% matchcalc_acceptnew_hasgtee(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_acceptnew_nogtee(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_accept_belowgtee(p)$`STUDENT ID`)
     ) |>
-    pull(`STUDENT ID`) |>
+    pull(.data$`STUDENT ID`) |>
     # c(pull(overmatches, `STUDENT ID`)) %>%
     unique()
 
   fallback <-
-    participants |>
+    p |>
     filter(
-      (`STUDENT ID` %in% matchcalc_fallback_waiting(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_fallback_full(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_fallback_inelig(participants)$`STUDENT ID`)
+      (.data$`STUDENT ID` %in% matchcalc_fallback_waiting(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_fallback_full(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_fallback_inelig(p)$`STUDENT ID`)
     ) |>
-    pull(`STUDENT ID`)
+    pull(.data$`STUDENT ID`)
 
   unassigned <-
-    participants |>
+    p |>
     filter(
-      (`STUDENT ID` %in% matchcalc_unassign_waiting(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_unassign_full(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_unassign_inelig(participants)$`STUDENT ID`)
+      (.data$`STUDENT ID` %in% matchcalc_unassign_waiting(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_unassign_full(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_unassign_inelig(p)$`STUDENT ID`)
     ) |>
-    pull(`STUDENT ID`)
+    pull(.data$`STUDENT ID`)
 
   guaranteed <-
-    participants |>
+    p |>
     filter(
-      (`STUDENT ID` %in% matchcalc_gtee1_only(participants)$`STUDENT ID`) |
-        (`STUDENT ID` %in% matchcalc_gtee1_haschoices(participants)$`STUDENT ID`)
+      (.data$`STUDENT ID` %in% matchcalc_gtee1_only(p)$`STUDENT ID`) |
+        (.data$`STUDENT ID` %in% matchcalc_gtee1_haschoices(p)$`STUDENT ID`)
     ) |>
-    pull(`STUDENT ID`)
+    pull(.data$`STUDENT ID`)
 
-  participants_aug <-
-    participants %>%
-    mutate(is_waiting = n_waiting > 0) %>%
-    mutate(is_ec = GRADE %in% grades_ec()) %>%
-    mutate(is_acceptednew = `STUDENT ID` %in% acceptednew) %>%
-    mutate(is_fallback = `STUDENT ID` %in% fallback) %>%
-    mutate(is_unassigned = `STUDENT ID` %in% unassigned) %>%
-    mutate(is_guaranteed = `STUDENT ID` %in% guaranteed)
+  p_aug <-
+    p %>%
+    mutate(is_ec = .data$GRADE %in% grades_ec()) %>%
+    mutate(is_waiting = .data$n_waiting > 0) %>%
+    mutate(is_acceptednew = .data$`STUDENT ID` %in% acceptednew) %>%
+    mutate(is_fallback = .data$`STUDENT ID` %in% fallback) %>%
+    mutate(is_unassigned = .data$`STUDENT ID` %in% unassigned) %>%
+    mutate(is_guaranteed = .data$`STUDENT ID` %in% guaranteed)
 
-  participants_matchtype <-
-    participants_aug %>%
+  p_matchtype <-
+    p_aug %>%
     mutate(matchtype = case_when(
 
       is_ec & is_acceptednew & is_waiting ~ "ec_acceptednew_wl",
@@ -93,16 +80,18 @@ match_notification <- function(dir_business, match, overmatches) {
       is_unassigned ~ "k12_unassigned",
       is_guaranteed ~ "k12_guaranteed",
       .default = "other"
-    ))
+    )) |>
+    left_join(matchtypes_salesforce(), by = "matchtype") |>
+    left_join(contacts, by = "STUDENT ID") |>
+    select(
+      "matchtype", "GRADE", "STUDENT ID", "id_contact", "matchtype_salesforce"
+    ) |>
+    arrange(.data$matchtype_salesforce, .data$GRADE, .data$`STUDENT ID`)
 
-  participants_matchtype |>
+  p_matchtype |>
+    # group_by(matchtype_salesforce) |>
+    # slice_sample(n = 3) |>
     write_csv(glue("{dir_business}/participants_matchtype.csv"), na = "")
 
   return(NULL)
-
-  match_notification_salesforce(
-    notifications = notifications,
-    dir_out = dir_out,
-    students_recent = students_recent
-  )
 }

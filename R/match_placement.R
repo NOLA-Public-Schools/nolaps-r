@@ -35,7 +35,5 @@ match_placement <- function(dir_business, match, overmatches) {
       .default = .data$grade_future
     ))
 
-  placements |>
-    slice_sample(n = 30) |>
-    write_csv(glue("{dir_business}/placements.csv"), na = "")
+  placements |> write_csv(glue("{dir_business}/placements.csv"), na = "")
 }

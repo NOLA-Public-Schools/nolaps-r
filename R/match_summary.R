@@ -1,4 +1,4 @@
-#' Summarize student-level match outcomes
+#' Summarize student match outcomes
 #'
 #' @param m tibble of match records
 #'
@@ -30,6 +30,13 @@ match_summary_student <- function(m, schools_waitlist, ...) {
 }
 
 
+#' Summarize program-grade match outcomes
+#'
+#' @param m tibble of match records
+#'
+#' @param schools_waitlist character vector of choice school codes
+#' @param ... additional grouping variables, like program and grade
+#'
 #' @export
 match_summary_program <- function(m, schools_waitlist, ...) {
   m |>

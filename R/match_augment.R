@@ -21,7 +21,8 @@ match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
   choices <-
     choices |>
     select(
-      "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec"
+      "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec",
+      "id_reference_avela"
     )
 
   expulsions <-

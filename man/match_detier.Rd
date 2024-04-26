@@ -4,7 +4,7 @@
 \alias{match_detier}
 \title{Remove tier structure from match choices}
 \usage{
-match_detier(dir_business, match)
+match_detier(match)
 }
 \arguments{
 \item{match}{tibble of match records}

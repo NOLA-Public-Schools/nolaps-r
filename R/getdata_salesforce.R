@@ -11,7 +11,8 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
         Numerical_Rank__c,
         EC_Program_Type__c,
         Has_Eligibility_Requirements__c,
-        Eligibility_Display__c
+        Eligibility_Display__c,
+        Reference_ID__c
 
       from Application_School_Ranking__c
 
@@ -34,7 +35,8 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
       rank = Numerical_Rank__c,
       type_program_ec = EC_Program_Type__c,
       needs_eligibility_k12 = Has_Eligibility_Requirements__c,
-      eligibility_k12 = Eligibility_Display__c
+      eligibility_k12 = Eligibility_Display__c,
+      id_reference_avela = Reference_ID__c
     ) |>
     mutate(across(c(rank), as.numeric)) |>
     mutate(across(c(needs_eligibility_k12), as.logical)) |>
