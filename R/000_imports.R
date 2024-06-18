@@ -2,17 +2,18 @@
 #' @import forcats
 #' @import ggplot2
 #' @import lubridate
-#' @import salesforcer
+#' @import purrr
 #' @import stringr
+#' @import tidyr
 #'
-#' @importFrom glue glue glue_safe
-#' @importFrom ggrepel geom_text_repel
-#' @importFrom purrr set_names walk
-#' @importFrom readr read_csv write_csv
-#' @importFrom sf st_read
-#' @importFrom tidyr replace_na
+#' @import salesforcer
 #'
-#' @importFrom stats complete.cases median
-#' @importFrom utils data
+#' @importFrom ggrepel    geom_label_repel geom_text_repel
+#' @importFrom glue       glue glue_safe
+#' @importFrom readr      read_csv write_csv read_rds write_rds
+#' @importFrom sf         st_read
+#' @importFrom stats      median setNames
+#' @importFrom tidygraph  tbl_graph to_components
+#' @importFrom utils      data
 
 NULL

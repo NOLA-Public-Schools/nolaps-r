@@ -1,29 +1,31 @@
-match_test_sibling <- function(dir_review, match, eps_gradelevel, eps_choice) {
-  cat("\nTest: Sibling\n")
+match_test_military <- function(dir_review, match, eps_gradelevel, eps_choice) {
+  cat("\nTest: Military\n")
 
   offers_priority <-
     eps_gradelevel |>
-    filter(.data$name_ep == "Sibling Priority") |>
+    filter(.data$name_ep == "Military Priority") |>
     select("id_gradelevel")
 
   shouldhave <-
     eps_choice |>
-    filter(.data$name_ep == "Sibling Priority") |>
+    filter(.data$name_ep == "Military Priority") |>
     filter(.data$status == "Approved") |>
     filter(.data$id_gradelevel %in% offers_priority$id_gradelevel) |>
     select("id_appschoolranking")
 
   have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Military child"))
 
-  invalid_sibling <-
+  invalid_military <-
     have |>
     filter(!(.data$id_appschoolranking %in% shouldhave$id_appschoolranking))
 
-  missing_sibling <-
+  missing_military <-
     match |>
-    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
+    filter(
+      !str_detect(.data$`QUALIFIED PRIORITIES`, "Military child")
+    ) |>
     filter(.data$`ELIGIBLE?` == "YES") |>
     filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Priority Score")) |>
     filter(.data$id_appschoolranking %in% shouldhave$id_appschoolranking)
@@ -38,17 +40,17 @@ match_test_sibling <- function(dir_review, match, eps_gradelevel, eps_choice) {
     )
   )
 
-  print(count(distinct(have, .data$`STUDENT ID`, .data$GRADE), .data$GRADE))
+  print(count(have, .data$name_program, .data$GRADE))
 
   test_helper(
-    invalid_sibling,
-    "No student has an invalid sibling priority."
+    invalid_military,
+    "No student has an invalid military priority."
   )
-  write_if_bad(invalid_sibling, dir_review)
+  write_if_bad(invalid_military, dir_review)
 
   test_helper(
-    missing_sibling,
-    "No student has a missing sibling priority."
+    missing_military,
+    "No student has a missing military priority."
   )
-  write_if_bad(missing_sibling, dir_review)
+  write_if_bad(missing_military, dir_review)
 }

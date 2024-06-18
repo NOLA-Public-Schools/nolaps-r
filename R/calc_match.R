@@ -1,538 +1,153 @@
+#' @param x tibble of match records
+#' @param schools_waitlist character vector of choice school codes
+#'
+#' @param ... grouping variables present in data
+#'
 #' @export
-matchcalcs_participants <- function(x, ...) {
-  x %>% dplyr::distinct(`STUDENT ID`, GRADE, ...)
-}
-
-
-
-#' @export
-matchcalcs_participants_accepted <- function(x, ...) {
-  x %>%
-    dplyr::filter(`ASSIGNMENT STATUS` == "Accepted") %>%
-    dplyr::select(`STUDENT ID`, rank_accepted = `CHOICE RANK`, school_assigned = `CHOICE SCHOOL`, ...)
-}
-
-
-
-#' @export
-matchcalcs_participants_guaranteed <- function(x, ...) {
-  x %>%
-    dplyr::filter(`GUARANTEED?` == "YES") %>%
-    dplyr::select(`STUDENT ID`, rank_guaranteed = `CHOICE RANK`, school_guaranteed = `CHOICE SCHOOL`, ...)
-}
-
-
-
-#' @export
-matchcalcs_participants_n_choices <- function(x, ...) {
-  x %>% dplyr::count(`STUDENT ID`, ..., name = "n_choices")
-}
-
-
-
-#' @export
-matchcalcs_participants_n_eligibleprocessed <- function(x, ...) {
-  x %>%
-    dplyr::filter(
-      `ASSIGNMENT STATUS` != "Ineligible",
-      `ASSIGNMENT STATUS` != "Not Processed"
-    ) %>%
-    dplyr::count(`STUDENT ID`, ..., name = "n_eligibleprocessed")
-}
-
-
-
-#' @export
-matchcalcs_participants_n_ineligible <- function(x, ...) {
-  x %>%
-    dplyr::filter(`ASSIGNMENT STATUS` == "Ineligible") %>%
-    dplyr::count(`STUDENT ID`, ..., name = "n_ineligible")
-}
-
-
-
-#' @export
-matchcalcs_participants_n_full <- function(x, schools_waitlist, ...) {
-  x %>%
-    dplyr::filter(`ASSIGNMENT STATUS` %in% c(
-      "Waiting List",
-      "Waiting List - Family Link Rejection"
-    )) %>%
-    dplyr::filter(!(GRADE %in% c("INF", "1YR", "2YR", "PK3", "PK4"))) %>%
-    dplyr::filter(!(`CHOICE SCHOOL` %in% schools_waitlist)) %>%
-    dplyr::count(`STUDENT ID`, ..., name = "n_full")
-}
-
-
-
-#' @export
-matchcalcs_participants_n_waiting <- function(x, schools_waitlist, ...) {
-  x %>%
-    dplyr::filter(`ASSIGNMENT STATUS` %in% c(
-      "Waiting List",
-      "Waiting List - Family Link Rejection"
-    )) %>%
-    dplyr::filter(
-      GRADE %in% c("INF", "1YR", "2YR", "PK3", "PK4") |
-        `CHOICE SCHOOL` %in% schools_waitlist
-    ) %>%
-    dplyr::count(`STUDENT ID`, ..., name = "n_waiting")
-}
-
-
-
-#' @export
-matchcalcs_participants_sibling <- function(x, ...) {
-  x %>%
-    dplyr::filter(stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling")) %>%
-    dplyr::distinct(`STUDENT ID`, ...)
-}
-
-
-
-#' @export
-matchcalcs_participants_all <- function(x, schools_waitlist, ...) {
-  x %>%
-    matchcalcs_participants(...) %>%
-    dplyr::left_join(matchcalcs_participants_n_choices(x, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_accepted(x, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_guaranteed(x, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_n_waiting(x, schools_waitlist, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_n_full(x, schools_waitlist, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_n_ineligible(x, ...)) %>%
-    dplyr::left_join(matchcalcs_participants_n_eligibleprocessed(x, ...)) %>%
-    replace_na(list(
-      n_waiting = 0,
-      n_full = 0,
-      n_ineligible = 0,
-      n_eligibleprocessed = 0
-    ))
-}
-
-
-
-# Match scenarios ---------------------------------------------------------
-
-
-
-#' @export
-matchcalcs_guarantee1_only <- function(x) {
-  x %>%
-    dplyr::filter(
-      rank_accepted == 1,
-      rank_guaranteed == 1,
-      n_choices == 1
-    )
-}
-
-
-
-#' @export
-matchcalcs_guarantee1_haschoices <- function(x) {
-  x %>%
-    dplyr::filter(
-      rank_accepted == 1,
-      rank_guaranteed == 1,
-      n_choices > 1
-    )
-}
-
-
-
-#' @export
-matchcalcs_accepted_belowguarantee <- function(x) {
-  x %>%
-    dplyr::filter(
-      !is.na(rank_accepted),
-      !is.na(rank_guaranteed),
-      rank_accepted > rank_guaranteed
-    )
-}
-
-
-
-#' @export
-matchcalcs_acceptednew_hasguarantee <- function(x) {
-  x %>%
-    dplyr::filter(
-      !is.na(rank_accepted),
-      !is.na(rank_guaranteed),
-      rank_accepted < rank_guaranteed
-    )
-}
-
-
-
-#' @export
-matchcalcs_acceptednew_noguarantee <- function(x) {
-  x %>%
-    dplyr::filter(
-      !is.na(rank_accepted),
-      is.na(rank_guaranteed)
-    )
-}
-
-
-
-#' @export
-matchcalcs_fallback_waiting <- function(x) {
-  x %>%
-    dplyr::filter(
-      n_choices > 1,
-      rank_accepted > 1,
-      rank_accepted == rank_guaranteed,
-      n_waiting > 0
-    )
-}
-
-
-
-#' @export
-matchcalcs_fallback_full <- function(x) {
-  x %>%
-    dplyr::filter(
-      n_choices > 1,
-      rank_accepted > 1,
-      rank_accepted == rank_guaranteed,
-      n_waiting == 0,
-      n_full > 0
-    )
-}
-
-
-
-#' @export
-matchcalcs_fallback_ineligible <- function(x) {
-  x %>%
-    dplyr::filter(
-      n_choices > 1,
-      rank_accepted > 1,
-      rank_accepted == rank_guaranteed,
-      n_waiting == 0,
-      n_full == 0,
-      n_ineligible > 0
-    )
-}
-
-
-
-#' @export
-matchcalcs_unassigned_waiting <- function(x) {
-  x %>%
-    dplyr::filter(
-      is.na(rank_accepted),
-      n_waiting > 0
-    )
-}
-
-
-
-#' @export
-matchcalcs_unassigned_full <- function(x) {
-  x %>%
-    dplyr::filter(
-      is.na(rank_accepted),
-      n_waiting == 0,
-      n_full > 0
-    )
-}
-
-
-
-#' @export
-matchcalcs_unassigned_ineligible <- function(x) {
-  x %>%
-    dplyr::filter(
-      is.na(rank_accepted),
-      n_waiting == 0,
-      n_full == 0,
-      n_ineligible == n_choices
-    )
-}
-
-
-
-# Summary stats -----------------------------------------------------------
-
-
-
-#' @export
-matchcalcs_summarystats <- function(x, ...) {
-  dplyr::count(matchcalcs_guarantee1_only(x), ..., name = "n_guarantee1_only") %>%
-    dplyr::full_join(dplyr::count(matchcalcs_guarantee1_haschoices(x), ..., name = "n_guarantee1_haschoices")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_accepted_belowguarantee(x), ..., name = "n_accepted_belowguarantee")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_acceptednew_hasguarantee(x), ..., name = "n_acceptednew_hasguarantee")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_acceptednew_noguarantee(x), ..., name = "n_acceptednew_noguarantee")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_fallback_waiting(x), ..., name = "n_fallback_waiting")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_fallback_full(x), ..., name = "n_fallback_full")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_fallback_ineligible(x), ..., name = "n_fallback_ineligible")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_unassigned_waiting(x), ..., name = "n_unassigned_waiting")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_unassigned_full(x), ..., name = "n_unassigned_full")) %>%
-    dplyr::full_join(dplyr::count(matchcalcs_unassigned_ineligible(x), ..., name = "n_unassigned_ineligible")) %>%
-    dplyr::mutate(dplyr::across(c(n_guarantee1_only:n_unassigned_ineligible), ~ tidyr::replace_na(., 0)))
-}
-
-
-
-#' @export
-matchcalcs_summarycols <- function(x) {
-  x %>%
-    dplyr::mutate(
-      assigned = n_acceptednew_hasguarantee + n_acceptednew_noguarantee,
-      fallback_not_ineligible = n_fallback_waiting + n_fallback_full,
-      unassigned = n_unassigned_waiting + n_unassigned_full + n_unassigned_ineligible,
-      subtotal = assigned + fallback_not_ineligible + unassigned,
-      prop_assigned = assigned / subtotal,
-      prop_fallback_not_ineligible = fallback_not_ineligible / subtotal,
-      prop_unassigned = unassigned / subtotal
-    ) %>%
-    dplyr::select(
-      GRADE,
-      assigned,
-      fallback_not_ineligible,
-      unassigned,
-      subtotal,
-      prop_assigned,
-      prop_fallback_not_ineligible,
-      prop_unassigned,
-      everything()
-    )
-}
-
-
-
-#' @export
-matchcalcs_summaryrow <- function(x, row_name) {
-  x %>%
-    dplyr::select(n_guarantee1_only:n_unassigned_ineligible) %>%
-    colSums() %>%
-    dplyr::bind_rows() %>%
-    dplyr::mutate(GRADE = row_name) %>%
-    matchcalcs_summarycols()
-}
-
-
-
-#' @export
-matchcalcs_summarystats_full <- function(x, schools_waitlist = c("846", "847", "4012", "4013")) {
-  with_bin_grade <-
-    x %>%
-    matchcalcs_participants_all(schools_waitlist) %>%
-    matchcalcs_summarystats(GRADE) %>%
-    fix_grades() %>%
-    dplyr::arrange(GRADE) %>%
-    dplyr::mutate(
-      is_inf_2yr = GRADE %in% c("INF", "1YR", "2YR"),
-      is_pk3_pk4 = GRADE %in% c("PK3", "PK4"),
-      is_k_8 = GRADE %in% c("K", "1", "2", "3", "4", "5", "6", "7", "8"),
-      is_9_12 = GRADE %in% c("9", "10", "11", "12"),
-      is_k_12 = GRADE %in% c("K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"),
-      is_pk4_12 = GRADE %in% c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
-    )
-
-  summary_inf_2yr <-
-    with_bin_grade %>%
-    dplyr::filter(is_inf_2yr) %>%
-    matchcalcs_summaryrow("Grades INF - 2YR")
-
-  summary_pk3_pk4 <-
-    with_bin_grade %>%
-    dplyr::filter(is_pk3_pk4) %>%
-    matchcalcs_summaryrow("Grades PK3 - PK4")
-
-  summary_k_8 <-
-    with_bin_grade %>%
-    dplyr::filter(is_k_8) %>%
-    matchcalcs_summaryrow("Grades K - 8")
-
-  summary_9_12 <-
-    with_bin_grade %>%
-    dplyr::filter(is_9_12) %>%
-    matchcalcs_summaryrow("Grades 9 - 12")
-
-  summary_k_12 <-
-    with_bin_grade %>%
-    dplyr::filter(is_k_12) %>%
-    matchcalcs_summaryrow("Grades K - 12")
-
-  summary_pk4_12 <-
-    with_bin_grade %>%
-    dplyr::filter(is_pk4_12) %>%
-    matchcalcs_summaryrow("Grades PK4 - 12")
-
-  summary_inf_12 <-
-    with_bin_grade %>%
-    matchcalcs_summaryrow("Grades INF - 12")
-
-  summary_all <-
-    with_bin_grade %>%
-    dplyr::select(GRADE:n_unassigned_ineligible) %>%
-    matchcalcs_summarycols()
-
-  summarystats <-
-    dplyr::bind_rows(
-      summary_all,
-      summary_inf_2yr,
-      summary_pk3_pk4,
-      summary_k_8,
-      summary_9_12,
-      summary_k_12,
-      summary_pk4_12,
-      summary_inf_12
-    )
-
-  summarystats
-}
-
-
-
-# Match rates -------------------------------------------------------------
-
-
-
-#' @export
-matchcalcs_seekingnew <- function(x, schools_waitlist, ...) {
-  x %>%
-    matchcalcs_participants_all(schools_waitlist, ...) %>%
-    dplyr::filter(is.na(rank_guaranteed) | rank_guaranteed != 1)
-}
-
-
-
-#' @export
-matchcalcs_results_seekingnew <- function(
-    x,
-    schools_waitlist,
-    ...,
-    exclude_ineligible = TRUE,
-    exclude_notprocessed = TRUE) {
-  if (exclude_ineligible == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible")
-  }
-
-  if (exclude_notprocessed == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Not Processed")
-  }
-
-  x %>%
-    dplyr::semi_join(matchcalcs_seekingnew(x, schools_waitlist, ...)) %>%
-    dplyr::group_by(...) %>%
-    dplyr::summarize(
-      n_seekingnew = length(unique(`STUDENT ID`)),
-      n_seekingnew_rank1 = sum(`CHOICE RANK` == 1),
-      n_seekingnew_acceptednew =
-        sum(`ASSIGNMENT STATUS` == "Accepted" & is.na(`GUARANTEED?`)),
-      n_seekingnew_acceptednew_top3 =
-        sum(`ASSIGNMENT STATUS` == "Accepted" & is.na(`GUARANTEED?`) & `CHOICE RANK` %in% 1:3),
-      n_seekingnew_acceptednew_top1 =
-        sum(`ASSIGNMENT STATUS` == "Accepted" & is.na(`GUARANTEED?`) & `CHOICE RANK` == 1),
+matchcalc_results_seekingnew <- function(x, schools_waitlist, ...) {
+  p <- match_parts_all(x, schools_waitlist, ...)
+
+  seekingnew <- match_parts_seekingnew(x, schools_waitlist, ...)
+  fallback_inelig <- matchcalc_fallback_inelig(p)
+  unassign_inelig <- matchcalc_unassign_inelig(p)
+
+  x |>
+    filter((.data$`STUDENT ID` %in% seekingnew$`STUDENT ID`)) |>
+    filter(!(.data$`STUDENT ID` %in% fallback_inelig$`STUDENT ID`)) |>
+    filter(!(.data$`STUDENT ID` %in% unassign_inelig$`STUDENT ID`)) |>
+    filter(.data$`ASSIGNMENT STATUS` != "Ineligible") |>
+    filter(.data$`ASSIGNMENT STATUS` != "Not Processed") |>
+    mutate(
+      is_accepted = .data$`ASSIGNMENT STATUS` == "Accepted",
+      is_guaranteed = !is.na(.data$`GUARANTEED?`)
+    ) |>
+    group_by(...) |>
+    summarize(
+      n_seekingnew = length(unique(.data$`STUDENT ID`)),
+      n_seekingnew_accept =
+        sum(.data$is_accepted & !.data$is_guaranteed),
+      n_seekingnew_accept_top3 =
+        sum(.data$is_accepted & !.data$is_guaranteed & .data$`CHOICE RANK` %in% 1:3),
+      n_seekingnew_accept_top1 =
+        sum(.data$is_accepted & !.data$is_guaranteed & .data$`CHOICE RANK` == 1),
       n_seekingnew_fallback =
-        sum(`ASSIGNMENT STATUS` == "Accepted" & !is.na(`GUARANTEED?`)),
-      n_seekingnew_unassigned = n_seekingnew - n_seekingnew_acceptednew - n_seekingnew_fallback,
-      n_records_waiting = sum(stringr::str_detect(`ASSIGNMENT STATUS`, "Waiting"))
-    ) %>%
-    dplyr::mutate(
-      rate_acceptednew = n_seekingnew_acceptednew / n_seekingnew,
-      rate_acceptednew_top3 = n_seekingnew_acceptednew_top3 / n_seekingnew,
-      rate_acceptednew_top1 = n_seekingnew_acceptednew_top1 / n_seekingnew,
-      rate_fallback = n_seekingnew_fallback / n_seekingnew,
-      rate_unassigned = n_seekingnew_unassigned / n_seekingnew
+        sum(.data$is_accepted & .data$is_guaranteed),
+      n_seekingnew_unassigned =
+        .data$n_seekingnew - .data$n_seekingnew_accept - .data$n_seekingnew_fallback
+    ) |>
+    mutate(
+      rate_accept = .data$n_seekingnew_accept / .data$n_seekingnew,
+      rate_accept_top3 = .data$n_seekingnew_accept_top3 / .data$n_seekingnew,
+      rate_accept_top1 = .data$n_seekingnew_accept_top1 / .data$n_seekingnew,
+      rate_fallback = .data$n_seekingnew_fallback / .data$n_seekingnew,
+      rate_unassigned = .data$n_seekingnew_unassigned / .data$n_seekingnew
     )
 }
 
 
-
+#' Summarize match outcomes by program
+#'
+#' @param m tibble of match records
+#' @param schools_waitlist character vector of choice school codes
+#'
+#' @param ... grouping variables present in data
+#'
 #' @export
-matchcalcs_results_seekingnew_sibling <- function(
-    x,
-    schools_waitlist,
-    ...,
-    exclude_ineligible = TRUE,
-    exclude_notprocessed = TRUE) {
-  if (exclude_ineligible == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible")
-  }
-
-  if (exclude_notprocessed == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Not Processed")
-  }
-
-  x %>%
-    dplyr::semi_join(matchcalcs_seekingnew(x, schools_waitlist, ...)) %>%
-    dplyr::semi_join(matchcalcs_participants_sibling(x, ...)) %>%
-    dplyr::group_by(...) %>%
-    dplyr::summarize(
-      n_seekingnew = length(unique(`STUDENT ID`)),
-      n_seekingnew_acceptednew_sibling =
-        sum(`ASSIGNMENT STATUS` == "Accepted" & stringr::str_detect(`QUALIFIED PRIORITIES`, "Sibling"), na.rm = TRUE)
-    ) %>%
-    dplyr::mutate(
-      rate_acceptednew_sibling = n_seekingnew_acceptednew_sibling / n_seekingnew
+match_calc_program_all <- function(m, schools_waitlist, ...) {
+  m |>
+    mutate(
+      is_eligproc = !(.data$`ASSIGNMENT STATUS` %in% c(
+        "Ineligible", "Not Processed"
+      )),
+      is_gtee = !is.na(.data$`GUARANTEED?`),
+      is_seeknew = !.data$is_gtee,
+      is_accept = .data$`ASSIGNMENT STATUS` == "Accepted",
+      is_acceptgtee = .data$is_accept & .data$is_gtee,
+      is_acceptnew = .data$is_accept & .data$is_seeknew,
+      is_top1 = .data$`CHOICE RANK` == 1,
+      is_top3 = .data$`CHOICE RANK` %in% 1:3
+    ) |>
+    group_by(...) |>
+    summarize(
+      n_choices = n(),
+      n_gtee = sum(.data$is_gtee),
+      n_seeknew = sum(.data$is_seeknew),
+      n_seeknew_top3 = sum(.data$is_seeknew & .data$is_top3),
+      n_seeknew_top1 = sum(.data$is_seeknew & .data$is_top1),
+      n_choices_eligproc = sum(.data$is_eligproc),
+      n_seeknew_eligproc = sum(.data$is_eligproc & .data$is_seeknew),
+      n_seeknew_top3_eligproc = sum(
+        .data$is_eligproc & .data$is_seeknew & .data$is_top3
+      ),
+      n_seeknew_top1_eligproc = sum(
+        .data$is_eligproc & .data$is_seeknew & .data$is_top1
+      ),
+      n_accept = sum(.data$is_accept),
+      n_rollforward = sum(.data$is_acceptgtee & .data$is_top1),
+      n_fallback = sum(.data$is_acceptgtee & !.data$is_top1),
+      n_acceptnew = sum(.data$is_acceptnew),
+      n_acceptnew_top3 = sum(.data$is_acceptnew & .data$is_top3),
+      n_acceptnew_top1 = sum(.data$is_acceptnew & .data$is_top1)
+    ) |>
+    mutate(
+      rate_acceptnew = .data$n_acceptnew / .data$n_seeknew_eligproc,
+      rate_acceptnew_top3 = .data$n_acceptnew_top3 / .data$n_seeknew_eligproc,
+      rate_acceptnew_top1 = .data$n_acceptnew_top1 / .data$n_seeknew_eligproc
     )
 }
 
 
-
+#' @param x tibble of match records
+#' @param schools_waitlist character vector of choice school codes
+#'
+#' @param ... grouping variables present in data
+#'
 #' @export
-matchcalcs_results_seekingnew_unassigned <- function(
-    x,
-    schools_waitlist,
-    ...,
-    exclude_ineligible = TRUE,
-    exclude_notprocessed = TRUE) {
-  if (exclude_ineligible == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Ineligible")
-  }
+matchcalc_results_seekingnew_sibling <- function(x, schools_waitlist, ...) {
+  p <- match_parts_all(x, schools_waitlist, ...)
 
-  if (exclude_notprocessed == TRUE) {
-    x <- x %>% dplyr::filter(`ASSIGNMENT STATUS` != "Not Processed")
-  }
+  seekingnew <- match_parts_seekingnew(x, schools_waitlist, ...)
+  fallback_inelig <- matchcalc_fallback_inelig(p)
+  unassign_inelig <- matchcalc_unassign_inelig(p)
 
-  matchcalcs_seekingnew(x, schools_waitlist, ...) %>%
-    dplyr::filter(is.na(rank_accepted)) %>%
-    dplyr::group_by(...) %>%
-    dplyr::summarize(
-      n_seekingnew_unassigned = dplyr::n(),
+  x |>
+    filter((`STUDENT ID` %in% seekingnew$`STUDENT ID`)) |>
+    filter(!(`STUDENT ID` %in% fallback_inelig$`STUDENT ID`)) |>
+    filter(!(`STUDENT ID` %in% unassign_inelig$`STUDENT ID`)) |>
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
+    filter(`ASSIGNMENT STATUS` != "Ineligible") |>
+    filter(`ASSIGNMENT STATUS` != "Not Processed") |>
+    group_by(`STUDENT ID`) |>
+    summarize(is_acceptednew_sibling = "Accepted" %in% `ASSIGNMENT STATUS`) |>
+    summarize(rate_acceptednew_sibling = mean(is_acceptednew_sibling))
+}
+
+
+#' @param x tibble of match records
+#' @param schools_waitlist character vector of choice school codes
+#'
+#' @param ... grouping variables present in data
+#'
+#' @export
+matchcalc_results_seekingnew_unassigned <- function(x, schools_waitlist, ...) {
+  p <- match_parts_all(x, schools_waitlist, ...)
+
+  seekingnew <- match_parts_seekingnew(x, schools_waitlist, ...)
+  fallback_inelig <- matchcalc_fallback_inelig(p)
+  unassign_inelig <- matchcalc_unassign_inelig(p)
+
+  seekingnew |>
+    filter(!(`STUDENT ID` %in% fallback_inelig$`STUDENT ID`)) |>
+    filter(!(`STUDENT ID` %in% unassign_inelig$`STUDENT ID`)) |>
+    filter(is.na(rank_accepted)) |>
+    group_by(...) |>
+    summarize(
+      n_seekingnew_unassigned = n(),
       n_seekingnew_unassigned_k9 = sum(GRADE %in% c("K", "9")),
       n_seekingnew_unassigned_3orless = sum(n_choices <= 3),
-    ) %>%
-    dplyr::mutate(
+    ) |>
+    mutate(
       rate_k9 = n_seekingnew_unassigned_k9 / n_seekingnew_unassigned,
       rate_3orless = n_seekingnew_unassigned_3orless / n_seekingnew_unassigned
-    )
-}
-
-
-
-# Priority summaries ------------------------------------------------------
-
-
-
-#' @export
-matchcalcs_priorityoutcomes <- function(x) {
-  x %>%
-    dplyr::select(
-      id_student, choice_name, is_highdemand,
-      `CHOICE SCHOOL`, GRADE, `STUDENT ID`, `QUALIFIED PRIORITIES`, `ASSIGNMENT PRIORITY`, id_account
-    ) %>%
-    dplyr::mutate(dplyr::across(`QUALIFIED PRIORITIES`, ~ stringr::str_remove(., "/$"))) %>%
-    tidyr::separate_rows(`QUALIFIED PRIORITIES`, sep = "/") %>%
-    dplyr::mutate(has = 1) %>%
-    tidyr::pivot_wider(names_from = `QUALIFIED PRIORITIES`, values_from = has) %>%
-    dplyr::select(-`NA`) %>%
-    fix_grades() %>%
-    dplyr::arrange(choice_name, `CHOICE SCHOOL`, GRADE, `STUDENT ID`)
-}
-
-
-
-#' @export
-matchcalcs_priorityoutcomes_summary <- function(x, ...) {
-  x %>%
-    matchcalcs_priorityoutcomes() %>%
-    dplyr::group_by(...) %>%
-    dplyr::summarize(
-      n_applicants = dplyr::n(),
-      dplyr::across(c(Guaranteed:Ineligible), list(count = ~ sum(.x, na.rm = TRUE), rate = ~ sum(.x, na.rm = TRUE) / n_applicants))
     )
 }

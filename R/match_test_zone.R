@@ -1,29 +1,29 @@
-match_test_sibling <- function(dir_review, match, eps_gradelevel, eps_choice) {
-  cat("\nTest: Sibling\n")
+match_test_zone <- function(dir_review, match, eps_gradelevel, eps_choice) {
+  cat("\nTest: Zone\n")
 
   offers_priority <-
     eps_gradelevel |>
-    filter(.data$name_ep == "Sibling Priority") |>
+    filter(.data$name_ep == "Zone Priority") |>
     select("id_gradelevel")
 
   shouldhave <-
     eps_choice |>
-    filter(.data$name_ep == "Sibling Priority") |>
+    filter(.data$name_ep == "Zone Priority") |>
     filter(.data$status == "Approved") |>
     filter(.data$id_gradelevel %in% offers_priority$id_gradelevel) |>
     select("id_appschoolranking")
 
   have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Geography"))
 
-  invalid_sibling <-
+  invalid_zone <-
     have |>
     filter(!(.data$id_appschoolranking %in% shouldhave$id_appschoolranking))
 
-  missing_sibling <-
+  missing_zone <-
     match |>
-    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Geography")) |>
     filter(.data$`ELIGIBLE?` == "YES") |>
     filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Priority Score")) |>
     filter(.data$id_appschoolranking %in% shouldhave$id_appschoolranking)
@@ -41,14 +41,14 @@ match_test_sibling <- function(dir_review, match, eps_gradelevel, eps_choice) {
   print(count(distinct(have, .data$`STUDENT ID`, .data$GRADE), .data$GRADE))
 
   test_helper(
-    invalid_sibling,
-    "No student has an invalid sibling priority."
+    invalid_zone,
+    "No student has an invalid zone priority."
   )
-  write_if_bad(invalid_sibling, dir_review)
+  write_if_bad(invalid_zone, dir_review)
 
   test_helper(
-    missing_sibling,
-    "No student has a missing sibling priority."
+    missing_zone,
+    "No student has a missing zone priority."
   )
-  write_if_bad(missing_sibling, dir_review)
+  write_if_bad(missing_zone, dir_review)
 }
