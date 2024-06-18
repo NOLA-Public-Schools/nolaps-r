@@ -1,52 +1,4 @@
 #' @export
-getdata_appschoolranking <- function(date_start = date_appstart()) {
-  sf_query(
-    glue_safe(
-      "
-      select
-        Application__r.ContactId,
-        Application__c,
-        Id,
-        Grade_Level__c,
-        Numerical_Rank__c,
-        EC_Program_Type__c,
-        Has_Eligibility_Requirements__c,
-        Eligibility_Display__c,
-        Reference_ID__c
-
-      from Application_School_Ranking__c
-
-      where
-        Application__r.Academic_Term__r.Name = '2024-2025'
-        and Application__r.CreatedDate >= {date_start}
-        and Application__r.Status = 'Submitted'
-        and Numerical_Rank__c > 0
-        and Grade_Level__r.Grade__c != null
-      "
-    ),
-    api_type = "Bulk 2.0",
-    guess_types = FALSE
-  ) |>
-    select(
-      id_contact = Application__r.ContactId,
-      id_app = Application__c,
-      id_appschoolranking = Id,
-      id_gradelevel = Grade_Level__c,
-      rank = Numerical_Rank__c,
-      type_program_ec = EC_Program_Type__c,
-      needs_eligibility_k12 = Has_Eligibility_Requirements__c,
-      eligibility_k12 = Eligibility_Display__c,
-      id_reference_avela = Reference_ID__c
-    ) |>
-    mutate(across(c(rank), as.numeric)) |>
-    mutate(across(c(needs_eligibility_k12), as.logical)) |>
-    group_by(id_app) |>
-    arrange(rank) |>
-    ungroup()
-}
-
-
-#' @export
 getdata_ate_active <- function() {
   sf_query(
     glue(
@@ -163,7 +115,9 @@ getdata_contact_active <- function() {
 
       from AcademicTermEnrollment
 
-      where Active__c = true
+      where
+        Active__c = true
+        and AcademicTerm.Name = '2023-2024'
       "
     ),
     api_type = "Bulk 2.0",

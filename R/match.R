@@ -140,34 +140,32 @@ match_process <- function(
       na = ""
     )
 
-  match_test(
-    dir_review = dir_review,
-    match = match,
-    gradelevels = gradelevels,
-    contactsmatch = contactsmatch,
-    choices = choices,
-    eps_gradelevel = eps_gradelevel,
-    eps_choice = eps_choice
-  )
+  # match_test(
+  #   dir_review = dir_review,
+  #   match = match,
+  #   gradelevels = gradelevels,
+  #   contactsmatch = contactsmatch,
+  #   choices = choices,
+  #   eps_gradelevel = eps_gradelevel,
+  #   eps_choice = eps_choice
+  # )
+  #
+  # match_placement(
+  #   dir_business,
+  #   match,
+  #   overmatches = NULL
+  # )
+  #
+  # match_notification(
+  #   dir_business,
+  #   match,
+  #   overmatches = NULL
+  # )
 
-  match_placement(
-    dir_business,
+  match_briefing(
     match,
-    overmatches = NULL
-  )
-
-  match_notification(
-    dir_business,
-    match,
-    overmatches = NULL
+    dir_business
   )
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
-
-  return(NULL)
-
-  match_briefing(
-    match = match,
-    dir_out = dir_business
-  )
 }

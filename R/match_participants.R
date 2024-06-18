@@ -71,13 +71,6 @@ match_parts_n_waiting <- function(x, schools_waitlist) {
 }
 
 
-match_parts_sibling <- function(x) {
-  x |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
-    distinct(.data$`STUDENT ID`)
-}
-
-
 match_parts_all <- function(x, schools_waitlist, ...) {
   x |>
     match_parts(...) |>
@@ -108,4 +101,18 @@ match_parts_all <- function(x, schools_waitlist, ...) {
       n_ineligible = 0,
       n_eligibleprocd = 0
     ))
+}
+
+
+match_parts_seekingnew <- function(x, schools_waitlist, ...) {
+  x |>
+    match_parts_all(schools_waitlist, ...) |>
+    filter(is.na(rank_guaranteed) | rank_guaranteed != 1)
+}
+
+
+match_parts_sibling <- function(x) {
+  x |>
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Sibling")) |>
+    distinct(.data$`STUDENT ID`)
 }
