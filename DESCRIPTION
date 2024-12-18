@@ -7,7 +7,7 @@ Authors@R: c(
       email = "sprimeaux@nolapublicschools.com", 
       role = "aut"),
   person("Ashley", "Bowen",
-    email = "asbowen@nolapublicschools.com", 
+    email = "asbowen@nolapublicschools.com",
     role = c("aut", "cre")
     ))
 Description: Commonly used functionality and data wrappers for the 

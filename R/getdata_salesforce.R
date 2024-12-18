@@ -425,6 +425,7 @@ getdata_program <- function() {
       from School_Program__c
       "
     ),
+    api_type = "REST",
     guess_types = FALSE
   ) |>
     select(
