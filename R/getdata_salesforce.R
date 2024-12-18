@@ -421,7 +421,7 @@ getdata_program <- function() {
         Name,
         Application_Code__c,
         Program_Name__c,
-        Site_Code_c
+        Site_Code__c
       from School_Program__c
       "
     ),
