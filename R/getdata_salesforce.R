@@ -419,7 +419,9 @@ getdata_program <- function() {
         School__r.Name,
         Id,
         Name,
-        Application_Code__c
+        Application_Code__c,
+        Program_Name__c,
+        Site_Code_c
       from School_Program__c
       "
     ),
@@ -431,5 +433,7 @@ getdata_program <- function() {
       id_program = Id,
       name_program = Name,
       code_appschool = Application_Code__c,
+      name_program_test = Program_Name__c,
+      code_site = Site_Code__c
     )
 }

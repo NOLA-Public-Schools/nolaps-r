@@ -1,9 +1,15 @@
 Package: nolaps
 Type: Package
 Title: Provides Tools and Data for NOLA Public Schools
-Version: 0.1.0
-Authors@R: person("Steven", "Primeaux",
-    email = "sprimeaux@nolapublicschools.com", role = c("aut", "cre"))
+Version: 1.2.0
+Authors@R: c(
+  person("Steven", "Primeaux",
+      email = "sprimeaux@nolapublicschools.com", 
+      role = "aut"),
+  person("Ashley", "Bowen",
+    email = "asbowen@nolapublicschools.com", 
+    role = c("aut", "cre")
+    ))
 Description: Commonly used functionality and data wrappers for the 
     Orleans Parish School Board, a school district in 
     New Orleans, Louisiana. Data wrappers include calls to the Salesforce API, 
