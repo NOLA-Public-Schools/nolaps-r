@@ -117,7 +117,7 @@ getdata_contact_active <- function() {
 
       where
         Active__c = true
-        and AcademicTerm.Name = '2023-2024'
+        and AcademicTerm.Name = '2024-2025'
       "
     ),
     api_type = "Bulk 2.0",
@@ -168,9 +168,9 @@ getdata_contact_app <- function(date_start = date_appstart()) {
       from IndividualApplication
 
       where
-        Academic_Term__r.Name = '2024-2025'
+        Academic_Term__r.Name = '2025-2026'
         and CreatedDate >= {date_start}
-        and Status = 'Submitted'
+        and InternalStatus = 'Submitted'
         and Sum_of_Rank_Values__c > 0
       "
     ),

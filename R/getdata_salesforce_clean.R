@@ -22,7 +22,7 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
       where
         Application__r.Academic_Term__r.Name = '2025-2026'
         and Application__r.CreatedDate >= {date_start}
-        and Application__r.Status = 'Submitted'
+        and Application__r.InternalStatus = 'Submitted'
         and Numerical_Rank__c > 0
         and Grade_Level__r.Grade__c != null
       "
@@ -78,7 +78,7 @@ getdata_ep_choice <- function(
 where
 Application_School_Ranking__r.Application__r.Academic_Term__r.Name = '{term}'
 and Application_School_Ranking__r.Application__r.CreatedDate >= {date_start}
-and Application_School_Ranking__r.Application__r.Status = 'Submitted'
+and Application_School_Ranking__r.Application__r.InternalStatus = 'Submitted'
 and Application_School_Ranking__r.Numerical_Rank__c > 0"
   )
 
@@ -147,7 +147,7 @@ where
 Re_Apply_Status__c != null and
 ((Academic_Term_Enrollment__r.Grade_Level__r.School_Program__c != null and
 Re_Apply_Status__c = 'Re-Entry Prohibited') or
-(End_Date__c >= 2024-07-01))"
+(End_Date__c >= 2025-07-01))"
   )
 
   template_query(
