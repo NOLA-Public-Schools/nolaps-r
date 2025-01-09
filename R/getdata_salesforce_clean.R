@@ -20,7 +20,7 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
       from Application_School_Ranking__c
 
       where
-        Application__r.Academic_Term__r.Name = '2024-2025'
+        Application__r.Academic_Term__r.Name = '2025-2026'
         and Application__r.CreatedDate >= {date_start}
         and Application__r.Status = 'Submitted'
         and Numerical_Rank__c > 0

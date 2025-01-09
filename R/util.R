@@ -1,30 +1,30 @@
 #' @export
 date_appstart <- function() {
-  "2023-11-01T00:00:00Z"
+  "2024-11-01T00:00:00Z"
 }
 
 
 #' @export
 date_appstart_3year <- function() {
-  "2021-11-01T00:00:00Z"
+  "2022-11-01T00:00:00Z"
 }
 
 
 #' @export
 date_currentyear <- function() {
-  "2023-2024"
+  "2024-2025"
 }
 
 
 #' @export
 term_current <- function() {
-  "2023-2024"
+  "2024-2025"
 }
 
 
 #' @export
 term_next <- function() {
-  "2024-2025"
+  "2025-2026"
 }
 
 
