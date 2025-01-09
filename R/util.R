@@ -6,7 +6,7 @@ date_appstart <- function() {
 
 #' @export
 date_appstart_3year <- function() {
-  "2022-11-01T00:00:00Z"
+  "2021-11-01T00:00:00Z"
 }
 
 
