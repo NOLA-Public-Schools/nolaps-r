@@ -65,12 +65,12 @@ match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
     ) |>
     mutate(is_underage = case_when(
       .data$`CHOICE SCHOOL` %in% schools_net() & .data$GRADE == "8" &
-        .data$student_dob > "2009-09-30" ~ TRUE,
-      .data$GRADE == "1YR" & .data$student_dob > "2023-09-30" ~ TRUE,
-      .data$GRADE == "2YR" & .data$student_dob > "2022-09-30" ~ TRUE,
-      .data$GRADE == "PK3" & .data$student_dob > "2021-09-30" ~ TRUE,
-      .data$GRADE == "PK4" & .data$student_dob > "2020-09-30" ~ TRUE,
-      .data$GRADE %in% grades_k12() & .data$student_dob > "2019-09-30" ~ TRUE,
+        .data$student_dob > "2010-09-30" ~ TRUE,
+      .data$GRADE == "1YR" & .data$student_dob > "2024-09-30" ~ TRUE,
+      .data$GRADE == "2YR" & .data$student_dob > "2023-09-30" ~ TRUE,
+      .data$GRADE == "PK3" & .data$student_dob > "2022-09-30" ~ TRUE,
+      .data$GRADE == "PK4" & .data$student_dob > "2021-09-30" ~ TRUE,
+      .data$GRADE %in% grades_k12() & .data$student_dob > "2020-09-30" ~ TRUE,
       .default = FALSE
     )) |>
     mutate(is_prohibited = !is.na(.data$is_prohibited)) |>
