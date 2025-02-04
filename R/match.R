@@ -140,27 +140,31 @@ match_process <- function(
       na = ""
     )
 
-  # match_test(
-  #   dir_review = dir_review,
-  #   match = match,
-  #   gradelevels = gradelevels,
-  #   contactsmatch = contactsmatch,
-  #   choices = choices,
-  #   eps_gradelevel = eps_gradelevel,
-  #   eps_choice = eps_choice
-  # )
-  #
-  # match_placement(
-  #   dir_business,
-  #   match,
-  #   overmatches = NULL
-  # )
-  #
-  # match_notification(
-  #   dir_business,
-  #   match,
-  #   overmatches = NULL
-  # )
+
+  #comment out/in####
+   match_test(
+    dir_review = dir_review,
+    match = match,
+    gradelevels = gradelevels,
+    contactsmatch = contactsmatch,
+    choices = choices,
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
+  )
+
+  match_placement(
+    dir_business,
+    match,
+    overmatches = NULL
+  )
+
+  match_notification(
+    dir_business,
+    match,
+    overmatches = NULL
+  )
+
+  #comment out/in####
 
   match_briefing(
     match,
