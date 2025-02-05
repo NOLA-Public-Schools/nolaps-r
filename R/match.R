@@ -164,6 +164,27 @@ match_process <- function(
     overmatches = NULL
   )
 
+  match_test_sibling(
+    dir_review = dir_review,
+    match = match,
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
+  )
+
+  match_test_uno(
+    dir_review = dir_review,
+    match = match,
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
+  )
+
+  match_test_french(
+    dir_review = dir_review,
+    match = match,
+    eps_gradelevel = eps_gradelevel,
+    eps_choice = eps_choice
+  )
+
   #comment out/in####
 
   match_briefing(
