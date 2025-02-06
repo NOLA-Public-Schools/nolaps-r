@@ -15,7 +15,6 @@ match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
     mutate( #
       name_program = case_when(#
         str_detect(name_program, "Tubman") ~ "Harriet Tubman Charter School",#
-        #name_program == "International School of LA: St Roch Campus (French)" ~ "International School of LA: St. Roch Campus (French)",
         TRUE ~ name_program#
       )#
     ) |>
@@ -57,7 +56,7 @@ match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
     ) |>
     left_join(
       contactsmatch |>
-        filter(grade_current %in% grades_k12()) |> #update
+        #filter(!grade_current %in% grades_ec()) |> #update
         distinct(oneappid, .keep_all = TRUE), #update
       by = c("STUDENT ID" = "oneappid"),
       relationship = "many-to-one"
