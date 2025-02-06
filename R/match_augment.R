@@ -56,8 +56,9 @@ match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
       relationship = "many-to-one"
     ) |>
     left_join(
-      contactsmatch,
-      #contactsmatch |> filter(oneappid != 327471172), #alt line59
+      contactsmatch |>
+        filter(grade_current %in% grades_k12()) |> #update
+        distinct(oneappid, .keep_all = TRUE), #update
       by = c("STUDENT ID" = "oneappid"),
       relationship = "many-to-one"
     ) |>
