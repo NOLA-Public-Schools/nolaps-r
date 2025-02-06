@@ -80,7 +80,8 @@ getdata_ate_active <- function() {
       ),
       as_date
     )) |>
-    fix_grades(grade_current)
+    fix_grades(grade_current) |>
+    filter(!grade_current %in% grades_ec())
 
   # %>%
   #   fix_grades(grade_future) %>%
@@ -142,7 +143,8 @@ getdata_contact_active <- function() {
     ) |>
     mutate(across(c(.data$student_dob), as_date)) |>
     mutate(across(c(.data$is_active), as.logical)) |>
-    fix_grades(var = grade_current)
+    fix_grades(var = grade_current) |>
+    filter(!grade_current %in% grades_ec())
 }
 
 
