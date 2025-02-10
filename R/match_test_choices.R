@@ -33,7 +33,7 @@ match_test_choices <- function(dir_review, match, choices) {
     left_join(match, by = c("id_contact", "id_gradelevel")) |>
     filter(.data$`GUARANTEED?` != "YES") |>
     select(
-      "id_contact", "id_gradelevel", "rank",
+      "id_contact", "STUDENT ID", "CHOICE SCHOOL" ,"id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
 
