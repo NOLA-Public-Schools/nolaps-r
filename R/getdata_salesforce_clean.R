@@ -6,6 +6,7 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
       select
         Application__r.ContactId,
         Application__c,
+        Student_OneApp_ID__c
         Id,
         Grade_Level__c,
         Numerical_Rank__c,
@@ -33,6 +34,7 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
     select(
       id_contact = Application__r.ContactId,
       id_app = Application__c,
+      oneappid = Student_OneApp_ID__c,
       id_appschoolranking = Id,
       id_gradelevel = Grade_Level__c,
       rank = Numerical_Rank__c,
