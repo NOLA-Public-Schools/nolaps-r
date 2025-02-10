@@ -34,7 +34,7 @@ match_process <- function(
 
     grade_PK4_12 <- c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
     contactsmatch <- getdata_contact_match() |>
-      filter(grade_current %in% grade_PK4_12()) |>
+      filter(grade_current %in% grade_PK4_12) |>
       arrange(oneappid) %>%  # Sort by ID and most recent date
       group_by(oneappid) %>% # Group by contact ID
       slice(1) %>%           # Keep only the first (most recent) row
