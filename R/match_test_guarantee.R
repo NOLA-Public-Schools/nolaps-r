@@ -17,7 +17,7 @@ match_test_guarantee <- function(dir_review, match, students_active) {
       by = c("id_contact", "id_gradelevel_guarantee" = "id_gradelevel")
     ) |>
     select(
-      "id_contact", "id_gradelevel_guarantee",
+      "oneappid","id_contact", "id_gradelevel_guarantee",
       "student_dob", "promotion"
     )
 
@@ -50,7 +50,7 @@ match_test_guarantee <- function(dir_review, match, students_active) {
         "id_gradelevel_guarantee"
       )
     ) |>
-    arrange(.data$student_dob, .data$oneappid)
+    arrange(.data$oneappid, .data$student_dob)
 
   cat(glue("\n{nrow(distinct(have, id_contact))} students\n\n"))
 
