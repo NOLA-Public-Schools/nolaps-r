@@ -8,7 +8,7 @@ match_test_choices <- function(dir_review, match, choices) {
     mutate(rank = seq_len(n())) |>
     ungroup() |>
     select(
-      "id_contact", "id_gradelevel", "rank",
+      "id_contact", ",oneappid", "id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
 
@@ -33,7 +33,7 @@ match_test_choices <- function(dir_review, match, choices) {
     left_join(match, by = c("id_contact", "id_gradelevel")) |>
     filter(.data$`GUARANTEED?` != "YES") |>
     select(
-      "id_contact", "STUDENT ID", "CHOICE SCHOOL" ,"id_gradelevel", "rank",
+      "id_contact", "id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
 
@@ -44,6 +44,10 @@ match_test_choices <- function(dir_review, match, choices) {
       "id_gradelevel",
       "rank"
     ))
+    select(
+      "id_contact", "oneappid", "id_gradelevel", "rank",
+      "id_app", "id_appschoolranking"
+    )
 
   test_helper(
     invalid_choices,
