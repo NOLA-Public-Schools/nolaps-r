@@ -8,7 +8,7 @@ match_test_choices <- function(dir_review, match, choices) {
     mutate(rank = seq_len(n())) |>
     ungroup() |>
     select(
-      "id_contact", ",oneappid", "id_gradelevel", "rank",
+      "id_contact", "oneappid", "id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
 
