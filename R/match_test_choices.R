@@ -39,6 +39,16 @@ match_test_choices <- function(dir_review, match, choices) {
     mutate(rank = seq_len(n())) |>
     ungroup()
 
+  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/have.csv"
+  write_csv(have, output_path)
+
+    # Check if the file was created
+  if (file.exists(output_path)) {
+      cat("File created successfully at", output_path, "\n")
+  } else {
+      cat("Failed to create file at", output_path, "\n")
+  }
+
   invalid_choices <-
     have |>
     anti_join(shouldhave, by = c(
@@ -59,11 +69,7 @@ match_test_choices <- function(dir_review, match, choices) {
       "id_contact",
       "id_gradelevel",
       "rank"
-    )) |>
-    select(
-      "id_contact", "oneappid", "id_gradelevel", "rank",
-      "id_app", "id_appschoolranking"
-    )
+    ))
 
   test_helper(
     invalid_choices,

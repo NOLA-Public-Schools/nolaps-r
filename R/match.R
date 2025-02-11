@@ -2,6 +2,9 @@ library(glue)
 library(dplyr)
 library(readr)
 library(salesforcer)
+library(stringr)
+library(lubridate)
+
 # Source all .R files in the same directory as match.R
 current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
 files <- list.files(dirname(current_file), pattern = "\\.R$", full.names = TRUE)
@@ -20,7 +23,7 @@ sapply(files, source)
 #'
 
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
+    run, dir_in = "in", dir_out = "out", use_cache = TRUE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
