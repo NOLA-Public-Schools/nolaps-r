@@ -23,11 +23,6 @@ match_test_choices <- function(dir_review, match, choices) {
     cat("Failed to create file at", output_path, "\n")
   }
 
-  # # Check if the file was created
-  # if (file.exists(output_path)) {
-  #   cat("File created successfully at", output_path, "\n")
-  # } else {
-  #   cat("Failed to create file at", output_path, "\n")
   have <-
     match |>
     filter(!is.na(.data$id_gradelevel)) |>
