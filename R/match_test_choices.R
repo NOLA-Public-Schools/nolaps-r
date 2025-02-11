@@ -13,7 +13,7 @@ match_test_choices <- function(dir_review, match, choices) {
       "id_contact", "oneappid", "id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
-  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/shouldhave.csv"
+  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/shouldhave.csv"
   write_csv(shouldhave, output_path)
 
   # Check if the file was created
@@ -39,7 +39,7 @@ match_test_choices <- function(dir_review, match, choices) {
     mutate(rank = seq_len(n())) |>
     ungroup()
 
-  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/have.csv"
+  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/have.csv"
   write_csv(have, output_path)
 
     # Check if the file was created

@@ -18,13 +18,13 @@ match_summary_student <- function(m, schools_waitlist, ...) {
       n_accept = .data$n_acceptnew_hasgtee + .data$n_acceptnew_nogtee,
       n_fallback = .data$n_fallback_waiting + .data$n_fallback_full,
       n_unassign = .data$n_unassign_waiting + .data$n_unassign_full,
-      .before = .data$n_gtee1_only
+      .before = n_gtee1_only
     ) |>
     mutate(
       rate_accept = .data$n_accept / .data$n_seekingnew_elig,
       rate_fallback = .data$n_fallback / .data$n_seekingnew_elig,
       rate_unassign = .data$n_unassign / .data$n_seekingnew_elig,
-      .before = .data$n_gtee1_only
+      .before = n_gtee1_only
     ) |>
     mutate(across(starts_with("rate_"), \(x) round(x, 3)))
 }
@@ -56,13 +56,13 @@ match_summary_program <- function(m, schools_waitlist, ...) {
       n_acceptnew = .data$n_accept,
       n_fallbacknew = .data$n_fallback,
       n_unassignnew = .data$n_unassign_waiting + .data$n_unassign_full,
-      .before = .data$n_gtee1
+      .before = n_gtee1
     ) |>
     mutate(
       rate_acceptnew = .data$n_acceptnew / .data$n_seekingnew_elig,
       rate_fallbacknew = .data$n_fallbacknew / .data$n_seekingnew_elig,
       rate_unassignnew = .data$n_unassignnew / .data$n_seekingnew_elig,
-      .before = .data$n_gtee1
+      .before = n_gtee1
     ) |>
     mutate(across(starts_with("rate_"), \(x) round(x, 3))) |>
     arrange(...)

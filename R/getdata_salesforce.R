@@ -1,4 +1,8 @@
 #' @export
+#' 
+current_grade_ec <- function() {
+  c("INF", "1YR", "2YR", "PK3")
+}
 getdata_ate_active <- function() {
   sf_query(
     glue(
@@ -31,7 +35,7 @@ getdata_ate_active <- function() {
 
       from AcademicTermEnrollment
 
-      where Active__c = true
+      where Active__c = TRUE
       "
     ),
     guess_types = FALSE
@@ -81,7 +85,7 @@ getdata_ate_active <- function() {
       as_date
     )) |>
     fix_grades(grade_current) |>
-    filter(!grade_current %in% grades_ec())
+    filter(!grade_current %in% current_grade_ec())
 
   # %>%
   #   fix_grades(grade_future) %>%
@@ -117,7 +121,7 @@ getdata_contact_active <- function() {
       from AcademicTermEnrollment
 
       where
-        Active__c = true
+        Active__c = TRUE
         and AcademicTerm.Name = '2024-2025'
       "
     ),
@@ -144,7 +148,7 @@ getdata_contact_active <- function() {
     mutate(across(c(.data$student_dob), as_date)) |>
     mutate(across(c(.data$is_active), as.logical)) |>
     fix_grades(var = grade_current) |>
-    filter(!grade_current %in% grades_ec())
+    filter(!grade_current %in% current_grade_ec())
 }
 
 
