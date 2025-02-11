@@ -1,3 +1,5 @@
+library(readr)
+library(dplyr)
 match_test_choices <- function(dir_review, match, choices) {
   cat("\nTest: Choices and Rank Ordering\n")
 
@@ -11,7 +13,21 @@ match_test_choices <- function(dir_review, match, choices) {
       "id_contact", "oneappid", "id_gradelevel", "rank",
       "id_app", "id_appschoolranking"
     )
+  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/shouldhave.csv"
+  write_csv(shouldhave, output_path)
 
+  # Check if the file was created
+  if (file.exists(output_path)) {
+    cat("File created successfully at", output_path, "\n")
+  } else {
+    cat("Failed to create file at", output_path, "\n")
+  }
+
+  # # Check if the file was created
+  # if (file.exists(output_path)) {
+  #   cat("File created successfully at", output_path, "\n")
+  # } else {
+  #   cat("Failed to create file at", output_path, "\n")
   have <-
     match |>
     filter(!is.na(.data$id_gradelevel)) |>

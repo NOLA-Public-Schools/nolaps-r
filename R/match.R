@@ -1,3 +1,13 @@
+library(glue)
+library(dplyr)
+library(readr)
+library(salesforcer)
+# Source all .R files in the same directory as match.R
+current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
+files <- list.files(dirname(current_file), pattern = "\\.R$", full.names = TRUE)
+files <- files[files != current_file]  # Exclude the current file to avoid recursion
+sapply(files, source)
+
 #' Process match file
 #'
 #' @param run integer
@@ -6,11 +16,17 @@
 #' @param use_cache logical
 #'
 #' @export
+#'
+#'
+
 match_process <- function(
     run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
+  if (!dir.exists(dir_out)) {
+    dir.create(dir_out)
+  }
   if (!dir.exists(dir_business)) {
     dir.create(dir_business)
   }
@@ -200,3 +216,6 @@ match_process <- function(
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }
+
+
+match_process(run = 33)
