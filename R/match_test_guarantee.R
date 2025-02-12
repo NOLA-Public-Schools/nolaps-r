@@ -18,16 +18,16 @@ match_test_guarantee <- function(dir_review, match, students_active) {
     ) |>
     select(
       "oneappid","id_contact", "id_gradelevel_guarantee",
-      "student_dob", "promotion"
+      "student_dob", "promotion", "create_date"
     )
 
   have <-
     match |>
     filter(.data$`GUARANTEED?` == "YES") |>
     select(
-      "id_contact", "id_gradelevel_guarantee" = "id_gradelevel",
-      "student_dob", "promotion",
-      "name_program", "GRADE"
+      "STUDENT ID", "id_contact", "id_gradelevel_guarantee" = "id_gradelevel",
+      "CHOICE SCHOOL","student_dob", "promotion",
+      "name_program", "GRADE", "create_date"
     ) |>
     arrange(.data$GRADE, .data$student_dob)
 

@@ -116,7 +116,8 @@ getdata_contact_active <- function() {
         Grade_Level__r.School_Program__r.Name,
         Grade_Level__r.Grade__c,
         Grade_Level__r.Next_Grade_Level__c,
-        Promotion_Decision__c
+        Promotion_Decision__c,
+        CreatedDate
 
       from AcademicTermEnrollment
 
@@ -143,7 +144,8 @@ getdata_contact_active <- function() {
       name_program_current = Grade_Level__r.School_Program__r.Name,
       grade_current = Grade_Level__r.Grade__c,
       id_gradelevel_guarantee = Grade_Level__r.Next_Grade_Level__c,
-      promotion = Promotion_Decision__c
+      promotion = Promotion_Decision__c,
+      create_date = CreatedDate
     ) |>
     mutate(across(c(.data$student_dob), as_date)) |>
     mutate(across(c(.data$is_active), as.logical)) |>
@@ -208,7 +210,7 @@ getdata_contact_match <- function() {
     select(
       id_contact, is_active,
       id_gradelevel_current, name_program_current, grade_current,
-      id_gradelevel_guarantee, promotion
+      id_gradelevel_guarantee, promotion, create_date
     )
   fields_app <- contacts_app |>
     select(

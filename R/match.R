@@ -100,7 +100,7 @@ match_process <- function(
   }
 
   contactsmatch |>
-    count(.data$oneappid, sort = TRUE) |>
+    count(.data$oneappid, .data$grade_current, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
     print()
@@ -242,4 +242,4 @@ match_process <- function(
 }
 
 
-match_process(run = 35)
+match_process(run = 38)
