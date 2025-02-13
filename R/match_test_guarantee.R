@@ -30,7 +30,13 @@ match_test_guarantee <- function(dir_review, match, students_active) {
       "name_program", "GRADE", "create_date"
     ) |>
     arrange(.data$GRADE, .data$student_dob)
-
+  output_path <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/have_guaranteed.csv"
+  write_csv(have, output_path, na = "")
+  if (file.exists(output_path)) {
+    cat("File created successfully at", output_path, "\n")
+  } else {
+    cat("Failed to create file at", output_path, "\n")
+  }
   invalid_guarantee <-
     have |>
     anti_join(
@@ -67,4 +73,6 @@ match_test_guarantee <- function(dir_review, match, students_active) {
     "No student has a missing guarantee."
   )
   write_if_bad(missing_guarantee, dir_review)
+  # write_csv(have, " C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/have_guaranteed.csv", na = "")
+  write_csv(shouldhave, "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/shouldhave_guaranteed.csv", na = "")
 }

@@ -7,7 +7,7 @@ library(lubridate)
 library(tidyr)
 
 # Source all .R files in the same directory as match.R
-current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/R/match.R"
+current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
 dir_path <- dirname(current_file)
 cat("Directory path: ", dir_path, "\n")
 
@@ -242,4 +242,4 @@ match_process <- function(
 }
 
 
-match_process(run = 38)
+match_process(run = 42)
