@@ -6,30 +6,31 @@ library(stringr)
 library(lubridate)
 library(tidyr)
 
+# Uncomment this out if you are using VS Code and want to source all .R files in the same directory as match.R
 # Source all .R files in the same directory as match.R
-current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
-dir_path <- dirname(current_file)
-cat("Directory path: ", dir_path, "\n")
+# current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
+# dir_path <- dirname(current_file)
+# cat("Directory path: ", dir_path, "\n")
 
-# List all .R files in the directory
-files <- list.files(dir_path, pattern = "\\.R$", full.names = TRUE)
-cat("All .R files in the directory:\n")
-print(files)
+# # List all .R files in the directory
+# files <- list.files(dir_path, pattern = "\\.R$", full.names = TRUE)
+# cat("All .R files in the directory:\n")
+# print(files)
 
-# Exclude match.R
-files <- files[basename(files) != basename(current_file)]
-cat("Files to be sourced (excluding match.R):\n")
-print(files)
+# # Exclude match.R
+# files <- files[basename(files) != basename(current_file)]
+# cat("Files to be sourced (excluding match.R):\n")
+# print(files)
 
-# Source the files
-if (length(files) > 0) {
-  invisible(sapply(files, function(file) {
-    cat("Sourcing file: ", file, "\n")
-    source(file)
-  }))
-} else {
-  cat("No files to source.\n")
-}
+# # Source the files
+# if (length(files) > 0) {
+#   invisible(sapply(files, function(file) {
+#     cat("Sourcing file: ", file, "\n")
+#     source(file)
+#   }))
+# } else {
+#   cat("No files to source.\n")
+# }
 
 
 #' Process match file
@@ -44,7 +45,7 @@ if (length(files) > 0) {
 #'
 
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
+    run, dir_in = "in", dir_out = "out", use_cache = TRUE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
