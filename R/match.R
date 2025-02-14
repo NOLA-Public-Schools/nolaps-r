@@ -32,12 +32,7 @@ match_process <- function(
     gradelevels |> write_rds(glue("{dir_in}/gradelevels.rds"))
     gradelevels |> write_csv(glue("{dir_in}/gradelevels.csv"), na = "")
 
-    contactsmatch <- getdata_contact_match() |>
-      filter(grade_current %in% grades_k12()) |>
-      arrange(oneappid) %>%  # Sort by ID and most recent date
-      group_by(oneappid) %>% # Group by contact ID
-      slice(1) %>%           # Keep only the first (most recent) row
-      ungroup()
+    contactsmatch <- getdata_contact_match()
     contactsmatch |> write_rds(glue("{dir_in}/contactsmatch.rds"))
     contactsmatch |> write_csv(glue("{dir_in}/contactsmatch.csv"), na = "")
 
