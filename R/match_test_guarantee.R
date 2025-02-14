@@ -67,4 +67,6 @@ match_test_guarantee <- function(dir_review, match, students_active) {
     "No student has a missing guarantee."
   )
   write_if_bad(missing_guarantee, dir_review)
+  write_csv(shouldhave, glue("shouldhave.csv"), na = "")
+  write_csv(have, glue("have.csv"), na = "")
 }
