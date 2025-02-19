@@ -64,7 +64,7 @@ match_test_choices <- function(dir_review, match, choices) {
   invalid_ranks <-
     match |>
     group_by(.data$id_contact) |>
-    summarize(n_ranks = n(), max_ranks = max(.data$`CHOICE RANK`)) |>
+    summarize(n_ranks = n(), max_ranks = max(.data$`CHOICE RANK`), choice_school = first(.data$`CHOICE SCHOOL`)) |>
     filter(.data$max_ranks != .data$n_ranks)
 
   test_helper(

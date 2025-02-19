@@ -15,7 +15,8 @@ match_test_iep <- function(dir_review, match, eps_gradelevel, eps_choice) {
 
   have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "IEP"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "IEP")) |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "/Guaranteed"))
 
   invalid_iep <-
     have |>

@@ -1,5 +1,16 @@
 match_test_eligibility_k12 <- function(dir_review, match, choices) {
   cat("\nTest: Eligibility: K12\n")
+  auto_inelgibilities <- read_csv(
+    glue("in/auto-ineligibilities.csv"),
+    col_types = cols(
+      `School Code` = col_character(),
+      `Grade` = col_character()
+    )
+  )
+  # Filter out rows from match that have a School Code and Grade in auto_inelgibilities
+  match <- match |>
+    anti_join(auto_inelgibilities, by = c("CHOICE SCHOOL" = "School Code", "GRADE" = "Grade"))
+  write_csv(match, 'match.csv')
 
   prohibited <-
     match |>
