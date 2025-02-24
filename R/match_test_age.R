@@ -4,7 +4,7 @@ match_test_age <- function(dir_review, match) {
   invalid_ages <-
     match |>
     filter(.data$is_underage) |>
-    select("GRADE", "student_dob", "id_contact", "ELIGIBLE?") |>
+    select("GRADE", "student_dob", "STUDENT ID", "id_contact", "CHOICE SCHOOL", "ELIGIBLE?") |>
     arrange(.data$GRADE, .data$student_dob)
 
   invalid_ages_eligible <-
