@@ -14,9 +14,10 @@ match_test_disadvantage <- function(
     filter(.data$id_gradelevel %in% offers_priority$id_gradelevel) |>
     select("id_appschoolranking")
 
-  have <-
+have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "At Risk"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "At Risk")) |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "/Guaranteed"))
 
   invalid_disadvantage <-
     have |>

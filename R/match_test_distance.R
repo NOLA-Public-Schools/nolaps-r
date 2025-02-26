@@ -15,7 +15,8 @@ match_test_distance <- function(dir_review, match, eps_gradelevel, eps_choice) {
 
   have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Child of Student"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Child of Student")) |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "/Guaranteed"))
 
   invalid_distance <-
     have |>

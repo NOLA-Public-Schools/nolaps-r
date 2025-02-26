@@ -15,7 +15,9 @@ match_test_closing <- function(dir_review, match, eps_gradelevel, eps_choice) {
 
   have <-
     match |>
-    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Closing Public School"))
+    filter(str_detect(.data$`QUALIFIED PRIORITIES`, "Closing Public School")) |>
+    filter(!str_detect(.data$`QUALIFIED PRIORITIES`, "Closing Public School/Guaranteed"))
+
 
   invalid_closing <-
     have |>
