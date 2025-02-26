@@ -4,9 +4,10 @@ library(readr)
 library(salesforcer)
 library(stringr)
 library(lubridate)
+library(tidyr)  # Load the tidyr package
 
 # Source all .R files in the same directory as match.R
-current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/R/match.R"
+current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
 dir_path <- dirname(current_file)
 cat("Directory path: ", dir_path, "\n")
 
@@ -59,7 +60,7 @@ match_process <- function(
 
   cat("\nLoading data. Please wait.\n")
 
-  if (use_cache) {
+    if (use_cache) {
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
@@ -71,12 +72,12 @@ match_process <- function(
     gradelevels |> write_rds(glue("{dir_in}/gradelevels.rds"))
     gradelevels |> write_csv(glue("{dir_in}/gradelevels.csv"), na = "")
 
-    grade_PK4_12 <- c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
+    # grade_PK4_12 <- c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
     contactsmatch <- getdata_contact_match() |>
-      filter(grade_current %in% grade_PK4_12) |>
+      # filter(grade_current %in% grade_PK4_12) |>
       arrange(oneappid) %>%  # Sort by ID and most recent date
       group_by(oneappid) %>% # Group by contact ID
-      slice(1) %>%           # Keep only the first (most recent) row
+      # slice(1) %>%           # Keep only the first (most recent) row
       ungroup()
     contactsmatch |> write_rds(glue("{dir_in}/contactsmatch.rds"))
     contactsmatch |> write_csv(glue("{dir_in}/contactsmatch.csv"), na = "")
@@ -99,7 +100,7 @@ match_process <- function(
   }
 
   contactsmatch |>
-    count(.data$oneappid, sort = TRUE) |>
+    count(.data$oneappid, .data$grade_current, sort = TRUE) |>
     filter(n > 1) |>
     write_csv(glue("{dir_review}/dupe_contacts.csv"), na = "") |>
     print()
@@ -241,4 +242,4 @@ match_process <- function(
 }
 
 
-match_process(run = 54)
+match_process(run = 56)
