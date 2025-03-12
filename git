@@ -1,4 +1,4 @@
- match_raw <- read_rds(glue("{dir_review}/000_match_{run}.rds"))
+#  match_raw <- read_rds(glue("{dir_review}/000_match_{run}.rds"))
 #   match_detiered <-
 #     match_raw |>
 #     match_detier() |>
@@ -163,3 +163,39 @@
 #     write_excel_csv("Lake Forest Waitlist Deduplicated.csv", na = "") |>
 #     print()
 # }
+
+
+# to update detier file
+# contacts_match_df = pd.read_csv('contactsmatch.csv')
+# match_detier_df = pd.read_csv('match_detier.csv')
+
+# # check if the OneApp IDs in match_detier_df are in contacts_match_df and if the column student_firstname and student_lastname in match_detier_df is blanck fill it with the value from contacts_match_df
+# for index, row in match_detier_df.iterrows():
+#     if row['STUDENT ID'] in contacts_match_df['oneappid'].values:
+#         if pd.isna(row['student_firstname']) or row['student_firstname'] == '':
+#             match_detier_df.at[index, 'student_firstname'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_firstname'].values[0]
+#         if pd.isna(row['student_lastname']) or row['student_lastname'] == '':
+#             match_detier_df.at[index, 'student_lastname'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_lastname'].values[0]
+#         if pd.isna(row['student_dob']) or row['student_dob'] == '':
+#             match_detier_df.at[index, 'student_dob'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_dob'].values[0]
+# new_match_detier_file_path = 'match_detier(updated).csv'
+# match_detier_df.to_csv(new_match_detier_file_path, index=False)
+
+
+
+
+
+# to update placements file
+# placements_df = pd.read_csv('placements.csv')
+# match_detier_df = pd.read_csv('match_detier.csv')
+
+# # if id_contact column value in placements df equals id_contact column value in match_detier_df then add the STUDENT ID column value from match_detier_df to placements_df
+# for index, row in placements_df.iterrows():
+#     if row['id_contact'] in match_detier_df['id_contact'].values:
+#         placements_df.at[index, 'STUDENT ID'] = match_detier_df.loc[match_detier_df['id_contact'] == row['id_contact'], 'STUDENT ID'].values[0]
+#     # if id_gradelevel in placements_df equals id_gradelevel in match_detier_df then add CHOICE SCHOOL column value from match_detier_df to placements_df based on STUDENT ID column value
+#     if row['id_gradelevel_future'] in match_detier_df['id_gradelevel'].values:
+#         placements_df.at[index, 'CHOICE SCHOOL'] = match_detier_df.loc[match_detier_df['id_gradelevel'] == row['id_gradelevel_future'], 'CHOICE SCHOOL'].values[0]
+    
+# new_placements_file_path = 'placements(Dave).csv'
+# placements_df.to_csv(new_placements_file_path, index=False)
