@@ -45,7 +45,7 @@ library(tidyr)
 #'
 
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
+    run, dir_in = "in", dir_out = "out", use_cache = TRUE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
@@ -196,7 +196,7 @@ match_process <- function(
     eps_gradelevel = eps_gradelevel,
     eps_choice = eps_choice
   )
-
+  
   match_placement(
     dir_business,
     match,
@@ -236,9 +236,37 @@ match_process <- function(
     match,
     dir_business
   )
+  
+  # match_deter <- read_csv(glue("{dir_business}/match_detier.csv"))
+  # contact <- read_csv(glue("{dir_in}/contactsmatch.csv"))
+  # for (i in 1:nrow(match_deter)) {
+  #     student_id <- match_deter$`STUDENT ID`[i]
+      
+  #     # Check if the student ID is in contacts_match_df
+  #     if (student_id %in% contact$oneappid) {
+        
+  #       # Fill missing first name if blank
+  #       if (is.na(match_deter$student_firstname[i]) || match_deter$student_firstname[i] == '') {
+  #         match_deter$student_firstname[i] <- contact$student_firstname[contact$oneappid == student_id]
+  #       }
+        
+  #       # Fill missing last name if blank
+  #       if (is.na(match_deter$student_lastname[i]) || match_deter$student_lastname[i] == '') {
+  #         match_deter$student_lastname[i] <- contact$student_lastname[contact$oneappid == student_id]
+  #       }
+        
+  #       # Fill missing date of birth if blank
+  #       # if (is.na(match_deter$student_dob[i]) || match_deter$student_dob[i] == '' || is.na(match_deter$student_dob[i])) {
+  #       #   match_deter$student_dob[i] <- contactsmatch$student_dob[contactsmatch$oneappid == student_id]
+  #       # }
+  #     }
+  #   }
+
+  # # Save the updated data frame to a new CSV file
+  # write.csv(match_deter, 'match_detier(updated).csv', na="", quote = FALSE, row.names = FALSE)
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }
 
 
-# match_process(run = 81)
+match_process(run = 91)
