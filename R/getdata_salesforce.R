@@ -101,7 +101,7 @@ getdata_contact_active <- function() {
       select
         OneApp_ID__c,
         LearnerContactId,
-
+        LearnerAccountId,
         LearnerContact.FirstName,
         LearnerContact.LastName,
         LearnerContact.Birthdate,
@@ -132,6 +132,7 @@ getdata_contact_active <- function() {
     select(
       oneappid = OneApp_ID__c,
       id_contact = LearnerContactId,
+      id_account = LearnerAccountId,
       student_firstname = LearnerContact.FirstName,
       student_lastname = LearnerContact.LastName,
       student_dob = LearnerContact.Birthdate,
@@ -162,7 +163,7 @@ getdata_contact_app <- function(date_start = date_appstart()) {
       select
         Contact.OneApp_ID__c,
         ContactId,
-
+        AccountId,
         Contact.FirstName,
         Contact.LastName,
         Contact.Birthdate,
@@ -188,6 +189,7 @@ getdata_contact_app <- function(date_start = date_appstart()) {
     select(
       oneappid = Contact.OneApp_ID__c,
       id_contact = ContactId,
+      id_account = AccountId,
       student_firstname = Contact.FirstName,
       student_lastname = Contact.LastName,
       student_dob = Contact.Birthdate,
@@ -221,14 +223,14 @@ getdata_contact_match <- function() {
     select(
       contacts_active,
       c(
-        "oneappid", "id_contact",
+        "oneappid", "id_contact", "id_account",
         "student_firstname", "student_lastname", "student_dob"
       )
     ),
     select(
       contacts_app,
       c(
-        "oneappid", "id_contact",
+        "oneappid", "id_contact", "id_account",
         "student_firstname", "student_lastname", "student_dob"
       )
     ),
