@@ -72,9 +72,7 @@ match_process <- function(
     gradelevels |> write_rds(glue("{dir_in}/gradelevels.rds"))
     gradelevels |> write_csv(glue("{dir_in}/gradelevels.csv"), na = "")
 
-    # grade_PK4_12 <- c("PK4", "K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12")
     contactsmatch <- getdata_contact_match() |>
-      # filter(grade_current %in% grade_PK4_12) |>
       arrange(oneappid) %>%  # Sort by ID and most recent date
       group_by(oneappid) %>% # Group by contact ID
       # slice(1) %>%           # Keep only the first (most recent) row
@@ -237,9 +235,37 @@ match_process <- function(
     match,
     dir_business
   )
+  
+  # match_deter <- read_csv(glue("{dir_business}/match_detier.csv"))
+  # contact <- read_csv(glue("{dir_in}/contactsmatch.csv"))
+  # for (i in 1:nrow(match_deter)) {
+  #     student_id <- match_deter$`STUDENT ID`[i]
+      
+  #     # Check if the student ID is in contacts_match_df
+  #     if (student_id %in% contact$oneappid) {
+        
+  #       # Fill missing first name if blank
+  #       if (is.na(match_deter$student_firstname[i]) || match_deter$student_firstname[i] == '') {
+  #         match_deter$student_firstname[i] <- contact$student_firstname[contact$oneappid == student_id]
+  #       }
+        
+  #       # Fill missing last name if blank
+  #       if (is.na(match_deter$student_lastname[i]) || match_deter$student_lastname[i] == '') {
+  #         match_deter$student_lastname[i] <- contact$student_lastname[contact$oneappid == student_id]
+  #       }
+        
+  #       # Fill missing date of birth if blank
+  #       # if (is.na(match_deter$student_dob[i]) || match_deter$student_dob[i] == '' || is.na(match_deter$student_dob[i])) {
+  #       #   match_deter$student_dob[i] <- contactsmatch$student_dob[contactsmatch$oneappid == student_id]
+  #       # }
+  #     }
+  #   }
+
+  # # Save the updated data frame to a new CSV file
+  # write.csv(match_deter, 'match_detier(updated).csv', na="", quote = FALSE, row.names = FALSE)
 
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }
 
 
-match_process(run = 65)
+match_process(run = 87)

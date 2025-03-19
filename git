@@ -1,0 +1,201 @@
+#  match_raw <- read_rds(glue("{dir_review}/000_match_{run}.rds"))
+#   match_detiered <-
+#     match_raw |>
+#     match_detier() |>
+#     filter(str_detect(`CHOICE SCHOOL`, "LakeForest")) |>
+#     filter(str_detect(`ASSIGNMENT STATUS`, "Waiting"))
+
+#   match <-
+#     match_raw |>
+#     filter(`STUDENT ID` %in% match_detiered$`STUDENT ID`) |>
+#     filter(str_detect(`CHOICE SCHOOL`, "LakeForest")) |>
+#     filter(str_detect(`ASSIGNMENT STATUS`, "Waiting")) |>
+#     mutate(across(c(`ASSIGNMENT PRIORITY`, `RANDOM NUMBER`), as.numeric)) |>
+#     arrange(GRADE, `STUDENT ID`, `CHOICE RANK`)
+
+#   contact <-
+#     match |>
+#     distinct(
+#       oneappid = `STUDENT ID`, student_firstname, student_lastname,
+#       id_contact, id_gradelevel
+#     )
+
+#   grades <- unique(match$GRADE)
+
+
+
+#   tier1 <-
+#     match |>
+#     filter(str_detect(`CHOICE SCHOOL`, "tier_1")) |>
+#     group_by(GRADE) |>
+#     arrange(GRADE, desc(`ASSIGNMENT PRIORITY`), `RANDOM NUMBER`) |>
+#     mutate(tier = "Tier 1", pos_within = seq_len(n()))
+
+#   tier2 <-
+#     match |>
+#     filter(str_detect(`CHOICE SCHOOL`, "tier_2")) |>
+#     group_by(GRADE) |>
+#     arrange(GRADE, `RANDOM NUMBER`) |>
+#     mutate(tier = "Tier 2", pos_within = seq_len(n()))
+
+#   tiers <-
+#     bind_rows(
+#       tier1,
+#       tier2
+#     ) |>
+#     select(
+#       grade = GRADE, tier, pos_within,
+#       priority_score = `ASSIGNMENT PRIORITY`, random_number = `RANDOM NUMBER`,
+#       oneappid = `STUDENT ID`,
+#       student_firstname, student_lastname,
+#       id_contact, id_gradelevel
+#     )
+
+
+
+#   tier_vec <- character(length = nrow(match))
+#   pos_within_vec <- integer(length = nrow(match))
+
+#   index_current <- 1
+#   for (g in grades) {
+#     tbl_grade <- match |> filter(GRADE == g)
+#     rows_grade <- tbl_grade |> nrow()
+
+#     pos_within_tier1 <- 1
+#     rem_tier1 <-
+#       tier1 |>
+#       filter(GRADE == g) |>
+#       nrow()
+
+#     pos_within_tier2 <- 1
+#     rem_tier2 <-
+#       tier2 |>
+#       filter(GRADE == g) |>
+#       nrow()
+
+#     counter_tier1 <- 0
+#     for (i in seq_len(rows_grade)) {
+#       if (counter_tier1 < 3 && rem_tier1 > 0) {
+#         tier_vec[index_current] <- "Tier 1"
+#         rem_tier1 <- rem_tier1 - 1
+
+#         pos_within_vec[index_current] <- pos_within_tier1
+#         pos_within_tier1 <- pos_within_tier1 + 1
+
+#         counter_tier1 <- counter_tier1 + 1
+#       } else {
+#         tier_vec[index_current] <- "Tier 2"
+#         rem_tier2 <- rem_tier2 - 1
+
+#         pos_within_vec[index_current] <- pos_within_tier2
+#         pos_within_tier2 <- pos_within_tier2 + 1
+
+#         counter_tier1 <- 0
+#       }
+
+#       index_current <- index_current + 1
+#     }
+#   }
+
+
+
+#   dupe <-
+#     tibble(
+#       grade = match$GRADE, tier = tier_vec, pos_within = pos_within_vec
+#     ) |>
+#     left_join(tiers, by = join_by(grade, tier, pos_within)) |>
+#     group_by(grade) |>
+#     mutate(pos_overall = seq_len(n()), .before = tier) |>
+#     ungroup()
+
+
+
+#   dedupe <- tibble()
+
+#   for (grade_current in grades) {
+#     tbl_grade <- dupe |> filter(grade == grade_current)
+
+#     target_length <- nrow(distinct(tbl_grade, oneappid))
+#     tier_pattern_old <- tbl_grade$tier
+
+#     oneappids_assigned <- character()
+#     tier_pattern_new <- character()
+
+#     while (length(oneappids_assigned) < target_length) {
+#       for (tier_needed in tier_pattern_old) {
+#         for (k in seq_len(nrow(tbl_grade))) {
+#           oneappid_current <- tbl_grade$oneappid[k]
+#           tier_current <- tbl_grade$tier[k]
+
+#           if (tier_current == tier_needed) {
+#             if (!(oneappid_current %in% oneappids_assigned)) {
+#               tier_pattern_new <- append(tier_pattern_new, tier_current)
+#               oneappids_assigned <- append(oneappids_assigned, oneappid_current)
+
+#               break
+#             }
+#           }
+#         }
+#       }
+#     }
+
+#     dedupe_grade <- tibble(
+#       grade = grade_current,
+#       pos_overall = 1:target_length,
+#       tier = tier_pattern_new,
+#       oneappid = oneappids_assigned
+#     )
+
+#     dedupe <- dedupe |> bind_rows(dedupe_grade)
+#   }
+
+#   dedupe <-
+#     dedupe |>
+#     left_join(contact, by = join_by(oneappid))
+
+
+
+#   dupe |>
+#     write_excel_csv("Lake Forest Waitlist NOT Deduplicated.csv", na = "") |>
+#     print()
+
+#   dedupe |>
+#     write_excel_csv("Lake Forest Waitlist Deduplicated.csv", na = "") |>
+#     print()
+# }
+
+
+# to update detier file
+# contacts_match_df = pd.read_csv('contactsmatch.csv')
+# match_detier_df = pd.read_csv('match_detier.csv')
+
+# # check if the OneApp IDs in match_detier_df are in contacts_match_df and if the column student_firstname and student_lastname in match_detier_df is blanck fill it with the value from contacts_match_df
+# for index, row in match_detier_df.iterrows():
+#     if row['STUDENT ID'] in contacts_match_df['oneappid'].values:
+#         if pd.isna(row['student_firstname']) or row['student_firstname'] == '':
+#             match_detier_df.at[index, 'student_firstname'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_firstname'].values[0]
+#         if pd.isna(row['student_lastname']) or row['student_lastname'] == '':
+#             match_detier_df.at[index, 'student_lastname'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_lastname'].values[0]
+#         if pd.isna(row['student_dob']) or row['student_dob'] == '':
+#             match_detier_df.at[index, 'student_dob'] = contacts_match_df.loc[contacts_match_df['oneappid'] == row['STUDENT ID'], 'student_dob'].values[0]
+# new_match_detier_file_path = 'match_detier(updated).csv'
+# match_detier_df.to_csv(new_match_detier_file_path, index=False)
+
+
+
+
+
+# to update placements file
+# placements_df = pd.read_csv('placements.csv')
+# match_detier_df = pd.read_csv('match_detier.csv')
+
+# # if id_contact column value in placements df equals id_contact column value in match_detier_df then add the STUDENT ID column value from match_detier_df to placements_df
+# for index, row in placements_df.iterrows():
+#     if row['id_contact'] in match_detier_df['id_contact'].values:
+#         placements_df.at[index, 'STUDENT ID'] = match_detier_df.loc[match_detier_df['id_contact'] == row['id_contact'], 'STUDENT ID'].values[0]
+#     # if id_gradelevel in placements_df equals id_gradelevel in match_detier_df then add CHOICE SCHOOL column value from match_detier_df to placements_df based on STUDENT ID column value
+#     if row['id_gradelevel_future'] in match_detier_df['id_gradelevel'].values:
+#         placements_df.at[index, 'CHOICE SCHOOL'] = match_detier_df.loc[match_detier_df['id_gradelevel'] == row['id_gradelevel_future'], 'CHOICE SCHOOL'].values[0]
+    
+# new_placements_file_path = 'placements(Dave).csv'
+# placements_df.to_csv(new_placements_file_path, index=False)
