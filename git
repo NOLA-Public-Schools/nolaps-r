@@ -199,3 +199,13 @@
     
 # new_placements_file_path = 'placements(Dave).csv'
 # placements_df.to_csv(new_placements_file_path, index=False)
+
+# to update placements file for matchtype
+
+# placements_df = pd.read_csv('placements.csv')
+# participants_matchtype_df = pd.read_csv('participants_matchtype.csv')
+# for index, row in placements_df.iterrows():
+#     if row['id_contact'] in participants_matchtype_df['id_contact'].values:
+#         placements_df.at[index, 'matchtype'] = participants_matchtype_df.loc[participants_matchtype_df['id_contact'] == row['id_contact'], 'matchtype'].values[0]
+# new_placements_file_path = 'placements(matchtype).csv'
+# placements_df.to_csv(new_placements_file_path, index=False)
