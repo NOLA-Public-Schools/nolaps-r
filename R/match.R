@@ -7,7 +7,7 @@ library(lubridate)
 library(tidyr)  # Load the tidyr package
 
 # Source all .R files in the same directory as match.R
-current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/nolaps-r/R/match.R"
+current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/R/match.R"
 dir_path <- dirname(current_file)
 cat("Directory path: ", dir_path, "\n")
 
@@ -44,7 +44,7 @@ if (length(files) > 0) {
 #'
 
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = TRUE) {
+    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 
@@ -60,7 +60,7 @@ match_process <- function(
 
   cat("\nLoading data. Please wait.\n")
 
-    if (use_cache) {
+  if (use_cache) {
     gradelevels <- read_rds(glue("{dir_in}/gradelevels.rds"))
     contactsmatch <- read_rds(glue("{dir_in}/contactsmatch.rds"))
     choices <- read_rds(glue("{dir_in}/choices.rds"))
@@ -279,4 +279,4 @@ match_process <- function(
 }
 
 
-match_process(run = 92)
+match_process(run = 1)
