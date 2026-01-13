@@ -7,7 +7,7 @@
 #' @export
 match_placement <- function(dir_business, match, overmatches) {
   cat("\nGenerating placements upload.\n")
-  match_type <- read_csv(glue("{dir_business}/participants_matchtype.csv"))
+  # match_type <- read_csv(glue("{dir_business}/participants_matchtype.csv"))
   placements <-
     match |>
     filter(.data$`ASSIGNMENT STATUS` == "Accepted") |>

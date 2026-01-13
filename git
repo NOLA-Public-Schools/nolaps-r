@@ -209,3 +209,12 @@
 #         placements_df.at[index, 'matchtype'] = participants_matchtype_df.loc[participants_matchtype_df['id_contact'] == row['id_contact'], 'matchtype'].values[0]
 # new_placements_file_path = 'placements(matchtype).csv'
 # placements_df.to_csv(new_placements_file_path, index=False)
+
+
+
+
+# Set the working directory
+setwd("C:/Users/dpalacios/Documents/github/nolaps-r/R")
+
+# Source the match.R file
+source("match.R")
