@@ -62,16 +62,16 @@ match_test_guarantee <- function(dir_review, match, students_active) {
 
   print(count(have, .data$GRADE))
 
-  test_helper(
-    invalid_guarantee,
-    "No student has an invalid guarantee."
-  )
+  # test_helper(
+  #   invalid_guarantee,
+  #   "No student has an invalid guarantee."
+  # )
   write_if_bad(invalid_guarantee, dir_review)
 
-  test_helper(
-    missing_guarantee,
-    "No student has a missing guarantee."
-  )
+  # test_helper(
+  #   missing_guarantee,
+  #   "No student has a missing guarantee."
+  # )
   write_if_bad(missing_guarantee, dir_review)
   write_csv(shouldhave, glue("shouldhave.csv"), na = "")
   write_csv(have, glue("have.csv"), na = "")

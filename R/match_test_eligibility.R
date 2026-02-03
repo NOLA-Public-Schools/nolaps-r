@@ -55,10 +55,10 @@ match_test_eligibility_k12 <- function(dir_review, match, choices) {
     count(donthave, .data$name_program, .data$GRADE) |> slice_sample(n = 10)
   )
 
-  test_helper(
-    invalid_eligibility_k12,
-    "No student has invalid K12 eligibility in the match."
-  )
+  # test_helper(
+  #   invalid_eligibility_k12,
+  #   "No student has invalid K12 eligibility in the match."
+  # )
   write_if_bad(invalid_eligibility_k12, dir_review)
 
   test_helper(

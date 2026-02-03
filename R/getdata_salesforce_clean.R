@@ -26,6 +26,7 @@ getdata_appschoolranking <- function(date_start = date_appstart()) {
         and Application__r.InternalStatus = 'Submitted'
         and Numerical_Rank__c > 0
         and Grade_Level__r.Grade__c != null
+        and Application__r.Status != 'Cancelled'
       "
     ),
     api_type = "Bulk 2.0",
@@ -81,6 +82,7 @@ where
 Application_School_Ranking__r.Application__r.Academic_Term__r.Name = '{term}'
 and Application_School_Ranking__r.Application__r.CreatedDate >= {date_start}
 and Application_School_Ranking__r.Application__r.InternalStatus = 'Submitted'
+and Application_School_Ranking__r.Application__r.Status != 'Cancelled'
 and Application_School_Ranking__r.Numerical_Rank__c > 0"
   )
 

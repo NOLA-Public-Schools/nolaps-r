@@ -1,3 +1,101 @@
+# #' Augment match records with additional information
+# #'
+# #' @param m tibble of match records
+# #'
+# #' @param gradelevels tibble of grade levels
+# #' @param contactsmatch tibble of contacts
+# #' @param choices tibble of application school rankings
+# #' @param expulsions tibble of expulsions
+# #'
+# #' @export
+# match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
+#   names_lookup <-
+#     gradelevels |>
+#     select("choice_school", "name_program") |>
+#     mutate( #
+#       name_program = case_when(#
+#         str_detect(name_program, "Tubman") ~ "Harriet Tubman Charter School",#
+#         TRUE ~ name_program#
+#       )#
+#     ) |>
+#     distinct()
+
+#   gradelevels <-
+#     gradelevels |>
+#     select("choice_school", "grade", "id_program", "id_gradelevel")
+
+#   choices <-
+#     choices |>
+#     select(
+#       "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec",
+#       "id_avela_app", "id_avela_choice", "id_avela_gradelevel"
+#     )
+
+#   expulsions <-
+#     expulsions |>
+#     distinct(.data$id_contact, .data$id_program_expelledfrom) |>
+#     mutate(is_prohibited = TRUE)
+
+#   m |>
+#     mutate(
+#       choice_school_clean =
+#         if_else(str_detect(.data$`CHOICE SCHOOL`, "Willow|LakeForest"),
+#           str_remove(.data$`CHOICE SCHOOL`, "_.*"),
+#           .data$`CHOICE SCHOOL`
+#         )
+#     ) |>
+#     left_join(
+#       names_lookup,
+#       by = c("choice_school_clean" = "choice_school"),
+#       relationship = "many-to-one"
+#     ) |>
+#     left_join(
+#       gradelevels,
+#       by = c("choice_school_clean" = "choice_school", "GRADE" = "grade"),
+#       relationship = "many-to-one"
+#     ) |>
+#     left_join(
+#       contactsmatch |>
+#         #filter(!grade_current %in% grades_ec()) |> #update
+#         distinct(oneappid, .keep_all = TRUE), #update
+#       by = c("STUDENT ID" = "oneappid"),
+#       relationship = "many-to-one"
+#     ) |>
+#     left_join(
+#       expulsions,
+#       by = c("id_contact", "id_program" = "id_program_expelledfrom"),
+#       relationship = "many-to-one"
+#     ) |>
+#     left_join(
+#       choices,
+#       by = c("id_contact", "id_gradelevel"),
+#       relationship = "many-to-one"
+#     ) |>
+#     mutate(is_underage = case_when(
+#       .data$`CHOICE SCHOOL` %in% schools_net() & .data$GRADE == "8" &
+#         .data$student_dob > "2011-09-30" ~ TRUE,
+#       .data$GRADE == "1YR" & .data$student_dob > "2025-09-30" ~ TRUE,
+#       .data$GRADE == "2YR" & .data$student_dob > "2024-09-30" ~ TRUE,
+#       .data$GRADE == "PK3" & .data$student_dob > "2023-09-30" ~ TRUE,
+#       .data$GRADE == "PK4" & .data$student_dob > "2022-09-30" ~ TRUE,
+#       .data$GRADE %in% grades_k12() & .data$student_dob > "2021-09-30" ~ TRUE,
+#       .default = FALSE
+#     )) |>
+#     mutate(is_prohibited = !is.na(.data$is_prohibited)) |>
+#     mutate(id_gradelevel_guarantee = case_when(
+#       .data$promotion == "Retained" ~ .data$id_gradelevel_current,
+#       .data$is_prohibited ~ NA,
+#       .default = .data$id_gradelevel_guarantee
+#     )) |>
+#     relocate(
+#       c("promotion", "is_underage", "is_prohibited", "id_gradelevel_guarantee"),
+#       .after = "grade_current"
+#     )
+# }
+
+
+
+
 #' Augment match records with additional information
 #'
 #' @param m tibble of match records
@@ -9,31 +107,37 @@
 #'
 #' @export
 match_augment <- function(m, gradelevels, contactsmatch, choices, expulsions) {
+  # names_lookup (unique on choice_school)
   names_lookup <-
     gradelevels |>
     select("choice_school", "name_program") |>
-    mutate( #
-      name_program = case_when(#
-        str_detect(name_program, "Tubman") ~ "Harriet Tubman Charter School",#
-        TRUE ~ name_program#
-      )#
+    mutate(
+      name_program = case_when(
+        str_detect(name_program, "Tubman") ~ "Harriet Tubman Charter School",
+        TRUE ~ name_program
+      )
     ) |>
-    distinct()
+    distinct(choice_school, .keep_all = TRUE)
 
+  # gradelevels (unique on choice_school, grade)
   gradelevels <-
     gradelevels |>
-    select("choice_school", "grade", "id_program", "id_gradelevel")
+    select("choice_school", "grade", "id_program", "id_gradelevel") |>
+    distinct(choice_school, grade, .keep_all = TRUE)
 
+  # choices (unique on id_contact, id_gradelevel)
   choices <-
     choices |>
     select(
       "id_contact", "id_gradelevel", "id_appschoolranking", "type_program_ec",
       "id_avela_app", "id_avela_choice", "id_avela_gradelevel"
-    )
+    ) |>
+    distinct(id_contact, id_gradelevel, .keep_all = TRUE)
 
+  # expulsions (unique on id_contact, id_program_expelledfrom)
   expulsions <-
     expulsions |>
-    distinct(.data$id_contact, .data$id_program_expelledfrom) |>
+    distinct(.data$id_contact, .data$id_program_expelledfrom, .keep_all = TRUE) |>
     mutate(is_prohibited = TRUE)
 
   m |>

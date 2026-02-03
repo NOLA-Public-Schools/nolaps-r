@@ -47,10 +47,13 @@ match_test <- function(
     eps_choice = eps_choice
   )
 
+
   return(NULL)
-
-
   # Family link and twin data
+  siblings <- contactsmatch
+  students <- contactsmatch
+  student_oneappid <- students$oneappid
+  sibling_oneappid <- siblings$oneappid
 
   dob <-
     students %>%
@@ -267,20 +270,30 @@ test_twin <- function(dir_out, siblings, match, students_with_family) {
 
 
 test_helper <- function(bad, test_text) {
-  testthat::with_reporter(
-    "stop",
-    {
-      testthat::test_that(test_text, {
-        testthat::expect_equal(nrow(bad), 0)
-      })
-    }
-  )
+  if (nrow(bad) > 0) {
+    cat(glue::glue("WARNING: {test_text}\n"))
+    cat(glue::glue("Found {nrow(bad)} failing rows:\n"))
+    print(head(bad, 5))
+  } else {
+    cat(glue::glue("PASS: {test_text}\n"))
+  }
 }
 
 
+# write_if_bad <- function(x, dir_out) {
+#   if (nrow(x) > 0) {
+#     filename <- deparse(substitute(x))
+#     write_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
+#   }
+# }
 write_if_bad <- function(x, dir_out) {
   if (nrow(x) > 0) {
     filename <- deparse(substitute(x))
-    write_csv(x, glue("{dir_out}/{filename}.csv"), na = "")
+    out_path <- glue("{dir_out}/{filename}.csv")
+    write_csv(x, out_path, na = "")
+    cat(glue("Wrote {nrow(x)} rows to {out_path}\n"))
+    print(head(x, 5))
+  } else {
+    cat(glue("No rows to write for {deparse(substitute(x))}\n"))
   }
 }

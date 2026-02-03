@@ -6,8 +6,8 @@ library(stringr)
 library(lubridate)
 library(tidyr)  # Load the tidyr package
 
-# Source all .R files in the same directory as match.R
-# current_file <- "C:/Users/dpalacios/Documents/github/nolaps-r/R/match.R"
+# # Source all .R files in the same directory as match.R
+# current_file <- "C:/Users/PalaciosDavid/Documents/github/nolaps-r/R/match.R"
 # dir_path <- dirname(current_file)
 # cat("Directory path: ", dir_path, "\n")
 
@@ -42,7 +42,8 @@ library(tidyr)  # Load the tidyr package
 #' @export
 #'
 #'
-
+# setwd("C:/Users/PalaciosDavid/Documents/github/nolaps-r/R")
+# source("R/match.R")
 match_process <- function(
     run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
@@ -195,9 +196,9 @@ match_process <- function(
       na = ""
     )
 
-
+  cat("\nGenerating match tests.\n")
   #comment out/in####
-   match_test(
+  match_test(
     dir_review = dir_review,
     match = match,
     gradelevels = gradelevels,

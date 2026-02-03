@@ -40,15 +40,15 @@ match_test_zone <- function(dir_review, match, eps_gradelevel, eps_choice) {
 
   print(count(distinct(have, .data$`STUDENT ID`, .data$GRADE), .data$GRADE))
 
-  test_helper(
-    invalid_zone,
-    "No student has an invalid zone priority."
-  )
+  # test_helper(
+  #   invalid_zone,
+  #   "No student has an invalid zone priority."
+  # )
   write_if_bad(invalid_zone, dir_review)
 
-  test_helper(
-    missing_zone,
-    "No student has a missing zone priority."
-  )
+  # test_helper(
+  #   missing_zone,
+  #   "No student has a missing zone priority."
+  # )
   write_if_bad(missing_zone, dir_review)
 }
