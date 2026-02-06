@@ -1,37 +1,3 @@
-library(glue)
-library(dplyr)
-library(readr)
-library(salesforcer)
-library(stringr)
-library(lubridate)
-library(tidyr)  # Load the tidyr package
-
-# # Source all .R files in the same directory as match.R
-# current_file <- "C:/Users/PalaciosDavid/Documents/github/nolaps-r/R/match.R"
-# dir_path <- dirname(current_file)
-# cat("Directory path: ", dir_path, "\n")
-
-# # List all .R files in the directory
-# files <- list.files(dir_path, pattern = "\\.R$", full.names = TRUE)
-# cat("All .R files in the directory:\n")
-# print(files)
-
-# # Exclude match.R
-# files <- files[basename(files) != basename(current_file)]
-# cat("Files to be sourced (excluding match.R):\n")
-# print(files)
-
-# # Source the files
-# if (length(files) > 0) {
-#   invisible(sapply(files, function(file) {
-#     cat("Sourcing file: ", file, "\n")
-#     source(file)
-#   }))
-# } else {
-#   cat("No files to source.\n")
-# }
-
-
 #' Process match file
 #'
 #' @param run integer
@@ -40,10 +6,6 @@ library(tidyr)  # Load the tidyr package
 #' @param use_cache logical
 #'
 #' @export
-#'
-#'
-# setwd("C:/Users/PalaciosDavid/Documents/github/nolaps-r/R")
-# source("R/match.R")
 match_process <- function(
     run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
@@ -97,17 +59,6 @@ match_process <- function(
     expulsions |> write_rds(glue("{dir_in}/expulsions.rds"))
     expulsions |> write_csv(glue("{dir_in}/expulsions.csv"), na = "")
   }
-    # Read the bfhs_accepted CSV file
-  bfhs_accepted <- read_csv(
-    glue("{dir_in}/BFHS_oneapp.csv"),
-    col_types = cols(
-      `Student ID` = col_character()
-    )
-  )
-
-  # Filter out choices where oneappid matches Student ID in bfhs_accepted
-  choices <- choices %>%
-    filter(!oneappid %in% bfhs_accepted$`Student ID`)
 
   contactsmatch |>
     count(.data$oneappid, .data$grade_current, sort = TRUE) |>
@@ -248,36 +199,8 @@ match_process <- function(
     dir_business
   )
 
-  # match_deter <- read_csv(glue("{dir_business}/match_detier.csv"))
-  # contact <- read_csv(glue("{dir_in}/contactsmatch.csv"))
-  # for (i in 1:nrow(match_deter)) {
-  #     student_id <- match_deter$`STUDENT ID`[i]
-
-  #     # Check if the student ID is in contacts_match_df
-  #     if (student_id %in% contact$oneappid) {
-
-  #       # Fill missing first name if blank
-  #       if (is.na(match_deter$student_firstname[i]) || match_deter$student_firstname[i] == '') {
-  #         match_deter$student_firstname[i] <- contact$student_firstname[contact$oneappid == student_id]
-  #       }
-
-  #       # Fill missing last name if blank
-  #       if (is.na(match_deter$student_lastname[i]) || match_deter$student_lastname[i] == '') {
-  #         match_deter$student_lastname[i] <- contact$student_lastname[contact$oneappid == student_id]
-  #       }
-
-  #       # Fill missing date of birth if blank
-  #       # if (is.na(match_deter$student_dob[i]) || match_deter$student_dob[i] == '' || is.na(match_deter$student_dob[i])) {
-  #       #   match_deter$student_dob[i] <- contactsmatch$student_dob[contactsmatch$oneappid == student_id]
-  #       # }
-  #     }
-  #   }
-
-  # # Save the updated data frame to a new CSV file
-  # write.csv(match_deter, 'match_detier(updated).csv', na="", quote = FALSE, row.names = FALSE)
-
   cat(glue("\n\nFinished at {Sys.time()}\n\n"))
 }
 
 
-match_process(run = 1)
+#match_process(run = 1)
