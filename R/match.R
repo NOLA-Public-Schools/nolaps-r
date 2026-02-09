@@ -7,7 +7,7 @@
 #'
 #' @export
 match_process <- function(
-    run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
+  run, dir_in = "in", dir_out = "out", use_cache = FALSE) {
   dir_business <- glue("{dir_out}/business")
   dir_review <- glue("{dir_out}/validation")
 

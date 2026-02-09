@@ -2,7 +2,7 @@ match_test_eligibility_k12 <- function(dir_review, match, choices) {
   cat("\nTest: Eligibility: K12\n")
   auto_inelgibilities <- read_csv(
     glue("in/auto-ineligibilities.csv"),
-    col_types = cols(
+    col_types = readr::cols(
       `School Code` = col_character(),
       `Grade` = col_character()
     )
