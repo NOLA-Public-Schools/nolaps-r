@@ -151,7 +151,9 @@ where
 Re_Apply_Status__c != null and
 ((Academic_Term_Enrollment__r.Grade_Level__r.School_Program__c != null and
 Re_Apply_Status__c = 'Re-Entry Prohibited') or
-(End_Date__c >= 2026-07-01))"
+(End_Date__c >= 2026-07-01))
+AND School_Year__c = '2025-2026'
+    "
   )
 
   template_query(
