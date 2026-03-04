@@ -150,9 +150,8 @@ getdata_expulsion <- function() {
 where
 Re_Apply_Status__c != null and
 ((Academic_Term_Enrollment__r.Grade_Level__r.School_Program__c != null and
-Re_Apply_Status__c = 'Re-Entry Prohibited') or
+Re_Apply_Status__c = 'Re-Entry Prohibited' AND School_Year__c = IN ('2024-2025', '2025-2026')) or
 (End_Date__c >= 2026-07-01))
-AND School_Year__c = '2025-2026'
     "
   )
 
