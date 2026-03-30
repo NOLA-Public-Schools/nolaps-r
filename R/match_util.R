@@ -5,11 +5,16 @@
 #' @export
 schools_waitlist <- function() {
   c(
-    "331001_C_FISLCampFrench",
-    "331001_C_SISLCampSpanish",
-    "331001_E_FISLDixonFrench",
-    "331001_E_SISLDixonSpanish",
-    "331001_O_SISLOlivierSpanish",
+    #"331001_C_FISLCampFrench",
+    #"331001_C_SISLCampSpanish",
+    #"331001_E_FISLDixonFrench",
+    #"331001_E_SISLDixonSpanish",
+    #"331001_O_SISLOlivierSpanish",
+    "331001_E_FISLStRochFrench",
+    "331001_E_SISLStRochSpanish",
+    "331001_O_SISLWestbankSpanish",
+    "331001_C_FISLUptownFrench",
+    "331001_C_SISLUptownSpanish",
     "347001LFNOPK4T2",
     "348001NOMMA",
     "3C2001_FHLFrench",
